@@ -137,35 +137,45 @@ app_license = "mit"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+period_closing_doctypes = [
+	"Asset",
+	"Asset Capitalization",
+	"Asset Repair",
+]
+
+accounting_dimension_doctypes = [
+	"Asset",
+	"Asset Value Adjustment",
+	"Asset Repair",
+	"Asset Capitalization",
+]
+
+doc_events = {
+	tuple(period_closing_doctypes): {
+		"validate": "erpnext.accounts.doctype.accounting_period.accounting_period.validate_accounting_period_on_doc_save",
+	},
+}
 
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"assets.tasks.all"
-# 	],
-# 	"daily": [
-# 		"assets.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"assets.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"assets.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"assets.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	"daily": [
+		"assets.assets.doctype.asset.asset.update_maintenance_status",
+		"assets.assets.doctype.asset.asset.make_post_gl_entry",
+        "assets.assets.doctype.asset_maintenance_log.asset_maintenance_log.update_asset_maintenance_log_status",
+	],
+    "daily_long": [
+		"assets.assets.doctype.asset.depreciation.post_depreciation_entries",
+	],
+}
 
+# ERPNext doctypes for Global Search
+global_search_doctypes = {
+	"Default": [
+		{"doctype": "Asset", "index": 28},
+	],
+}
 # Testing
 # -------
 
