@@ -163,18 +163,18 @@ scheduler_events = {
 	"daily": [
 		"assets.assets.doctype.asset.asset.update_maintenance_status",
 		"assets.assets.doctype.asset.asset.make_post_gl_entry",
-        "assets.assets.doctype.asset_maintenance_log.asset_maintenance_log.update_asset_maintenance_log_status",
+		"assets.assets.doctype.asset_maintenance_log.asset_maintenance_log.update_asset_maintenance_log_status",
 	],
-    "daily_long": [
+	"daily_long": [
 		"assets.assets.doctype.asset.depreciation.post_depreciation_entries",
 	],
-}
+	}
 
 # ERPNext doctypes for Global Search
 global_search_doctypes = {
 	"Default": [
 		{"doctype": "Asset", "index": 28},
-	],
+],
 }
 # Testing
 # -------
