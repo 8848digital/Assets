@@ -154,6 +154,10 @@ doc_events = {
 	tuple(period_closing_doctypes): {
 		"validate": "erpnext.accounts.doctype.accounting_period.accounting_period.validate_accounting_period_on_doc_save",
 	},
+    "Journal Entry": {
+		"on_submit": "asset.asset.customizations.journal_entry.journal_entry.on_submit",
+		"on_cancel": "asset.asset.customizations.journal_entry.journal_entry.on_cancel",
+	},
 }
 
 # Scheduled Tasks
