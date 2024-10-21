@@ -17,6 +17,7 @@
   "new_asset_value",
   "column_break_11",
   "difference_amount",
+  "difference_account",
   "journal_entry",
   "accounting_dimensions_section",
   "cost_center",
@@ -120,6 +121,14 @@
   {
    "fieldname": "column_break_11",
    "fieldtype": "Column Break"
+  },
+  {
+    "fieldname": "difference_account",
+    "fieldtype": "Link",
+    "label": "Difference Account",
+    "no_copy": 1,
+    "options": "Account",
+    "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
