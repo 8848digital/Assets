@@ -71,7 +71,7 @@ frappe.ui.form.on("Asset", {
 		frm.set_query("purchase_receipt", (doc) => {
 			return {
 				query: "erpnext.controllers.queries.get_purchase_receipts",
-				filters: { item_code: doc.item_code },
+				filters: { item_code: doc.item_code, company: frm.doc.company},
 			};
 		});
 		frm.set_query("purchase_invoice", (doc) => {
