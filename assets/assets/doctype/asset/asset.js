@@ -70,14 +70,17 @@ frappe.ui.form.on("Asset", {
 
 		frm.set_query("purchase_receipt", (doc) => {
 			return {
-				query: "erpnext.controllers.queries.get_purchase_receipts",
+				query: "assets.controllers.queries.get_purchase_receipts",
 				filters: { item_code: doc.item_code, company: frm.doc.company},
 			};
 		});
 		frm.set_query("purchase_invoice", (doc) => {
 			return {
-				query: "erpnext.controllers.queries.get_purchase_invoices",
-				filters: { item_code: doc.item_code },
+				query: "assets.controllers.queries.get_purchase_invoices",
+				filters: {
+					item_code: doc.item_code,
+					company: frm.doc.company
+				},
 			};
 		});
 	},
