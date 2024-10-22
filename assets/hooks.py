@@ -148,6 +148,8 @@ accounting_dimension_doctypes = [
 	"Asset Value Adjustment",
 	"Asset Repair",
 	"Asset Capitalization",
+    "Asset Movement Item",
+	"Asset Depreciation Schedule",
 ]
 
 doc_events = {
