@@ -79,7 +79,8 @@ frappe.ui.form.on("Asset", {
 				query: "assets.controllers.queries.get_purchase_invoices",
 				filters: {
 					item_code: doc.item_code,
-					company: frm.doc.company
+					company: frm.doc.company,
+					update_stock: 1,
 				},
 			};
 		});
