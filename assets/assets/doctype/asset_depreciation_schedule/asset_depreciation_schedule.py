@@ -63,6 +63,7 @@ class AssetDepreciationSchedule(Document):
 				self.asset, self.finance_book
 			)
 		self.update_shift_depr_schedule()
+		self.calculate_wdv()
 
 	def validate(self):
 		self.validate_another_asset_depr_schedule_does_not_exist()
@@ -575,6 +576,12 @@ class AssetDepreciationSchedule(Document):
 			d.accumulated_depreciation_amount = flt(
 				accumulated_depreciation, d.precision("accumulated_depreciation_amount")
 			)
+	def calculate_wdv(self):
+		gross_purchase_amount = frappe.utils.flt(frappe.db.get_value("Asset", self.asset, "gross_purchase_amount"))
+
+		for row in self.depreciation_schedule:
+			row.wdv = gross_purchase_amount - row.depreciation_amount
+			gross_purchase_amount = row.wdv
 
 
 def _get_value_after_depreciation_for_making_schedule(asset_doc, fb_row):
