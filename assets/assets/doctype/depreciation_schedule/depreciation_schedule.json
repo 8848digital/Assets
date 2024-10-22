@@ -9,6 +9,7 @@
  "field_order": [
   "schedule_date",
   "depreciation_amount",
+  "wdv",
   "column_break_3",
   "accumulated_depreciation_amount",
   "journal_entry",
@@ -30,6 +31,12 @@
    "label": "Depreciation Amount",
    "options": "Company:company:default_currency",
    "reqd": 1
+  },
+  {
+    "fieldname": "wdv",
+    "fieldtype": "Currency",
+    "in_list_view":1,
+    "label": "WDV"
   },
   {
    "fieldname": "column_break_3",
