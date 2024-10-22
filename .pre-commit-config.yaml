@@ -1,0 +1,80 @@
+exclude: 'node_modules|.git'
+default_stages: [commit]
+fail_fast: false
+
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ".*json$|.*txt$|.*csv|.*md|.*svg"
+      - id: check-yaml
+      - id: no-commit-to-branch
+        args: ['--branch', 'master', '--branch', 'develop', '--branch', 'pre-prod']
+      - id: check-merge-conflict
+      - id: check-ast
+      - id: check-json
+      - id: check-toml
+      - id: check-yaml
+      - id: debug-statements
+
+  # - repo: https://github.com/frappe/black
+  #   rev: 951ccf4d5bb0d692b457a5ebc4215d755618eb68
+  #   hooks:
+  #     - id: black
+
+  # - repo: https://github.com/pre-commit/mirrors-prettier
+  #   rev: v2.7.1
+  #   hooks:
+  #     - id: prettier
+  #       types_or: [javascript, vue, scss]
+  #       # Ignore any files that might contain jinja / bundles
+  #       exclude: |
+  #           (?x)^(
+  #               assets/public/dist/.*|
+  #               .*node_modules.*|
+  #               .*boilerplate.*|
+  #               assets/www/website_script.js|
+  #               assets/templates/includes/.*|
+  #               assets/public/js/lib/.*|
+  #               assets/website/doctype/website_theme/website_theme_template.scss
+  #           )$
+
+
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v8.44.0
+    hooks:
+      - id: eslint
+        types_or: [javascript]
+        args: ['--quiet']
+        # Ignore any files that might contain jinja / bundles
+        exclude: |
+            (?x)^(
+                assets/public/dist/.*|
+                cypress/.*|
+                .*node_modules.*|
+                .*boilerplate.*|
+                assets/www/website_script.js|
+                assets/templates/includes/.*|
+                assets/public/js/lib/.*
+            )$
+
+  # - repo: https://github.com/PyCQA/isort
+  #   rev: 5.12.0
+  #   hooks:
+  #     - id: isort
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        additional_dependencies: ['flake8-bugbear',]
+
+  - repo: local
+    hooks:
+    - id: check-max-lines
+      name: Check Max Lines
+      entry: python scripts/check_max_lines.py
+      language: python
+      types: [python]

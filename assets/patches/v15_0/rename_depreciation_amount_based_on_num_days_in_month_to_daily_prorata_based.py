@@ -8,7 +8,9 @@ from frappe.model.utils.rename_field import rename_field
 def execute():
 	try:
 		rename_field(
-			"Asset Finance Book", "depreciation_amount_based_on_num_days_in_month", "daily_prorata_based"
+			"Asset Finance Book",
+			"depreciation_amount_based_on_num_days_in_month",
+			"daily_prorata_based",
 		)
 		rename_field(
 			"Asset Depreciation Schedule",

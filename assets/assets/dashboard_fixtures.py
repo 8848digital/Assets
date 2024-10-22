@@ -4,11 +4,10 @@
 import json
 
 import frappe
-from frappe import _
-from frappe.utils import get_date_str, nowdate
-
 from erpnext.accounts.dashboard_fixtures import _get_fiscal_year
 from erpnext.buying.dashboard_fixtures import get_company_for_dashboards
+from frappe import _
+from frappe.utils import get_date_str, nowdate
 
 
 def get_data():
@@ -126,7 +125,12 @@ def get_charts(fiscal_year, year_start_date, year_end_date):
 			"x_field": "location",
 			"timeseries": 0,
 			"filters_json": json.dumps(
-				{"company": company, "status": "In Location", "group_by": "Location", "is_existing_asset": 0}
+				{
+					"company": company,
+					"status": "In Location",
+					"group_by": "Location",
+					"is_existing_asset": 0,
+				}
 			),
 			"type": "Donut",
 			"doctype": "Dashboard Chart",
@@ -167,7 +171,9 @@ def get_number_cards(fiscal_year, year_start_date, year_end_date):
 			"is_public": 1,
 			"show_percentage_stats": 1,
 			"stats_time_interval": "Monthly",
-			"filters_json": json.dumps([["Asset", "creation", "between", [year_start_date, year_end_date]]]),
+			"filters_json": json.dumps(
+				[["Asset", "creation", "between", [year_start_date, year_end_date]]]
+			),
 			"doctype": "Number Card",
 		},
 		{

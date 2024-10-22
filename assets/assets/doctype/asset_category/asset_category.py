@@ -20,7 +20,9 @@ class AssetCategory(Document):
 		from assets.assets.doctype.asset_category_account.asset_category_account import (
 			AssetCategoryAccount,
 		)
-		from assets.assets.doctype.asset_finance_book.asset_finance_book import AssetFinanceBook
+		from assets.assets.doctype.asset_finance_book.asset_finance_book import (
+			AssetFinanceBook,
+		)
 
 		accounts: DF.Table[AssetCategoryAccount]
 		asset_category_name: DF.Data
@@ -39,7 +41,8 @@ class AssetCategory(Document):
 			for field in ("Total Number of Depreciations", "Frequency of Depreciation"):
 				if cint(d.get(frappe.scrub(field))) < 1:
 					frappe.throw(
-						_("Row {0}: {1} must be greater than 0").format(d.idx, field), frappe.MandatoryError
+						_("Row {0}: {1} must be greater than 0").format(d.idx, field),
+						frappe.MandatoryError,
 					)
 
 	def validate_account_currency(self):
@@ -51,10 +54,14 @@ class AssetCategory(Document):
 		]
 		invalid_accounts = []
 		for d in self.accounts:
-			company_currency = frappe.get_value("Company", d.get("company_name"), "default_currency")
+			company_currency = frappe.get_value(
+				"Company", d.get("company_name"), "default_currency"
+			)
 			for type_of_account in account_types:
 				if d.get(type_of_account):
-					account_currency = frappe.get_value("Account", d.get(type_of_account), "account_currency")
+					account_currency = frappe.get_value(
+						"Account", d.get(type_of_account), "account_currency"
+					)
 					if account_currency != company_currency:
 						invalid_accounts.append(
 							frappe._dict(
@@ -81,7 +88,9 @@ class AssetCategory(Document):
 			for fieldname in account_type_map.keys():
 				if d.get(fieldname):
 					selected_account = d.get(fieldname)
-					key_to_match = next(iter(account_type_map.get(fieldname)))  # acount_type or root_type
+					key_to_match = next(
+						iter(account_type_map.get(fieldname))
+					)  # acount_type or root_type
 					selected_key_type = frappe.db.get_value("Account", selected_account, key_to_match)
 					expected_key_types = account_type_map[fieldname][key_to_match]
 
@@ -105,7 +114,9 @@ class AssetCategory(Document):
 				if not d.capital_work_in_progress_account and not frappe.db.get_value(
 					"Company", d.company_name, "capital_work_in_progress_account"
 				):
-					missing_cwip_accounts_for_company.append(get_link_to_form("Company", d.company_name))
+					missing_cwip_accounts_for_company.append(
+						get_link_to_form("Company", d.company_name)
+					)
 
 			if missing_cwip_accounts_for_company:
 				msg = _("""To enable Capital Work in Progress Accounting,""") + " "

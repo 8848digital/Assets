@@ -28,7 +28,15 @@ class AssetMaintenanceTask(Document):
 		parentfield: DF.Data
 		parenttype: DF.Data
 		periodicity: DF.Literal[
-			"", "Daily", "Weekly", "Monthly", "Quarterly", "Half-yearly", "Yearly", "2 Yearly", "3 Yearly"
+			"",
+			"Daily",
+			"Weekly",
+			"Monthly",
+			"Quarterly",
+			"Half-yearly",
+			"Yearly",
+			"2 Yearly",
+			"3 Yearly",
 		]
 		start_date: DF.Date
 	# end: auto-generated types

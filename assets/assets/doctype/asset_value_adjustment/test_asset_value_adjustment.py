@@ -3,8 +3,11 @@
 import unittest
 
 import frappe
-from frappe.tests import IntegrationTestCase
+from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
+	make_purchase_receipt,
+)
 from frappe.utils import add_days, cstr, get_last_day, getdate, nowdate
+from frappe.tests import IntegrationTestCase
 
 from assets.assets.doctype.asset.asset import get_asset_value_after_depreciation
 from assets.assets.doctype.asset.depreciation import post_depreciation_entries
@@ -13,7 +16,6 @@ from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedu
 	get_asset_depr_schedule_doc,
 )
 from assets.assets.doctype.asset_repair.test_asset_repair import create_asset_repair
-from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 
 
 class TestAssetValueAdjustment(IntegrationTestCase):
@@ -24,7 +26,9 @@ class TestAssetValueAdjustment(IntegrationTestCase):
 		)
 
 	def test_current_asset_value(self):
-		pr = make_purchase_receipt(item_code="Macbook Pro", qty=1, rate=100000.0, location="Test Location")
+		pr = make_purchase_receipt(
+			item_code="Macbook Pro", qty=1, rate=100000.0, location="Test Location"
+		)
 
 		asset_name = frappe.db.get_value("Asset", {"purchase_receipt": pr.name}, "name")
 		asset_doc = frappe.get_doc("Asset", asset_name)
@@ -52,7 +56,9 @@ class TestAssetValueAdjustment(IntegrationTestCase):
 		self.assertEqual(current_value, 100000.0)
 
 	def test_asset_depreciation_value_adjustment(self):
-		pr = make_purchase_receipt(item_code="Macbook Pro", qty=1, rate=120000.0, location="Test Location")
+		pr = make_purchase_receipt(
+			item_code="Macbook Pro", qty=1, rate=120000.0, location="Test Location"
+		)
 
 		asset_name = frappe.db.get_value("Asset", {"purchase_receipt": pr.name}, "name")
 		asset_doc = frappe.get_doc("Asset", asset_name)
@@ -131,7 +137,9 @@ class TestAssetValueAdjustment(IntegrationTestCase):
 		self.assertEqual(schedules, expected_schedules)
 
 	def test_depreciation_after_cancelling_asset_repair(self):
-		pr = make_purchase_receipt(item_code="Macbook Pro", qty=1, rate=120000.0, location="Test Location")
+		pr = make_purchase_receipt(
+			item_code="Macbook Pro", qty=1, rate=120000.0, location="Test Location"
+		)
 
 		asset_name = frappe.db.get_value("Asset", {"purchase_receipt": pr.name}, "name")
 		asset_doc = frappe.get_doc("Asset", asset_name)

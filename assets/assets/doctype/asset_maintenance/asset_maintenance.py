@@ -18,7 +18,9 @@ class AssetMaintenance(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		from assets.assets.doctype.asset_maintenance_task.asset_maintenance_task import AssetMaintenanceTask
+		from assets.assets.doctype.asset_maintenance_task.asset_maintenance_task import (
+			AssetMaintenanceTask,
+		)
 
 		asset_category: DF.ReadOnly | None
 		asset_maintenance_tasks: DF.Table[AssetMaintenanceTask]
@@ -34,7 +36,11 @@ class AssetMaintenance(Document):
 	def validate(self):
 		for task in self.get("asset_maintenance_tasks"):
 			if task.end_date and (getdate(task.start_date) >= getdate(task.end_date)):
-				throw(_("Start date should be less than end date for task {0}").format(task.maintenance_task))
+				throw(
+					_("Start date should be less than end date for task {0}").format(
+						task.maintenance_task
+					)
+				)
 			if getdate(task.next_due_date) < getdate(nowdate()):
 				task.maintenance_status = "Overdue"
 			if not task.assign_to and self.docstatus == 0:
@@ -55,7 +61,10 @@ class AssetMaintenance(Document):
 		for task in self.get("asset_maintenance_tasks"):
 			tasks_names.append(task.name)
 			update_maintenance_log(
-				asset_maintenance=self.name, item_code=self.item_code, item_name=self.item_name, task=task
+				asset_maintenance=self.name,
+				item_code=self.item_code,
+				item_name=self.item_name,
+				task=task,
 			)
 		asset_maintenance_logs = frappe.get_all(
 			"Asset Maintenance Log",
@@ -64,11 +73,15 @@ class AssetMaintenance(Document):
 		)
 		if asset_maintenance_logs:
 			for asset_maintenance_log in asset_maintenance_logs:
-				maintenance_log = frappe.get_doc("Asset Maintenance Log", asset_maintenance_log.name)
+				maintenance_log = frappe.get_doc(
+					"Asset Maintenance Log", asset_maintenance_log.name
+				)
 				maintenance_log.db_set("maintenance_status", "Cancelled")
 
 
-def assign_tasks(asset_maintenance_name, assign_to_member, maintenance_task, next_due_date):
+def assign_tasks(
+	asset_maintenance_name, assign_to_member, maintenance_task, next_due_date
+):
 	team_member = frappe.db.get_value("User", assign_to_member, "email")
 	args = {
 		"doctype": "Asset Maintenance",
@@ -90,12 +103,18 @@ def assign_tasks(asset_maintenance_name, assign_to_member, maintenance_task, nex
 
 @frappe.whitelist()
 def calculate_next_due_date(
-	periodicity, start_date=None, end_date=None, last_completion_date=None, next_due_date=None
+	periodicity,
+	start_date=None,
+	end_date=None,
+	last_completion_date=None,
+	next_due_date=None,
 ):
 	if not start_date and not last_completion_date:
 		start_date = frappe.utils.now()
 
-	if last_completion_date and ((start_date and last_completion_date > start_date) or not start_date):
+	if last_completion_date and (
+		(start_date and last_completion_date > start_date) or not start_date
+	):
 		start_date = last_completion_date
 	if periodicity == "Daily":
 		next_due_date = add_days(start_date, 1)
