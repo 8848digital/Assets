@@ -8,7 +8,9 @@ from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedu
 def execute():
 	if frappe.db.has_column("Asset Finance Book", "total_number_of_booked_depreciations"):
 		assets = frappe.get_all(
-			"Asset", filters={"docstatus": 1}, fields=["name", "opening_number_of_booked_depreciations"]
+			"Asset",
+			filters={"docstatus": 1},
+			fields=["name", "opening_number_of_booked_depreciations"],
 		)
 
 		for asset in assets:
@@ -16,7 +18,9 @@ def execute():
 
 			for fb_row in asset_doc.get("finance_books"):
 				depr_schedule = get_depr_schedule(asset.name, "Active", fb_row.finance_book)
-				total_number_of_booked_depreciations = asset.opening_number_of_booked_depreciations or 0
+				total_number_of_booked_depreciations = (
+					asset.opening_number_of_booked_depreciations or 0
+				)
 
 				if depr_schedule:
 					for je in depr_schedule:

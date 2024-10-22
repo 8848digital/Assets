@@ -31,7 +31,7 @@ frappe.ui.form.on("Asset Repair", {
 
 		frm.set_query("purchase_invoice", "invoices", function () {
 			return {
-				query: "erpnext.assets.doctype.asset_repair.asset_repair.get_purchase_invoice",
+				query: "assets.assets.doctype.asset_repair.asset_repair.get_purchase_invoice",
 				filters: {
 					company: frm.doc.company,
 					docstatus: 1,
@@ -70,7 +70,7 @@ frappe.ui.form.on("Asset Repair", {
 			};
 		});
 	},
-	
+
 	refresh: function (frm) {
 		if (frm.doc.docstatus) {
 			frm.add_custom_button(__("View General Ledger"), function () {
@@ -176,6 +176,11 @@ frappe.ui.form.on("Asset Repair Consumed Item", {
 
 	consumed_quantity: function (frm, cdt, cdn) {
 		var row = locals[cdt][cdn];
-		frappe.model.set_value(cdt, cdn, "total_value", row.consumed_quantity * row.valuation_rate);
+		frappe.model.set_value(
+			cdt,
+			cdn,
+			"total_value",
+			row.consumed_quantity * row.valuation_rate
+		);
 	},
 });

@@ -1,7 +1,9 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+import erpnext
 import frappe
+from erpnext.accounts.utils import get_fiscal_year
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import (
@@ -17,9 +19,6 @@ from frappe.utils import (
 	is_last_day_of_the_month,
 	month_diff,
 )
-
-import erpnext
-from erpnext.accounts.utils import get_fiscal_year
 
 
 class AssetDepreciationSchedule(Document):
@@ -121,7 +120,9 @@ class AssetDepreciationSchedule(Document):
 		self.make_depr_schedule(asset_doc, fb_row)
 		self.set_accumulated_depreciation(asset_doc, fb_row)
 
-	def prepare_draft_asset_depr_schedule_data_from_asset_name_and_fb_name(self, asset_name, fb_name):
+	def prepare_draft_asset_depr_schedule_data_from_asset_name_and_fb_name(
+		self, asset_name, fb_name
+	):
 		asset_doc = frappe.get_doc("Asset", asset_name)
 
 		finance_book_filter = ["finance_book", "is", "not set"]
@@ -152,16 +153,21 @@ class AssetDepreciationSchedule(Document):
 		self.set_draft_asset_depr_schedule_details(asset_doc, row)
 
 		if self.should_prepare_depreciation_schedule(
-			have_asset_details_been_modified, not_manual_depr_or_have_manual_depr_details_been_modified
+			have_asset_details_been_modified,
+			not_manual_depr_or_have_manual_depr_details_been_modified,
 		):
-			self.make_depr_schedule(asset_doc, row, date_of_disposal, update_asset_finance_book_row)
+			self.make_depr_schedule(
+				asset_doc, row, date_of_disposal, update_asset_finance_book_row
+			)
 			self.set_accumulated_depreciation(asset_doc, row, date_of_disposal, date_of_return)
 
 	def have_asset_details_been_modified(self, asset_doc):
 		return (
 			asset_doc.gross_purchase_amount != self.gross_purchase_amount
-			or asset_doc.opening_accumulated_depreciation != self.opening_accumulated_depreciation
-			or asset_doc.opening_number_of_booked_depreciations != self.opening_number_of_booked_depreciations
+			or asset_doc.opening_accumulated_depreciation
+			!= self.opening_accumulated_depreciation
+			or asset_doc.opening_number_of_booked_depreciations
+			!= self.opening_number_of_booked_depreciations
 		)
 
 	def not_manual_depr_or_have_manual_depr_details_been_modified(self, row):
@@ -169,12 +175,15 @@ class AssetDepreciationSchedule(Document):
 			self.depreciation_method != "Manual"
 			or row.total_number_of_depreciations != self.total_number_of_depreciations
 			or row.frequency_of_depreciation != self.frequency_of_depreciation
-			or getdate(row.depreciation_start_date) != self.get("depreciation_schedule")[0].schedule_date
+			or getdate(row.depreciation_start_date)
+			!= self.get("depreciation_schedule")[0].schedule_date
 			or row.expected_value_after_useful_life != self.expected_value_after_useful_life
 		)
 
 	def should_prepare_depreciation_schedule(
-		self, have_asset_details_been_modified, not_manual_depr_or_have_manual_depr_details_been_modified
+		self,
+		have_asset_details_been_modified,
+		not_manual_depr_or_have_manual_depr_details_been_modified,
 	):
 		if not self.get("depreciation_schedule"):
 			return True
@@ -184,7 +193,10 @@ class AssetDepreciationSchedule(Document):
 		if self.docstatus != 0 and not old_asset_depr_schedule_doc:
 			return True
 
-		if have_asset_details_been_modified or not_manual_depr_or_have_manual_depr_details_been_modified:
+		if (
+			have_asset_details_been_modified
+			or not_manual_depr_or_have_manual_depr_details_been_modified
+		):
 			return True
 
 		return False
@@ -193,8 +205,12 @@ class AssetDepreciationSchedule(Document):
 		self.asset = asset_doc.name
 		self.finance_book = row.finance_book
 		self.finance_book_id = row.idx
-		self.opening_accumulated_depreciation = asset_doc.opening_accumulated_depreciation or 0
-		self.opening_number_of_booked_depreciations = asset_doc.opening_number_of_booked_depreciations or 0
+		self.opening_accumulated_depreciation = (
+			asset_doc.opening_accumulated_depreciation or 0
+		)
+		self.opening_number_of_booked_depreciations = (
+			asset_doc.opening_number_of_booked_depreciations or 0
+		)
 		self.gross_purchase_amount = asset_doc.gross_purchase_amount
 		self.depreciation_method = row.depreciation_method
 		self.total_number_of_depreciations = row.total_number_of_depreciations
@@ -222,7 +238,12 @@ class AssetDepreciationSchedule(Document):
 		start = self.clear_depr_schedule()
 
 		self._make_depr_schedule(
-			asset_doc, row, start, date_of_disposal, update_asset_finance_book_row, value_after_depreciation
+			asset_doc,
+			row,
+			start,
+			date_of_disposal,
+			update_asset_finance_book_row,
+			value_after_depreciation,
 		)
 
 	def clear_depr_schedule(self):
@@ -256,7 +277,9 @@ class AssetDepreciationSchedule(Document):
 		asset_doc.validate_asset_finance_books(row)
 
 		if not value_after_depreciation:
-			value_after_depreciation = _get_value_after_depreciation_for_making_schedule(asset_doc, row)
+			value_after_depreciation = _get_value_after_depreciation_for_making_schedule(
+				asset_doc, row
+			)
 		row.value_after_depreciation = value_after_depreciation
 
 		if update_asset_finance_book_row:
@@ -275,7 +298,9 @@ class AssetDepreciationSchedule(Document):
 			row.depreciation_method in ("Written Down Value", "Double Declining Balance")
 			and cint(row.frequency_of_depreciation) != 12
 		):
-			has_wdv_or_dd_non_yearly_pro_rata = _check_is_pro_rata(asset_doc, row, wdv_or_dd_non_yearly=True)
+			has_wdv_or_dd_non_yearly_pro_rata = _check_is_pro_rata(
+				asset_doc, row, wdv_or_dd_non_yearly=True
+			)
 
 		skip_row = False
 		should_get_last_day = is_last_day_of_the_month(row.depreciation_start_date)
@@ -301,7 +326,9 @@ class AssetDepreciationSchedule(Document):
 				yearly_opening_wdv = value_after_depreciation
 
 			if n > 0 and len(self.get("depreciation_schedule")) > n - 1:
-				prev_depreciation_amount = self.get("depreciation_schedule")[n - 1].depreciation_amount
+				prev_depreciation_amount = self.get("depreciation_schedule")[
+					n - 1
+				].depreciation_amount
 			else:
 				prev_depreciation_amount = 0
 			depreciation_amount, prev_per_day_depr = get_depreciation_amount(
@@ -376,7 +403,11 @@ class AssetDepreciationSchedule(Document):
 							frappe.bold(row.frequency_of_depreciation),
 						)
 					)
-			elif n == 0 and has_wdv_or_dd_non_yearly_pro_rata and self.opening_accumulated_depreciation:
+			elif (
+				n == 0
+				and has_wdv_or_dd_non_yearly_pro_rata
+				and self.opening_accumulated_depreciation
+			):
 				if not is_first_day_of_the_month(getdate(asset_doc.available_for_use_date)):
 					from_date = get_last_day(
 						add_months(
@@ -439,7 +470,9 @@ class AssetDepreciationSchedule(Document):
 			if (
 				n == cint(final_number_of_depreciations) - 1
 				and flt(value_after_depreciation) != flt(row.expected_value_after_useful_life)
-			) or flt(value_after_depreciation) < flt(row.expected_value_after_useful_life):
+			) or flt(value_after_depreciation) < flt(
+				row.expected_value_after_useful_life
+			):
 				depreciation_amount += flt(value_after_depreciation) - flt(
 					row.expected_value_after_useful_life
 				)
@@ -472,7 +505,8 @@ class AssetDepreciationSchedule(Document):
 		if self.shift_based:
 			shift = (
 				self.schedules_before_clearing[schedule_idx].shift
-				if self.schedules_before_clearing and len(self.schedules_before_clearing) > schedule_idx
+				if self.schedules_before_clearing
+				and len(self.schedules_before_clearing) > schedule_idx
 				else frappe.get_cached_value("Asset Shift Factor", {"default": 1}, "shift_name")
 			)
 		else:
@@ -498,7 +532,8 @@ class AssetDepreciationSchedule(Document):
 		straight_line_idx = [
 			d.idx
 			for d in self.get("depreciation_schedule")
-			if self.depreciation_method == "Straight Line" or self.depreciation_method == "Manual"
+			if self.depreciation_method == "Straight Line"
+			or self.depreciation_method == "Manual"
 		]
 
 		accumulated_depreciation = None
@@ -564,16 +599,23 @@ def _check_is_pro_rata(asset_doc, row, wdv_or_dd_non_yearly=False):
 		prev_depreciation_start_date = get_last_day(
 			add_months(
 				row.depreciation_start_date,
-				(row.frequency_of_depreciation * -1) * asset_doc.opening_number_of_booked_depreciations,
+				(row.frequency_of_depreciation * -1)
+				* asset_doc.opening_number_of_booked_depreciations,
 			)
 		)
 		from_date = asset_doc.available_for_use_date
 		days = date_diff(prev_depreciation_start_date, from_date) + 1
-		total_days = get_total_days(prev_depreciation_start_date, row.frequency_of_depreciation)
+		total_days = get_total_days(
+			prev_depreciation_start_date, row.frequency_of_depreciation
+		)
 	else:
-		from_date = _get_modified_available_for_use_date(asset_doc, row, wdv_or_dd_non_yearly=False)
+		from_date = _get_modified_available_for_use_date(
+			asset_doc, row, wdv_or_dd_non_yearly=False
+		)
 		days = date_diff(row.depreciation_start_date, from_date) + 1
-		total_days = get_total_days(row.depreciation_start_date, row.frequency_of_depreciation)
+		total_days = get_total_days(
+			row.depreciation_start_date, row.frequency_of_depreciation
+		)
 	if days <= 0:
 		frappe.throw(
 			_(
@@ -600,7 +642,8 @@ def _get_modified_available_for_use_date(asset_doc, row, wdv_or_dd_non_yearly=Fa
 	if asset_doc.opening_number_of_booked_depreciations > 0:
 		from_date = add_months(
 			asset_doc.available_for_use_date,
-			(asset_doc.opening_number_of_booked_depreciations * row.frequency_of_depreciation) - 1,
+			(asset_doc.opening_number_of_booked_depreciations * row.frequency_of_depreciation)
+			- 1,
 		)
 		if is_last_day_of_the_month(row.depreciation_start_date):
 			return add_days(get_last_day(from_date), 1)
@@ -625,7 +668,9 @@ def _get_pro_rata_amt(
 	if has_wdv_or_dd_non_yearly_pro_rata:
 		total_days = get_total_days(original_schedule_date or to_date, 12)
 	else:
-		total_days = get_total_days(original_schedule_date or to_date, row.frequency_of_depreciation)
+		total_days = get_total_days(
+			original_schedule_date or to_date, row.frequency_of_depreciation
+		)
 	return (depreciation_amount * flt(days)) / flt(total_days), days, months
 
 
@@ -649,9 +694,12 @@ def get_depreciation_amount(
 	prev_per_day_depr=0,
 ):
 	if fb_row.depreciation_method in ("Straight Line", "Manual"):
-		return get_straight_line_or_manual_depr_amount(
-			asset_depr_schedule, asset, fb_row, schedule_idx, number_of_pending_depreciations
-		), None
+		return (
+			get_straight_line_or_manual_depr_amount(
+				asset_depr_schedule, asset, fb_row, schedule_idx, number_of_pending_depreciations
+			),
+			None,
+		)
 	else:
 		return get_wdv_or_dd_depr_amount(
 			asset,
@@ -674,18 +722,20 @@ def get_straight_line_or_manual_depr_amount(
 
 	# if the Depreciation Schedule is being modified after Asset Repair due to increase in asset life and value
 	if asset.flags.increase_in_asset_life:
-		return (flt(row.value_after_depreciation) - flt(row.expected_value_after_useful_life)) / (
-			date_diff(asset.to_date, asset.available_for_use_date) / 365
-		)
+		return (
+			flt(row.value_after_depreciation) - flt(row.expected_value_after_useful_life)
+		) / (date_diff(asset.to_date, asset.available_for_use_date) / 365)
 	# if the Depreciation Schedule is being modified after Asset Repair due to increase in asset value
 	elif asset.flags.increase_in_asset_value_due_to_repair:
-		return (flt(row.value_after_depreciation) - flt(row.expected_value_after_useful_life)) / flt(
-			number_of_pending_depreciations
-		)
+		return (
+			flt(row.value_after_depreciation) - flt(row.expected_value_after_useful_life)
+		) / flt(number_of_pending_depreciations)
 	# if the Depreciation Schedule is being modified after Asset Value Adjustment due to decrease in asset value
 	elif asset.flags.decrease_in_asset_value_due_to_value_adjustment:
 		if row.daily_prorata_based:
-			amount = flt(row.value_after_depreciation) - flt(row.expected_value_after_useful_life)
+			amount = flt(row.value_after_depreciation) - flt(
+				row.expected_value_after_useful_life
+			)
 
 			return get_daily_prorata_based_straight_line_depr(
 				asset,
@@ -724,7 +774,9 @@ def get_daily_prorata_based_straight_line_depr(
 
 
 def get_daily_depr_amount(asset, row, schedule_idx, amount):
-	if cint(frappe.db.get_single_value("Accounts Settings", "calculate_depr_using_total_days")):
+	if cint(
+		frappe.db.get_single_value("Accounts Settings", "calculate_depr_using_total_days")
+	):
 		total_days = (
 			date_diff(
 				get_last_day(
@@ -768,7 +820,10 @@ def get_daily_depr_amount(asset, row, schedule_idx, amount):
 		every_year_depr = amount / total_years
 
 		depr_period_start_date = add_days(
-			get_last_day(add_months(row.depreciation_start_date, row.frequency_of_depreciation * -1)), 1
+			get_last_day(
+				add_months(row.depreciation_start_date, row.frequency_of_depreciation * -1)
+			),
+			1,
 		)
 
 		year_start_date = add_years(
@@ -785,7 +840,9 @@ def get_shift_depr_amount(asset_depr_schedule, asset, row, schedule_idx):
 			flt(asset.gross_purchase_amount)
 			- flt(asset.opening_accumulated_depreciation)
 			- flt(row.expected_value_after_useful_life)
-		) / flt(row.total_number_of_depreciations - asset.opening_number_of_booked_depreciations)
+		) / flt(
+			row.total_number_of_depreciations - asset.opening_number_of_booked_depreciations
+		)
 
 	asset_shift_factors_map = get_asset_shift_factors_map()
 	shift = (
@@ -811,7 +868,9 @@ def get_shift_depr_amount(asset_depr_schedule, asset, row, schedule_idx):
 
 
 def get_asset_shift_factors_map():
-	return dict(frappe.db.get_all("Asset Shift Factor", ["shift_name", "shift_factor"], as_list=True))
+	return dict(
+		frappe.db.get_all("Asset Shift Factor", ["shift_name", "shift_factor"], as_list=True)
+	)
 
 
 @erpnext.allow_regional
@@ -849,15 +908,18 @@ def get_default_wdv_or_dd_depr_amount(
 	prev_per_day_depr,
 ):
 	if not fb_row.daily_prorata_based or cint(fb_row.frequency_of_depreciation) == 12:
-		return _get_default_wdv_or_dd_depr_amount(
-			asset,
-			fb_row,
-			depreciable_value,
-			schedule_idx,
-			prev_depreciation_amount,
-			has_wdv_or_dd_non_yearly_pro_rata,
-			asset_depr_schedule,
-		), None
+		return (
+			_get_default_wdv_or_dd_depr_amount(
+				asset,
+				fb_row,
+				depreciable_value,
+				schedule_idx,
+				prev_depreciation_amount,
+				has_wdv_or_dd_non_yearly_pro_rata,
+				asset_depr_schedule,
+			),
+			None,
+		)
 	else:
 		return _get_daily_prorata_based_default_wdv_or_dd_depr_amount(
 			asset,
@@ -915,19 +977,27 @@ def _get_daily_prorata_based_default_wdv_or_dd_depr_amount(
 	asset_depr_schedule,
 	prev_per_day_depr,
 ):
-	if has_wdv_or_dd_non_yearly_pro_rata:  # If applicable days for ther first month is less than full month
+	if (
+		has_wdv_or_dd_non_yearly_pro_rata
+	):  # If applicable days for ther first month is less than full month
 		if schedule_idx == 0:
 			return flt(depreciable_value) * (flt(fb_row.rate_of_depreciation) / 100), None
 
-		elif schedule_idx % (12 / cint(fb_row.frequency_of_depreciation)) == 1:  # Year changes
+		elif (
+			schedule_idx % (12 / cint(fb_row.frequency_of_depreciation)) == 1
+		):  # Year changes
 			return get_monthly_depr_amount(fb_row, schedule_idx, depreciable_value)
 		else:
-			return get_monthly_depr_amount_based_on_prev_per_day_depr(fb_row, schedule_idx, prev_per_day_depr)
+			return get_monthly_depr_amount_based_on_prev_per_day_depr(
+				fb_row, schedule_idx, prev_per_day_depr
+			)
 	else:
 		if schedule_idx % (12 / cint(fb_row.frequency_of_depreciation)) == 0:  # year changes
 			return get_monthly_depr_amount(fb_row, schedule_idx, depreciable_value)
 		else:
-			return get_monthly_depr_amount_based_on_prev_per_day_depr(fb_row, schedule_idx, prev_per_day_depr)
+			return get_monthly_depr_amount_based_on_prev_per_day_depr(
+				fb_row, schedule_idx, prev_per_day_depr
+			)
 
 
 def get_monthly_depr_amount(fb_row, schedule_idx, depreciable_value):
@@ -943,7 +1013,9 @@ def get_monthly_depr_amount(fb_row, schedule_idx, depreciable_value):
 	return (per_day_depr * days_in_month), per_day_depr
 
 
-def get_monthly_depr_amount_based_on_prev_per_day_depr(fb_row, schedule_idx, prev_per_day_depr):
+def get_monthly_depr_amount_based_on_prev_per_day_depr(
+	fb_row, schedule_idx, prev_per_day_depr
+):
 	""" "
 	Returns monthly depreciation amount based on prev per day depr
 	Calculate per day depr only for the first month
@@ -961,12 +1033,16 @@ def get_per_day_depr(
 ):
 	to_date = add_days(add_years(from_date, 1), -1)
 	total_days = date_diff(to_date, from_date) + 1
-	per_day_depr = (flt(depreciable_value) * (flt(fb_row.rate_of_depreciation) / 100)) / total_days
+	per_day_depr = (
+		flt(depreciable_value) * (flt(fb_row.rate_of_depreciation) / 100)
+	) / total_days
 	return per_day_depr
 
 
 def _get_total_days(depreciation_start_date, schedule_idx, frequency_of_depreciation):
-	from_date = add_months(depreciation_start_date, (schedule_idx - 1) * frequency_of_depreciation)
+	from_date = add_months(
+		depreciation_start_date, (schedule_idx - 1) * frequency_of_depreciation
+	)
 	to_date = add_months(from_date, frequency_of_depreciation)
 	if is_last_day_of_the_month(depreciation_start_date):
 		to_date = get_last_day(to_date)
@@ -1011,7 +1087,9 @@ def make_draft_asset_depr_schedule(asset_doc, row):
 
 def update_draft_asset_depr_schedules(asset_doc):
 	for row in asset_doc.get("finance_books"):
-		asset_depr_schedule_doc = get_asset_depr_schedule_doc(asset_doc.name, "Draft", row.finance_book)
+		asset_depr_schedule_doc = get_asset_depr_schedule_doc(
+			asset_doc.name, "Draft", row.finance_book
+		)
 
 		if not asset_depr_schedule_doc:
 			continue
@@ -1023,7 +1101,9 @@ def update_draft_asset_depr_schedules(asset_doc):
 
 def convert_draft_asset_depr_schedules_into_active(asset_doc):
 	for row in asset_doc.get("finance_books"):
-		asset_depr_schedule_doc = get_asset_depr_schedule_doc(asset_doc.name, "Draft", row.finance_book)
+		asset_depr_schedule_doc = get_asset_depr_schedule_doc(
+			asset_doc.name, "Draft", row.finance_book
+		)
 
 		if not asset_depr_schedule_doc:
 			continue
@@ -1033,7 +1113,9 @@ def convert_draft_asset_depr_schedules_into_active(asset_doc):
 
 def cancel_asset_depr_schedules(asset_doc):
 	for row in asset_doc.get("finance_books"):
-		asset_depr_schedule_doc = get_asset_depr_schedule_doc(asset_doc.name, "Active", row.finance_book)
+		asset_depr_schedule_doc = get_asset_depr_schedule_doc(
+			asset_doc.name, "Active", row.finance_book
+		)
 
 		if not asset_depr_schedule_doc:
 			continue
@@ -1057,18 +1139,25 @@ def make_new_active_asset_depr_schedules_and_cancel_current_ones(
 
 		if not current_asset_depr_schedule_doc:
 			frappe.throw(
-				_("Asset Depreciation Schedule not found for Asset {0} and Finance Book {1}").format(
-					asset_doc.name, row.finance_book
-				)
+				_(
+					"Asset Depreciation Schedule not found for Asset {0} and Finance Book {1}"
+				).format(asset_doc.name, row.finance_book)
 			)
 
 		new_asset_depr_schedule_doc = frappe.copy_doc(current_asset_depr_schedule_doc)
-		if asset_doc.flags.decrease_in_asset_value_due_to_value_adjustment and not value_after_depreciation:
+		if (
+			asset_doc.flags.decrease_in_asset_value_due_to_value_adjustment
+			and not value_after_depreciation
+		):
 			value_after_depreciation = row.value_after_depreciation + difference_amount
 
-		if asset_doc.flags.increase_in_asset_value_due_to_repair and row.depreciation_method in (
-			"Written Down Value",
-			"Double Declining Balance",
+		if (
+			asset_doc.flags.increase_in_asset_value_due_to_repair
+			and row.depreciation_method
+			in (
+				"Written Down Value",
+				"Double Declining Balance",
+			)
 		):
 			new_rate_of_depreciation = flt(
 				asset_doc.get_depreciation_rate(row), row.precision("rate_of_depreciation")
@@ -1099,7 +1188,9 @@ def get_temp_asset_depr_schedule_doc(
 	update_asset_finance_book_row=False,
 	new_depr_schedule=None,
 ):
-	current_asset_depr_schedule_doc = get_asset_depr_schedule_doc(asset_doc.name, "Active", row.finance_book)
+	current_asset_depr_schedule_doc = get_asset_depr_schedule_doc(
+		asset_doc.name, "Active", row.finance_book
+	)
 
 	if not current_asset_depr_schedule_doc:
 		frappe.throw(
@@ -1153,7 +1244,9 @@ def get_asset_depr_schedule_doc(asset_name, status, finance_book=None):
 	if not asset_depr_schedule:
 		return
 
-	asset_depr_schedule_doc = frappe.get_doc("Asset Depreciation Schedule", asset_depr_schedule[0].name)
+	asset_depr_schedule_doc = frappe.get_doc(
+		"Asset Depreciation Schedule", asset_depr_schedule[0].name
+	)
 
 	return asset_depr_schedule_doc
 

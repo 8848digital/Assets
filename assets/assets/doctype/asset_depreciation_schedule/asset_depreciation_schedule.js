@@ -11,7 +11,10 @@ frappe.ui.form.on("Asset Depreciation Schedule", {
 		var is_manual_hence_editable = frm.doc.depreciation_method === "Manual" ? true : false;
 		var is_shift_hence_editable = frm.doc.shift_based ? true : false;
 
-		frm.toggle_enable("depreciation_schedule", is_manual_hence_editable || is_shift_hence_editable);
+		frm.toggle_enable(
+			"depreciation_schedule",
+			is_manual_hence_editable || is_shift_hence_editable
+		);
 		frm.fields_dict["depreciation_schedule"].grid.toggle_enable(
 			"schedule_date",
 			is_manual_hence_editable
@@ -20,7 +23,10 @@ frappe.ui.form.on("Asset Depreciation Schedule", {
 			"depreciation_amount",
 			is_manual_hence_editable
 		);
-		frm.fields_dict["depreciation_schedule"].grid.toggle_enable("shift", is_shift_hence_editable);
+		frm.fields_dict["depreciation_schedule"].grid.toggle_enable(
+			"shift",
+			is_shift_hence_editable
+		);
 	},
 });
 

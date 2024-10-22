@@ -84,7 +84,9 @@ class Location(NestedSet):
 
 		for ancestor in self.get_ancestors():
 			ancestor_doc = frappe.get_doc("Location", ancestor)
-			child_features, ancestor_features = ancestor_doc.feature_seperator(child_feature=self.name)
+			child_features, ancestor_features = ancestor_doc.feature_seperator(
+				child_feature=self.name
+			)
 
 			ancestor_features = list(set(ancestor_features))
 			child_features = set(child_features)
@@ -110,7 +112,9 @@ class Location(NestedSet):
 	def remove_ancestor_location_features(self):
 		for ancestor in self.get_ancestors():
 			ancestor_doc = frappe.get_doc("Location", ancestor)
-			child_features, ancestor_features = ancestor_doc.feature_seperator(child_feature=self.name)
+			child_features, ancestor_features = ancestor_doc.feature_seperator(
+				child_feature=self.name
+			)
 
 			for index, feature in enumerate(ancestor_features):
 				ancestor_features[index] = json.loads(feature)
@@ -125,7 +129,9 @@ class Location(NestedSet):
 		]
 
 		for index, feature in enumerate(filter_features):
-			feature["properties"].update({"child_feature": True, "feature_of": self.location_name})
+			feature["properties"].update(
+				{"child_feature": True, "feature_of": self.location_name}
+			)
 			filter_features[index] = json.dumps(filter_features[index])
 
 		return filter_features
@@ -163,7 +169,9 @@ def compute_area(features):
 
 		if feature_type == "Polygon":
 			layer_area += _polygon_area(coords=feature.get("geometry").get("coordinates"))
-		elif feature_type == "Point" and feature.get("properties").get("point_type") == "circle":
+		elif (
+			feature_type == "Point" and feature.get("properties").get("point_type") == "circle"
+		):
 			layer_area += math.pi * math.pow(feature.get("properties").get("radius"), 2)
 
 	return layer_area

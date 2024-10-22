@@ -32,7 +32,9 @@ def execute():
 				ds for ds in depreciation_schedules if ds["finance_book_id"] == str(fb_row.idx)
 			]
 
-			update_depreciation_schedules(depreciation_schedules_of_fb_row, asset_depr_schedule_doc.name)
+			update_depreciation_schedules(
+				depreciation_schedules_of_fb_row, asset_depr_schedule_doc.name
+			)
 
 
 def get_details_of_draft_or_submitted_depreciable_assets():

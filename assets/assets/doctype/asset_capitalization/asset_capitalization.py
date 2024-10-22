@@ -3,23 +3,8 @@
 
 import json
 
-import frappe
-
-# import erpnext
-from frappe import _
-from frappe.utils import cint, flt, get_link_to_form
-
 import erpnext
-from assets.assets.doctype.asset.asset import get_asset_value_after_depreciation
-from assets.assets.doctype.asset.depreciation import (
-	depreciate_asset,
-	get_gl_entries_on_asset_disposal,
-	get_value_after_depreciation_on_disposal_date,
-	reset_depreciation_schedule,
-	reverse_depreciation_entry_made_after_disposal,
-)
-from assets.assets.doctype.asset_activity.asset_activity import add_asset_activity
-from assets.assets.doctype.asset_category.asset_category import get_asset_category_account
+import frappe
 from erpnext.controllers.stock_controller import StockController
 from erpnext.setup.doctype.brand.brand import get_brand_defaults
 from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
@@ -32,6 +17,23 @@ from erpnext.stock.get_item_details import (
 )
 from erpnext.stock.stock_ledger import get_previous_sle
 from erpnext.stock.utils import get_incoming_rate
+
+# import erpnext
+from frappe import _
+from frappe.utils import cint, flt, get_link_to_form
+
+from assets.assets.doctype.asset.asset import get_asset_value_after_depreciation
+from assets.assets.doctype.asset.depreciation import (
+	depreciate_asset,
+	get_gl_entries_on_asset_disposal,
+	get_value_after_depreciation_on_disposal_date,
+	reset_depreciation_schedule,
+	reverse_depreciation_entry_made_after_disposal,
+)
+from assets.assets.doctype.asset_activity.asset_activity import add_asset_activity
+from assets.assets.doctype.asset_category.asset_category import (
+	get_asset_category_account,
+)
 
 force_fields = [
 	"target_item_name",
@@ -70,7 +72,9 @@ class AssetCapitalization(StockController):
 		amended_from: DF.Link | None
 		asset_items: DF.Table[AssetCapitalizationAssetItem]
 		asset_items_total: DF.Currency
-		capitalization_method: DF.Literal["", "Create a new composite asset", "Choose a WIP composite asset"]
+		capitalization_method: DF.Literal[
+			"", "Create a new composite asset", "Choose a WIP composite asset"
+		]
 		company: DF.Link
 		cost_center: DF.Link | None
 		entry_type: DF.Literal["Capitalization", "Decapitalization"]
@@ -192,11 +196,15 @@ class AssetCapitalization(StockController):
 
 		if not target_item.is_fixed_asset and not target_item.is_stock_item:
 			frappe.throw(
-				_("Target Item {0} is neither a Fixed Asset nor a Stock Item").format(target_item.name)
+				_("Target Item {0} is neither a Fixed Asset nor a Stock Item").format(
+					target_item.name
+				)
 			)
 
 		if self.entry_type == "Capitalization" and not target_item.is_fixed_asset:
-			frappe.throw(_("Target Item {0} must be a Fixed Asset item").format(target_item.name))
+			frappe.throw(
+				_("Target Item {0} must be a Fixed Asset item").format(target_item.name)
+			)
 		elif self.entry_type == "Decapitalization" and not target_item.is_stock_item:
 			frappe.throw(_("Target Item {0} must be a Stock Item").format(target_item.name))
 
@@ -222,7 +230,9 @@ class AssetCapitalization(StockController):
 			target_asset = self.get_asset_for_validation(self.target_asset)
 
 			if not target_asset.is_composite_asset:
-				frappe.throw(_("Target Asset {0} needs to be composite asset").format(target_asset.name))
+				frappe.throw(
+					_("Target Asset {0} needs to be composite asset").format(target_asset.name)
+				)
 
 			if target_asset.item_code != self.target_item_code:
 				frappe.throw(
@@ -254,7 +264,9 @@ class AssetCapitalization(StockController):
 				item = frappe.get_cached_doc("Item", d.item_code)
 
 				if not item.is_stock_item:
-					frappe.throw(_("Row #{0}: Item {1} is not a stock item").format(d.idx, d.item_code))
+					frappe.throw(
+						_("Row #{0}: Item {1} is not a stock item").format(d.idx, d.item_code)
+					)
 
 				if flt(d.stock_qty) <= 0:
 					frappe.throw(_("Row #{0}: Qty must be a positive number").format(d.idx))
@@ -281,7 +293,9 @@ class AssetCapitalization(StockController):
 					)
 
 				if asset.docstatus == 0:
-					frappe.throw(_("Row #{0}: Consumed Asset {1} cannot be Draft").format(d.idx, asset.name))
+					frappe.throw(
+						_("Row #{0}: Consumed Asset {1} cannot be Draft").format(d.idx, asset.name)
+					)
 				elif asset.docstatus == 2:
 					frappe.throw(
 						_("Row #{0}: Consumed Asset {1} cannot be cancelled").format(d.idx, asset.name)
@@ -300,7 +314,9 @@ class AssetCapitalization(StockController):
 				item = frappe.get_cached_doc("Item", d.item_code)
 
 				if item.is_stock_item or item.is_fixed_asset:
-					frappe.throw(_("Row #{0}: Item {1} is not a service item").format(d.idx, d.item_code))
+					frappe.throw(
+						_("Row #{0}: Item {1} is not a service item").format(d.idx, d.item_code)
+					)
 
 				if flt(d.qty) <= 0:
 					frappe.throw(_("Row #{0}: Qty must be a positive number").format(d.idx))
@@ -317,7 +333,9 @@ class AssetCapitalization(StockController):
 		if not self.target_is_fixed_asset and not self.get("asset_items"):
 			frappe.throw(_("Consumed Asset Items is mandatory for Decapitalization"))
 
-		if not (self.get("stock_items") or self.get("asset_items") or self.get("service_items")):
+		if not (
+			self.get("stock_items") or self.get("asset_items") or self.get("service_items")
+		):
 			frappe.throw(
 				_(
 					"Consumed Stock Items, Consumed Asset Items or Consumed Service Items is mandatory for Capitalization"
@@ -391,11 +409,19 @@ class AssetCapitalization(StockController):
 			d.amount = flt(flt(d.qty) * flt(d.rate), d.precision("amount"))
 			self.service_items_total += d.amount
 
-		self.stock_items_total = flt(self.stock_items_total, self.precision("stock_items_total"))
-		self.asset_items_total = flt(self.asset_items_total, self.precision("asset_items_total"))
-		self.service_items_total = flt(self.service_items_total, self.precision("service_items_total"))
+		self.stock_items_total = flt(
+			self.stock_items_total, self.precision("stock_items_total")
+		)
+		self.asset_items_total = flt(
+			self.asset_items_total, self.precision("asset_items_total")
+		)
+		self.service_items_total = flt(
+			self.service_items_total, self.precision("service_items_total")
+		)
 
-		self.total_value = self.stock_items_total + self.asset_items_total + self.service_items_total
+		self.total_value = (
+			self.stock_items_total + self.asset_items_total + self.service_items_total
+		)
 		self.total_value = flt(self.total_value, self.precision("total_value"))
 
 		self.target_qty = flt(self.target_qty, self.precision("target_qty"))
@@ -407,7 +433,10 @@ class AssetCapitalization(StockController):
 		for d in self.stock_items:
 			sle = self.get_sl_entries(
 				d,
-				{"actual_qty": -flt(d.stock_qty), "serial_and_batch_bundle": d.serial_and_batch_bundle},
+				{
+					"actual_qty": -flt(d.stock_qty),
+					"serial_and_batch_bundle": d.serial_and_batch_bundle,
+				},
 			)
 			sl_entries.append(sle)
 
@@ -442,7 +471,9 @@ class AssetCapitalization(StockController):
 		elif self.docstatus == 2:
 			make_reverse_gl_entries(voucher_type=self.doctype, voucher_no=self.name)
 
-	def get_gl_entries(self, warehouse_account=None, default_expense_account=None, default_cost_center=None):
+	def get_gl_entries(
+		self, warehouse_account=None, default_expense_account=None, default_cost_center=None
+	):
 		# Stock GL Entries
 		gl_entries = []
 
@@ -456,9 +487,15 @@ class AssetCapitalization(StockController):
 		target_account = self.get_target_account()
 		target_against = set()
 
-		self.get_gl_entries_for_consumed_stock_items(gl_entries, target_account, target_against, precision)
-		self.get_gl_entries_for_consumed_asset_items(gl_entries, target_account, target_against, precision)
-		self.get_gl_entries_for_consumed_service_items(gl_entries, target_account, target_against, precision)
+		self.get_gl_entries_for_consumed_stock_items(
+			gl_entries, target_account, target_against, precision
+		)
+		self.get_gl_entries_for_consumed_asset_items(
+			gl_entries, target_account, target_against, precision
+		)
+		self.get_gl_entries_for_consumed_service_items(
+			gl_entries, target_account, target_against, precision
+		)
 
 		self.get_gl_entries_for_target_item(gl_entries, target_against, precision)
 
@@ -470,7 +507,9 @@ class AssetCapitalization(StockController):
 		else:
 			return self.warehouse_account[self.target_warehouse]["account"]
 
-	def get_gl_entries_for_consumed_stock_items(self, gl_entries, target_account, target_against, precision):
+	def get_gl_entries_for_consumed_stock_items(
+		self, gl_entries, target_account, target_against, precision
+	):
 		# Consumed Stock Items
 		for item_row in self.stock_items:
 			sle_list = self.sle_map.get(item_row.name)
@@ -499,7 +538,9 @@ class AssetCapitalization(StockController):
 						)
 					)
 
-	def get_gl_entries_for_consumed_asset_items(self, gl_entries, target_account, target_against, precision):
+	def get_gl_entries_for_consumed_asset_items(
+		self, gl_entries, target_account, target_against, precision
+	):
 		# Consumed Assets
 		for item in self.asset_items:
 			asset = frappe.get_doc("Asset", item.asset)
@@ -627,9 +668,9 @@ class AssetCapitalization(StockController):
 		)
 
 		frappe.msgprint(
-			_("Asset {0} has been created. Please set the depreciation details if any and submit it.").format(
-				get_link_to_form("Asset", asset_doc.name)
-			)
+			_(
+				"Asset {0} has been created. Please set the depreciation details if any and submit it."
+			).format(get_link_to_form("Asset", asset_doc.name))
 		)
 
 	def update_target_asset(self):
@@ -648,9 +689,9 @@ class AssetCapitalization(StockController):
 		asset_doc.save()
 
 		frappe.msgprint(
-			_("Asset {0} has been updated. Please set the depreciation details if any and submit it.").format(
-				get_link_to_form("Asset", asset_doc.name)
-			)
+			_(
+				"Asset {0} has been updated. Please set the depreciation details if any and submit it."
+			).format(get_link_to_form("Asset", asset_doc.name))
 		)
 
 	def restore_consumed_asset_items(self):
@@ -664,7 +705,8 @@ class AssetCapitalization(StockController):
 				notes = _(
 					"This schedule was created when Asset {0} was restored on Asset Capitalization {1}'s cancellation."
 				).format(
-					get_link_to_form(asset.doctype, asset.name), get_link_to_form(self.doctype, self.name)
+					get_link_to_form(asset.doctype, asset.name),
+					get_link_to_form(self.doctype, self.name),
 				)
 				reset_depreciation_schedule(asset, self.posting_date, notes)
 
@@ -744,7 +786,9 @@ def get_target_asset_details(asset=None, company=None):
 	# Get Asset Details
 	asset_details = frappe._dict()
 	if asset:
-		asset_details = frappe.db.get_value("Asset", asset, ["asset_name", "item_code"], as_dict=1)
+		asset_details = frappe.db.get_value(
+			"Asset", asset, ["asset_name", "item_code"], as_dict=1
+		)
 		if not asset_details:
 			frappe.throw(_("Asset {0} does not exist").format(asset))
 
@@ -783,13 +827,17 @@ def get_consumed_stock_item_details(args):
 	out.stock_qty = flt(args.stock_qty) or 1
 	out.stock_uom = item.stock_uom
 
-	out.warehouse = get_item_warehouse(item, args, overwrite_warehouse=True) if item else None
+	out.warehouse = (
+		get_item_warehouse(item, args, overwrite_warehouse=True) if item else None
+	)
 
 	# Cost Center
 	item_defaults = get_item_defaults(item.name, args.company)
 	item_group_defaults = get_item_group_defaults(item.name, args.company)
 	brand_defaults = get_brand_defaults(item.name, args.company)
-	out.cost_center = get_default_cost_center(args, item_defaults, item_group_defaults, brand_defaults)
+	out.cost_center = get_default_cost_center(
+		args, item_defaults, item_group_defaults, brand_defaults
+	)
 
 	if args.item_code and out.warehouse:
 		incoming_rate_args = frappe._dict(
@@ -875,7 +923,9 @@ def get_consumed_asset_details(args):
 		item_defaults = get_item_defaults(item.name, args.company)
 		item_group_defaults = get_item_group_defaults(item.name, args.company)
 		brand_defaults = get_brand_defaults(item.name, args.company)
-		out.cost_center = get_default_cost_center(args, item_defaults, item_group_defaults, brand_defaults)
+		out.cost_center = get_default_cost_center(
+			args, item_defaults, item_group_defaults, brand_defaults
+		)
 	return out
 
 
@@ -902,7 +952,9 @@ def get_service_item_details(args):
 	out.expense_account = get_default_expense_account(
 		args, item_defaults, item_group_defaults, brand_defaults
 	)
-	out.cost_center = get_default_cost_center(args, item_defaults, item_group_defaults, brand_defaults)
+	out.cost_center = get_default_cost_center(
+		args, item_defaults, item_group_defaults, brand_defaults
+	)
 
 	return out
 
@@ -926,7 +978,9 @@ def get_items_tagged_to_wip_composite_asset(asset):
 	]
 
 	pr_items = frappe.get_all(
-		"Purchase Receipt Item", filters={"wip_composite_asset": asset, "docstatus": 1}, fields=fields
+		"Purchase Receipt Item",
+		filters={"wip_composite_asset": asset, "docstatus": 1},
+		fields=fields,
 	)
 
 	stock_items = []

@@ -3,7 +3,9 @@
 
 frappe.provide("assets.assets");
 
-assets.assets.AssetCapitalization = class AssetCapitalization extends erpnext.stock.StockController {
+assets.assets.AssetCapitalization = class AssetCapitalization extends (
+	erpnext.stock.StockController
+) {
 	setup() {
 		this.frm.ignore_doctypes_on_cancel_all = ["Serial and Batch Bundle", "Asset Movement"];
 		this.setup_posting_date_time_check();
@@ -263,15 +265,30 @@ assets.assets.AssetCapitalization = class AssetCapitalization extends erpnext.st
 	}
 
 	stock_items_add(doc, cdt, cdn) {
-		erpnext.accounts.dimensions.copy_dimension_from_first_row(this.frm, cdt, cdn, "stock_items");
+		erpnext.accounts.dimensions.copy_dimension_from_first_row(
+			this.frm,
+			cdt,
+			cdn,
+			"stock_items"
+		);
 	}
 
 	asset_items_add(doc, cdt, cdn) {
-		erpnext.accounts.dimensions.copy_dimension_from_first_row(this.frm, cdt, cdn, "asset_items");
+		erpnext.accounts.dimensions.copy_dimension_from_first_row(
+			this.frm,
+			cdt,
+			cdn,
+			"asset_items"
+		);
 	}
 
 	serivce_items_add(doc, cdt, cdn) {
-		erpnext.accounts.dimensions.copy_dimension_from_first_row(this.frm, cdt, cdn, "service_items");
+		erpnext.accounts.dimensions.copy_dimension_from_first_row(
+			this.frm,
+			cdt,
+			cdn,
+			"service_items"
+		);
 	}
 
 	get_target_item_details() {
@@ -470,15 +487,23 @@ assets.assets.AssetCapitalization = class AssetCapitalization extends erpnext.st
 			me.frm.doc.service_items_total += d.amount;
 		});
 
-		me.frm.doc.stock_items_total = flt(me.frm.doc.stock_items_total, precision("stock_items_total"));
-		me.frm.doc.asset_items_total = flt(me.frm.doc.asset_items_total, precision("asset_items_total"));
+		me.frm.doc.stock_items_total = flt(
+			me.frm.doc.stock_items_total,
+			precision("stock_items_total")
+		);
+		me.frm.doc.asset_items_total = flt(
+			me.frm.doc.asset_items_total,
+			precision("asset_items_total")
+		);
 		me.frm.doc.service_items_total = flt(
 			me.frm.doc.service_items_total,
 			precision("service_items_total")
 		);
 
 		me.frm.doc.total_value =
-			me.frm.doc.stock_items_total + me.frm.doc.asset_items_total + me.frm.doc.service_items_total;
+			me.frm.doc.stock_items_total +
+			me.frm.doc.asset_items_total +
+			me.frm.doc.service_items_total;
 		me.frm.doc.total_value = flt(me.frm.doc.total_value, precision("total_value"));
 
 		me.frm.doc.target_qty = flt(me.frm.doc.target_qty, precision("target_qty"));

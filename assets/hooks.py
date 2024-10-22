@@ -154,9 +154,9 @@ doc_events = {
 	tuple(period_closing_doctypes): {
 		"validate": "erpnext.accounts.doctype.accounting_period.accounting_period.validate_accounting_period_on_doc_save",
 	},
-    "Journal Entry": {
-		"on_submit": "asset.asset.customizations.journal_entry.journal_entry.on_submit",
-		"on_cancel": "asset.asset.customizations.journal_entry.journal_entry.on_cancel",
+	"Journal Entry": {
+		"on_submit": "assets.assets.customizations.journal_entry.journal_entry.on_submit",
+		"on_cancel": "assets.assets.customizations.journal_entry.journal_entry.on_cancel",
 	},
 }
 
@@ -172,13 +172,13 @@ scheduler_events = {
 	"daily_long": [
 		"assets.assets.doctype.asset.depreciation.post_depreciation_entries",
 	],
-	}
+}
 
 # ERPNext doctypes for Global Search
 global_search_doctypes = {
 	"Default": [
 		{"doctype": "Asset", "index": 28},
-],
+	],
 }
 # Testing
 # -------
@@ -255,4 +255,3 @@ global_search_doctypes = {
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
-

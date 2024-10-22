@@ -19,7 +19,9 @@ class AssetMovement(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		from assets.assets.doctype.asset_movement_item.asset_movement_item import AssetMovementItem
+		from assets.assets.doctype.asset_movement_item.asset_movement_item import (
+			AssetMovementItem,
+		)
 
 		amended_from: DF.Link | None
 		assets: DF.Table[AssetMovementItem]
@@ -42,7 +44,9 @@ class AssetMovement(Document):
 				frappe.throw(_("{0} asset cannot be transferred").format(status))
 
 			if company != self.company:
-				frappe.throw(_("Asset {0} does not belong to company {1}").format(d.asset, self.company))
+				frappe.throw(
+					_("Asset {0} does not belong to company {1}").format(d.asset, self.company)
+				)
 
 			if not (d.source_location or d.target_location or d.from_employee or d.to_employee):
 				frappe.throw(_("Either location or employee must be required"))
@@ -115,12 +119,19 @@ class AssetMovement(Document):
 
 				if current_custodian != d.from_employee:
 					frappe.throw(
-						_("Asset {0} does not belongs to the custodian {1}").format(d.asset, d.from_employee)
+						_("Asset {0} does not belongs to the custodian {1}").format(
+							d.asset, d.from_employee
+						)
 					)
 
-			if d.to_employee and frappe.db.get_value("Employee", d.to_employee, "company") != self.company:
+			if (
+				d.to_employee
+				and frappe.db.get_value("Employee", d.to_employee, "company") != self.company
+			):
 				frappe.throw(
-					_("Employee {0} does not belongs to the company {1}").format(d.to_employee, self.company)
+					_("Employee {0} does not belongs to the company {1}").format(
+						d.to_employee, self.company
+					)
 				)
 
 	def on_submit(self):
@@ -156,8 +167,12 @@ class AssetMovement(Document):
 				current_location = latest_movement_entry[0][0]
 				current_employee = latest_movement_entry[0][1]
 
-			frappe.db.set_value("Asset", d.asset, "location", current_location, update_modified=False)
-			frappe.db.set_value("Asset", d.asset, "custodian", current_employee, update_modified=False)
+			frappe.db.set_value(
+				"Asset", d.asset, "location", current_location, update_modified=False
+			)
+			frappe.db.set_value(
+				"Asset", d.asset, "custodian", current_employee, update_modified=False
+			)
 
 			if current_location and current_employee:
 				add_asset_activity(
@@ -177,5 +192,7 @@ class AssetMovement(Document):
 			elif current_employee:
 				add_asset_activity(
 					d.asset,
-					_("Asset issued to Employee {0}").format(get_link_to_form("Employee", current_employee)),
+					_("Asset issued to Employee {0}").format(
+						get_link_to_form("Employee", current_employee)
+					),
 				)

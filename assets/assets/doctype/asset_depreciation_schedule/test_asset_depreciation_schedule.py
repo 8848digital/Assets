@@ -5,9 +5,7 @@ import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils import cstr, flt
 
-from assets.assets.doctype.asset.depreciation import (
-	post_depreciation_entries,
-)
+from assets.assets.doctype.asset.depreciation import post_depreciation_entries
 from assets.assets.doctype.asset.test_asset import create_asset, create_asset_data
 from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_asset_depr_schedule_doc,
@@ -110,7 +108,11 @@ class TestAssetDepreciationSchedule(FrappeTestCase):
 			["2025-10-10", 9.0, 731.0],
 		]
 		schedules = [
-			[cstr(d.schedule_date), flt(d.depreciation_amount, 2), d.accumulated_depreciation_amount]
+			[
+				cstr(d.schedule_date),
+				flt(d.depreciation_amount, 2),
+				d.accumulated_depreciation_amount,
+			]
 			for d in get_depr_schedule(asset.name, "Draft")
 		]
 		self.assertEqual(schedules, expected_schedules)
@@ -149,7 +151,11 @@ class TestAssetDepreciationSchedule(FrappeTestCase):
 			["2025-10-10", 8.8, 731.0],
 		]
 		schedules = [
-			[cstr(d.schedule_date), flt(d.depreciation_amount, 2), d.accumulated_depreciation_amount]
+			[
+				cstr(d.schedule_date),
+				flt(d.depreciation_amount, 2),
+				d.accumulated_depreciation_amount,
+			]
 			for d in get_depr_schedule(asset.name, "Draft")
 		]
 		self.assertEqual(schedules, expected_schedules)
@@ -180,7 +186,11 @@ class TestAssetDepreciationSchedule(FrappeTestCase):
 			["2026-11-01", 20.49, 731.0],
 		]
 		schedules = [
-			[cstr(d.schedule_date), flt(d.depreciation_amount, 2), d.accumulated_depreciation_amount]
+			[
+				cstr(d.schedule_date),
+				flt(d.depreciation_amount, 2),
+				d.accumulated_depreciation_amount,
+			]
 			for d in get_depr_schedule(asset.name, "Draft")
 		]
 		self.assertEqual(schedules, expected_schedules)
@@ -397,7 +407,11 @@ class TestAssetDepreciationSchedule(FrappeTestCase):
 			["2023-07-31", 12420.01, 50000.0],
 		]
 		schedules = [
-			[cstr(d.schedule_date), flt(d.depreciation_amount, 2), d.accumulated_depreciation_amount]
+			[
+				cstr(d.schedule_date),
+				flt(d.depreciation_amount, 2),
+				d.accumulated_depreciation_amount,
+			]
 			for d in get_depr_schedule(asset.name, "Draft")
 		]
 		self.assertEqual(schedules, expected_schedules)

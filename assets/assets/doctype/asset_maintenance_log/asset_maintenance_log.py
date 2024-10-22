@@ -8,7 +8,9 @@ from frappe.model.document import Document
 from frappe.query_builder import DocType
 from frappe.utils import getdate, nowdate, today
 
-from assets.assets.doctype.asset_maintenance.asset_maintenance import calculate_next_due_date
+from assets.assets.doctype.asset_maintenance.asset_maintenance import (
+	calculate_next_due_date,
+)
 
 
 class AssetMaintenanceLog(Document):
@@ -51,7 +53,9 @@ class AssetMaintenanceLog(Document):
 			frappe.throw(_("Please select Completion Date for Completed Asset Maintenance Log"))
 
 		if self.maintenance_status != "Completed" and self.completion_date:
-			frappe.throw(_("Please select Maintenance Status as Completed or remove Completion Date"))
+			frappe.throw(
+				_("Please select Maintenance Status as Completed or remove Completion Date")
+			)
 
 	def on_submit(self):
 		if self.maintenance_status not in ["Completed", "Cancelled"]:
@@ -82,7 +86,8 @@ def update_asset_maintenance_log_status():
 		frappe.qb.update(AssetMaintenanceLog)
 		.set(AssetMaintenanceLog.maintenance_status, "Overdue")
 		.where(
-			(AssetMaintenanceLog.maintenance_status == "Planned") & (AssetMaintenanceLog.due_date < today())
+			(AssetMaintenanceLog.maintenance_status == "Planned")
+			& (AssetMaintenanceLog.due_date < today())
 		)
 	).run()
 
@@ -91,6 +96,8 @@ def update_asset_maintenance_log_status():
 @frappe.validate_and_sanitize_search_inputs
 def get_maintenance_tasks(doctype, txt, searchfield, start, page_len, filters):
 	asset_maintenance_tasks = frappe.db.get_values(
-		"Asset Maintenance Task", {"parent": filters.get("asset_maintenance")}, "maintenance_task"
+		"Asset Maintenance Task",
+		{"parent": filters.get("asset_maintenance")},
+		"maintenance_task",
 	)
 	return asset_maintenance_tasks

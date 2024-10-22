@@ -49,7 +49,12 @@ class TestAssetShiftAllocation(FrappeTestCase):
 		]
 
 		schedules = [
-			[cstr(d.schedule_date), d.depreciation_amount, d.accumulated_depreciation_amount, d.shift]
+			[
+				cstr(d.schedule_date),
+				d.depreciation_amount,
+				d.accumulated_depreciation_amount,
+				d.shift,
+			]
 			for d in get_depr_schedule(asset.name, "Active")
 		]
 
@@ -60,18 +65,30 @@ class TestAssetShiftAllocation(FrappeTestCase):
 		).insert()
 
 		schedules = [
-			[cstr(d.schedule_date), d.depreciation_amount, d.accumulated_depreciation_amount, d.shift]
+			[
+				cstr(d.schedule_date),
+				d.depreciation_amount,
+				d.accumulated_depreciation_amount,
+				d.shift,
+			]
 			for d in asset_shift_allocation.get("depreciation_schedule")
 		]
 
 		self.assertEqual(schedules, expected_schedules)
 
-		asset_shift_allocation = frappe.get_doc("Asset Shift Allocation", asset_shift_allocation.name)
+		asset_shift_allocation = frappe.get_doc(
+			"Asset Shift Allocation", asset_shift_allocation.name
+		)
 		asset_shift_allocation.depreciation_schedule[4].shift = "Triple"
 		asset_shift_allocation.save()
 
 		schedules = [
-			[cstr(d.schedule_date), d.depreciation_amount, d.accumulated_depreciation_amount, d.shift]
+			[
+				cstr(d.schedule_date),
+				d.depreciation_amount,
+				d.accumulated_depreciation_amount,
+				d.shift,
+			]
 			for d in asset_shift_allocation.get("depreciation_schedule")
 		]
 
@@ -94,7 +111,12 @@ class TestAssetShiftAllocation(FrappeTestCase):
 		asset_shift_allocation.submit()
 
 		schedules = [
-			[cstr(d.schedule_date), d.depreciation_amount, d.accumulated_depreciation_amount, d.shift]
+			[
+				cstr(d.schedule_date),
+				d.depreciation_amount,
+				d.accumulated_depreciation_amount,
+				d.shift,
+			]
 			for d in get_depr_schedule(asset.name, "Active")
 		]
 
@@ -103,10 +125,30 @@ class TestAssetShiftAllocation(FrappeTestCase):
 
 def create_asset_shift_factors():
 	shifts = [
-		{"doctype": "Asset Shift Factor", "shift_name": "Half", "shift_factor": 0.5, "default": 0},
-		{"doctype": "Asset Shift Factor", "shift_name": "Single", "shift_factor": 1, "default": 1},
-		{"doctype": "Asset Shift Factor", "shift_name": "Double", "shift_factor": 1.5, "default": 0},
-		{"doctype": "Asset Shift Factor", "shift_name": "Triple", "shift_factor": 2, "default": 0},
+		{
+			"doctype": "Asset Shift Factor",
+			"shift_name": "Half",
+			"shift_factor": 0.5,
+			"default": 0,
+		},
+		{
+			"doctype": "Asset Shift Factor",
+			"shift_name": "Single",
+			"shift_factor": 1,
+			"default": 1,
+		},
+		{
+			"doctype": "Asset Shift Factor",
+			"shift_name": "Double",
+			"shift_factor": 1.5,
+			"default": 0,
+		},
+		{
+			"doctype": "Asset Shift Factor",
+			"shift_name": "Triple",
+			"shift_factor": 2,
+			"default": 0,
+		},
 	]
 
 	for s in shifts:
