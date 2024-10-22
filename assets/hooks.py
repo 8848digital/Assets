@@ -172,13 +172,13 @@ scheduler_events = {
 	"daily_long": [
 		"assets.assets.doctype.asset.depreciation.post_depreciation_entries",
 	],
-	}
+}
 
 # ERPNext doctypes for Global Search
 global_search_doctypes = {
 	"Default": [
 		{"doctype": "Asset", "index": 28},
-],
+	],
 }
 # Testing
 # -------
@@ -255,4 +255,3 @@ global_search_doctypes = {
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
-

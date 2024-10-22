@@ -1,7 +1,6 @@
 import frappe
 from frappe import _
 
-
 from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_depr_schedule,
 )
@@ -61,14 +60,20 @@ def unlink_asset_reference(doc):
 			else:
 				asset.db_set("value_after_depreciation", asset.value_after_depreciation + d.debit)
 			asset.set_status()
-		elif doc.voucher_type == "Journal Entry" and d.reference_type == "Asset" and d.reference_name:
+		elif (
+			doc.voucher_type == "Journal Entry"
+			and d.reference_type == "Asset"
+			and d.reference_name
+		):
 			journal_entry_for_scrap = frappe.db.get_value(
 				"Asset", d.reference_name, "journal_entry_for_scrap"
 			)
 
 			if journal_entry_for_scrap == doc.name:
 				frappe.throw(
-					_("Journal Entry for Asset scrapping cannot be cancelled. Please restore the Asset.")
+					_(
+						"Journal Entry for Asset scrapping cannot be cancelled. Please restore the Asset."
+					)
 				)
 
 
@@ -99,7 +104,7 @@ def update_asset_value(doc):
 				asset.db_set("value_after_depreciation", asset.value_after_depreciation - d.debit)
 
 			asset.set_status()
-			
+
 
 def update_booked_depreciation(doc, cancel=0):
 	for d in doc.get("accounts"):
@@ -119,6 +124,7 @@ def update_booked_depreciation(doc, cancel=0):
 						fb_row.total_number_of_booked_depreciations += 1
 					fb_row.db_update()
 					break
+
 
 def unlink_asset_adjustment_entry(doc):
 	frappe.db.sql(

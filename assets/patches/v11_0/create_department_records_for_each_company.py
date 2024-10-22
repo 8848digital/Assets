@@ -68,7 +68,9 @@ def update_records(doctype, comp_dict):
 			`tab{}`
 		set
 			department = CASE {} END
-	""".format(doctype, " ".join(when_then))
+	""".format(
+			doctype, " ".join(when_then)
+		)
 	)
 
 

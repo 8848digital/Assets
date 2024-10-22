@@ -4,10 +4,14 @@
 import unittest
 
 import frappe
+from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
+	make_purchase_receipt,
+)
 from frappe.utils import add_days, get_last_day, nowdate
 
-from assets.assets.doctype.asset_maintenance.asset_maintenance import calculate_next_due_date
-from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
+from assets.assets.doctype.asset_maintenance.asset_maintenance import (
+	calculate_next_due_date,
+)
 
 
 class TestAssetMaintenance(unittest.TestCase):
@@ -17,7 +21,9 @@ class TestAssetMaintenance(unittest.TestCase):
 		create_maintenance_team()
 
 	def test_create_asset_maintenance(self):
-		pr = make_purchase_receipt(item_code="Photocopier", qty=1, rate=100000.0, location="Test Location")
+		pr = make_purchase_receipt(
+			item_code="Photocopier", qty=1, rate=100000.0, location="Test Location"
+		)
 
 		asset_name = frappe.db.get_value("Asset", {"purchase_receipt": pr.name}, "name")
 		asset_doc = frappe.get_doc("Asset", asset_name)
@@ -54,7 +60,9 @@ class TestAssetMaintenance(unittest.TestCase):
 			).insert()
 
 			next_due_date = calculate_next_due_date(nowdate(), "Monthly")
-			self.assertEqual(asset_maintenance.asset_maintenance_tasks[0].next_due_date, next_due_date)
+			self.assertEqual(
+				asset_maintenance.asset_maintenance_tasks[0].next_due_date, next_due_date
+			)
 
 	def test_create_asset_maintenance_log(self):
 		if not frappe.db.exists("Asset Maintenance Log", "Photocopier"):
@@ -68,8 +76,12 @@ class TestAssetMaintenance(unittest.TestCase):
 				}
 			).insert()
 		asset_maintenance = frappe.get_doc("Asset Maintenance", "Photocopier")
-		next_due_date = calculate_next_due_date(asset_maintenance_log.completion_date, "Monthly")
-		self.assertEqual(asset_maintenance.asset_maintenance_tasks[0].next_due_date, next_due_date)
+		next_due_date = calculate_next_due_date(
+			asset_maintenance_log.completion_date, "Monthly"
+		)
+		self.assertEqual(
+			asset_maintenance.asset_maintenance_tasks[0].next_due_date, next_due_date
+		)
 
 
 def create_asset_data():
@@ -128,7 +140,8 @@ def create_maintenance_team():
 
 def get_maintenance_team(user_list):
 	return [
-		{"team_member": user, "full_name": user, "maintenance_role": "Technician"} for user in user_list[1:]
+		{"team_member": user, "full_name": user, "maintenance_role": "Technician"}
+		for user in user_list[1:]
 	]
 
 
@@ -179,4 +192,6 @@ def set_depreciation_settings_in_company():
 	company.save()
 
 	# Enable booking asset depreciation entry automatically
-	frappe.db.set_single_value("Accounts Settings", "book_asset_depreciation_entry_automatically", 1)
+	frappe.db.set_single_value(
+		"Accounts Settings", "book_asset_depreciation_entry_automatically", 1
+	)

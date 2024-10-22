@@ -3,13 +3,13 @@
 
 
 import frappe
+from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
+	get_checks_for_pl_and_bs_accounts,
+)
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, formatdate, get_link_to_form, getdate
 
-from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
-	get_checks_for_pl_and_bs_accounts,
-)
 from assets.assets.doctype.asset.asset import get_asset_value_after_depreciation
 from assets.assets.doctype.asset.depreciation import get_depreciation_accounts
 from assets.assets.doctype.asset_activity.asset_activity import add_asset_activity
@@ -69,9 +69,9 @@ class AssetValueAdjustment(Document):
 		asset_purchase_date = frappe.db.get_value("Asset", self.asset, "purchase_date")
 		if getdate(self.date) < getdate(asset_purchase_date):
 			frappe.throw(
-				_("Asset Value Adjustment cannot be posted before Asset's purchase date <b>{0}</b>.").format(
-					formatdate(asset_purchase_date)
-				),
+				_(
+					"Asset Value Adjustment cannot be posted before Asset's purchase date <b>{0}</b>."
+				).format(formatdate(asset_purchase_date)),
 				title=_("Incorrect Date"),
 			)
 
@@ -80,7 +80,9 @@ class AssetValueAdjustment(Document):
 
 	def set_current_asset_value(self):
 		if not self.current_asset_value and self.asset:
-			self.current_asset_value = get_asset_value_after_depreciation(self.asset, self.finance_book)
+			self.current_asset_value = get_asset_value_after_depreciation(
+				self.asset, self.finance_book
+			)
 
 	def make_depreciation_entry(self):
 		asset = frappe.get_doc("Asset", self.asset)
@@ -91,7 +93,9 @@ class AssetValueAdjustment(Document):
 		) = get_depreciation_accounts(asset.asset_category, asset.company)
 
 		depreciation_cost_center, depreciation_series = frappe.get_cached_value(
-			"Company", asset.company, ["depreciation_cost_center", "series_for_depreciation_entry"]
+			"Company",
+			asset.company,
+			["depreciation_cost_center", "series_for_depreciation_entry"],
 		)
 
 		je = frappe.new_doc("Journal Entry")

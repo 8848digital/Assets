@@ -1,20 +1,27 @@
 # Copyright (c) 2017, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+import erpnext
 import frappe
+from erpnext.accounts.general_ledger import make_gl_entries
+from erpnext.controllers.accounts_controller import AccountsController
 from frappe import _
 from frappe.query_builder import DocType
-from frappe.utils import add_months, cint, flt, get_link_to_form, getdate, time_diff_in_hours
+from frappe.utils import (
+	add_months,
+	cint,
+	flt,
+	get_link_to_form,
+	getdate,
+	time_diff_in_hours,
+)
 
-import erpnext
-from erpnext.accounts.general_ledger import make_gl_entries
 from assets.assets.doctype.asset.asset import get_asset_account
 from assets.assets.doctype.asset_activity.asset_activity import add_asset_activity
 from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_depr_schedule,
 	make_new_active_asset_depr_schedules_and_cancel_current_ones,
 )
-from erpnext.controllers.accounts_controller import AccountsController
 
 
 class AssetRepair(AccountsController):
@@ -32,6 +39,7 @@ class AssetRepair(AccountsController):
 		from assets.assets.doctype.asset_repair_purchase_invoice.asset_repair_purchase_invoice import (
 			AssetRepairPurchaseInvoice,
 		)
+
 		actions_performed: DF.LongText | None
 		amended_from: DF.Link | None
 		asset: DF.Link
@@ -70,9 +78,11 @@ class AssetRepair(AccountsController):
 	def validate_dates(self):
 		if self.completion_date and (self.failure_date > self.completion_date):
 			frappe.throw(
-				_("Completion Date can not be before Failure Date. Please adjust the dates accordingly.")
+				_(
+					"Completion Date can not be before Failure Date. Please adjust the dates accordingly."
+				)
 			)
-	
+
 	def validate_purchase_invoice(self):
 		query = expense_item_pi_query(self.company)
 		purchase_invoice_list = [item[0] for item in query.run()]
@@ -85,7 +95,9 @@ class AssetRepair(AccountsController):
 			if flt(pi.repair_cost) > frappe.db.get_value(
 				"Purchase Invoice", pi.purchase_invoice, "base_net_total"
 			):
-				frappe.throw(_("Repair cost cannot be greater than purchase invoice base net total"))
+				frappe.throw(
+					_("Repair cost cannot be greater than purchase invoice base net total")
+				)
 
 	def validate_purchase_invoice_expense_account(self):
 		for pi in self.invoices:
@@ -116,7 +128,7 @@ class AssetRepair(AccountsController):
 
 	def calculate_repair_cost(self):
 		self.repair_cost = sum(flt(pi.repair_cost) for pi in self.invoices)
-	
+
 	def calculate_total_repair_cost(self):
 		self.total_repair_cost = flt(self.repair_cost)
 
@@ -212,7 +224,9 @@ class AssetRepair(AccountsController):
 
 	def check_for_stock_items_and_warehouse(self):
 		if not self.get("stock_items"):
-			frappe.throw(_("Please enter Stock Items consumed during the Repair."), title=_("Missing Items"))
+			frappe.throw(
+				_("Please enter Stock Items consumed during the Repair."), title=_("Missing Items")
+			)
 
 	def increase_asset_value(self):
 		total_value_of_stock_consumed = self.get_total_value_of_stock_consumed()
@@ -244,7 +258,11 @@ class AssetRepair(AccountsController):
 
 	def decrease_stock_quantity(self):
 		stock_entry = frappe.get_doc(
-			{"doctype": "Stock Entry", "stock_entry_type": "Material Issue", "company": self.company}
+			{
+				"doctype": "Stock Entry",
+				"stock_entry_type": "Material Issue",
+				"company": self.company,
+			}
 		)
 		stock_entry.asset_repair = self.name
 
@@ -292,7 +310,9 @@ class AssetRepair(AccountsController):
 	def get_gl_entries(self):
 		gl_entries = []
 
-		fixed_asset_account = get_asset_account("fixed_asset_account", asset=self.asset, company=self.company)
+		fixed_asset_account = get_asset_account(
+			"fixed_asset_account", asset=self.asset, company=self.company
+		)
 		self.get_gl_entries_for_repair_cost(gl_entries, fixed_asset_account)
 		self.get_gl_entries_for_consumed_items(gl_entries, fixed_asset_account)
 
@@ -355,7 +375,9 @@ class AssetRepair(AccountsController):
 				"Company", self.company, "default_expense_account"
 			)
 			if not default_expense_account:
-				frappe.throw(_("Please set default Expense Account in Company {0}").format(self.company))
+				frappe.throw(
+					_("Please set default Expense Account in Company {0}").format(self.company)
+				)
 
 		for item in stock_entry.items:
 			if flt(item.amount) > 0:
@@ -397,7 +419,9 @@ class AssetRepair(AccountsController):
 
 	def modify_depreciation_schedule(self):
 		for row in self.asset_doc.finance_books:
-			row.total_number_of_depreciations += self.increase_in_asset_life / row.frequency_of_depreciation
+			row.total_number_of_depreciations += (
+				self.increase_in_asset_life / row.frequency_of_depreciation
+			)
 
 			self.asset_doc.flags.increase_in_asset_life = False
 			extra_months = self.increase_in_asset_life % row.frequency_of_depreciation
@@ -431,12 +455,16 @@ class AssetRepair(AccountsController):
 
 	def revert_depreciation_schedule_on_cancellation(self):
 		for row in self.asset_doc.finance_books:
-			row.total_number_of_depreciations -= self.increase_in_asset_life / row.frequency_of_depreciation
+			row.total_number_of_depreciations -= (
+				self.increase_in_asset_life / row.frequency_of_depreciation
+			)
 
 			self.asset_doc.flags.increase_in_asset_life = False
 			extra_months = self.increase_in_asset_life % row.frequency_of_depreciation
 			if extra_months != 0:
-				self.calculate_last_schedule_date_before_modification(self.asset_doc, row, extra_months)
+				self.calculate_last_schedule_date_before_modification(
+					self.asset_doc, row, extra_months
+				)
 
 	def calculate_last_schedule_date_before_modification(self, asset, row, extra_months):
 		asset.flags.increase_in_asset_life = True
@@ -467,6 +495,7 @@ class AssetRepair(AccountsController):
 def get_downtime(failure_date, completion_date):
 	downtime = time_diff_in_hours(completion_date, failure_date)
 	return round(downtime, 2)
+
 
 @frappe.whitelist()
 def get_purchase_invoice(doctype, txt, searchfield, start, page_len, filters):

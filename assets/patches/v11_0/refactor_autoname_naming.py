@@ -13,7 +13,9 @@ def execute():
 
 
 def set_series(doctype, value):
-	doc = frappe.db.exists("Property Setter", {"doc_type": doctype, "property": "autoname"})
+	doc = frappe.db.exists(
+		"Property Setter", {"doc_type": doctype, "property": "autoname"}
+	)
 	if doc:
 		frappe.db.set_value("Property Setter", doc, "value", value)
 	else:

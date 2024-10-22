@@ -45,7 +45,9 @@ class AssetShiftAllocation(Document):
 		self.fetch_and_set_depr_schedule()
 
 	def validate(self):
-		self.asset_depr_schedule_doc = get_asset_depr_schedule_doc(self.asset, "Active", self.finance_book)
+		self.asset_depr_schedule_doc = get_asset_depr_schedule_doc(
+			self.asset, "Active", self.finance_book
+		)
 
 		self.validate_invalid_shift_change()
 		self.update_depr_schedule()
@@ -78,9 +80,9 @@ class AssetShiftAllocation(Document):
 				)
 		else:
 			frappe.throw(
-				_("Asset Depreciation Schedule not found for Asset {0} and Finance Book {1}").format(
-					self.asset, self.finance_book
-				)
+				_(
+					"Asset Depreciation Schedule not found for Asset {0} and Finance Book {1}"
+				).format(self.asset, self.finance_book)
 			)
 
 	def validate_invalid_shift_change(self):
@@ -88,7 +90,10 @@ class AssetShiftAllocation(Document):
 			return
 
 		for i, sch in enumerate(self.depreciation_schedule):
-			if sch.journal_entry and self.asset_depr_schedule_doc.depreciation_schedule[i].shift != sch.shift:
+			if (
+				sch.journal_entry
+				and self.asset_depr_schedule_doc.depreciation_schedule[i].shift != sch.shift
+			):
 				frappe.throw(
 					_(
 						"Row {0}: Shift cannot be changed since the depreciation has already been processed"
@@ -126,7 +131,9 @@ class AssetShiftAllocation(Document):
 
 	def allocate_shift_diff_in_depr_schedule(self):
 		asset_shift_factors_map = get_asset_shift_factors_map()
-		reverse_asset_shift_factors_map = {asset_shift_factors_map[k]: k for k in asset_shift_factors_map}
+		reverse_asset_shift_factors_map = {
+			asset_shift_factors_map[k]: k for k in asset_shift_factors_map
+		}
 
 		original_shift_factors_sum = sum(
 			flt(asset_shift_factors_map.get(schedule.shift))
@@ -134,7 +141,8 @@ class AssetShiftAllocation(Document):
 		)
 
 		new_shift_factors_sum = sum(
-			flt(asset_shift_factors_map.get(schedule.shift)) for schedule in self.depreciation_schedule
+			flt(asset_shift_factors_map.get(schedule.shift))
+			for schedule in self.depreciation_schedule
 		)
 
 		diff = new_shift_factors_sum - original_shift_factors_sum
@@ -162,8 +170,9 @@ class AssetShiftAllocation(Document):
 		elif diff < 0:
 			shift_factors = list(asset_shift_factors_map.values())
 			desc_shift_factors = sorted(shift_factors, reverse=True)
-			depr_schedule_len_diff = self.asset_depr_schedule_doc.total_number_of_depreciations - len(
-				self.depreciation_schedule
+			depr_schedule_len_diff = (
+				self.asset_depr_schedule_doc.total_number_of_depreciations
+				- len(self.depreciation_schedule)
 			)
 			subsets_result = []
 
@@ -171,7 +180,9 @@ class AssetShiftAllocation(Document):
 				num_rows_to_add = depr_schedule_len_diff
 
 				while not subsets_result and num_rows_to_add > 0:
-					find_subsets_with_sum(shift_factors, num_rows_to_add, abs(diff), [], subsets_result)
+					find_subsets_with_sum(
+						shift_factors, num_rows_to_add, abs(diff), [], subsets_result
+					)
 					if subsets_result:
 						break
 					num_rows_to_add -= 1
@@ -267,7 +278,9 @@ def find_subsets_with_sum(numbers, k, target_sum, current_subset, result):
 		return
 
 	# Include the current number in the subset
-	find_subsets_with_sum(numbers, k - 1, target_sum - numbers[0], [*current_subset, numbers[0]], result)
+	find_subsets_with_sum(
+		numbers, k - 1, target_sum - numbers[0], [*current_subset, numbers[0]], result
+	)
 
 	# Exclude the current number from the subset
 	find_subsets_with_sum(numbers[1:], k, target_sum, current_subset, result)
