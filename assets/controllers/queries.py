@@ -40,5 +40,10 @@ def get_purchase_invoices(doctype, txt, searchfield, start, page_len, filters):
 		query += " and pi.company = {company}".format(
 			company = frappe.db.escape(filters.get("company"))
 		)
+		
+	if filters and filters.get("update_stock"):
+		query += " and pi.update_stock = {update_stock}".format(
+			update_stock=filters.get("update_stock")
+		)
 
 	return frappe.db.sql(query, filters)
