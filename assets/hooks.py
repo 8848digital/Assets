@@ -160,6 +160,9 @@ doc_events = {
 		"on_submit": "assets.assets.customizations.journal_entry.journal_entry.on_submit",
 		"on_cancel": "assets.assets.customizations.journal_entry.journal_entry.on_cancel",
 	},
+    "Purchase Receipt": {
+        "validate": "assets.assets.customizations.purchase_receipt.purchase_receipt.validate",
+	},
 }
 
 # Scheduled Tasks
