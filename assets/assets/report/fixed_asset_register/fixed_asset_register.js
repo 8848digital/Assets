@@ -23,12 +23,28 @@ frappe.query_reports["Fixed Asset Register"] = {
 			label: __("Asset Category"),
 			fieldtype: "Link",
 			options: "Asset Category",
+			get_query: function () {
+				const company = frappe.query_report.get_filter_value("company");
+				return {
+					query: "assets.assets.report.fixed_asset_register.fixed_asset_register.asset_category_filter",
+					filters: { company: company },
+				};
+			},
 		},
 		{
 			fieldname: "cost_center",
 			label: __("Cost Center"),
 			fieldtype: "Link",
 			options: "Cost Center",
+			get_query: function () {
+				var company = frappe.query_report.get_filter_value("company");
+				return {
+					doctype: "Cost Center",
+					filters: {
+						company: company,
+					},
+				};
+			},
 		},
 		{
 			fieldname: "group_by",
