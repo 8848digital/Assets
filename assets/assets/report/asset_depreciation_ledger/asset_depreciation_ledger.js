@@ -30,18 +30,43 @@ frappe.query_reports["Asset Depreciation Ledger"] = {
 			label: __("Asset"),
 			fieldtype: "Link",
 			options: "Asset",
+			get_query: function () {
+				var company = frappe.query_report.get_filter_value("company");
+				return {
+					doctype: "Asset",
+					filters: {
+						company: company,
+					},
+				};
+			},
 		},
 		{
 			fieldname: "asset_category",
 			label: __("Asset Category"),
 			fieldtype: "Link",
 			options: "Asset Category",
+			get_query: function () {
+				const company = frappe.query_report.get_filter_value("company");
+				return {
+					query: "assets.assets.report.asset_depreciation_ledger.asset_depreciation_ledger.asset_category_filter",
+					filters: { company: company },
+				};
+			},
 		},
 		{
 			fieldname: "cost_center",
 			label: __("Cost Center"),
 			fieldtype: "Link",
 			options: "Cost Center",
+			get_query: function () {
+				var company = frappe.query_report.get_filter_value("company");
+				return {
+					doctype: "Cost Center",
+					filters: {
+						company: company,
+					},
+				};
+			},
 		},
 		{
 			fieldname: "finance_book",

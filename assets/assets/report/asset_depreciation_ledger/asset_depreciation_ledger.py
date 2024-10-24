@@ -203,3 +203,20 @@ def get_columns():
 		{"label": _("Current Status"), "fieldname": "status", "fieldtype": "Data", "width": 120},
 		{"label": _("Purchase Date"), "fieldname": "purchase_date", "fieldtype": "Date", "width": 120},
 	]
+
+@frappe.whitelist()
+def asset_category_filter(doctype, txt, searchfield, start, page_len, filters):
+    company = filters.get("company") 
+    ac = frappe.qb.DocType('Asset Category')
+    acc = frappe.qb.DocType('Asset Category Account')
+    query = (
+        frappe.qb.from_(ac)
+        .join(acc) 
+        .on(acc.parent == ac.name)
+        .select(ac.name)
+        .where(
+            (acc.company_name == company) &  
+            (ac.name.like(f"%{txt}%")) 
+        )
+    )
+    return query.run()
