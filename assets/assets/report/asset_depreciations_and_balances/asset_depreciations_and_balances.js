@@ -38,6 +38,13 @@ frappe.query_reports["Asset Depreciations and Balances"] = {
 			fieldtype: "Link",
 			options: "Asset Category",
 			depends_on: "eval: doc.group_by == 'Asset Category'",
+			get_query: function () {
+				const company = frappe.query_report.get_filter_value("company");
+				return {
+					query: "assets.assets.report.asset_depreciations_and_balances.asset_depreciations_and_balances.asset_category_filter",
+					filters: { company: company },
+				};
+			},
 		},
 		{
 			fieldname: "asset",
@@ -45,6 +52,15 @@ frappe.query_reports["Asset Depreciations and Balances"] = {
 			fieldtype: "Link",
 			options: "Asset",
 			depends_on: "eval: doc.group_by == 'Asset'",
+			get_query: function () {
+				var company = frappe.query_report.get_filter_value("company");
+				return {
+					doctype: "Asset",
+					filters: {
+						company: company,
+					},
+				};
+			},
 		},
 		{
 			fieldname: "finance_book",
