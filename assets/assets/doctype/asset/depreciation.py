@@ -129,7 +129,7 @@ def get_depreciable_asset_depr_schedules_data(date):
 		.where(a.status.isin(["Submitted", "Partially Depreciated"]))
 		.where(ds.journal_entry.isnull())
 		.where(ds.schedule_date <= date)
-		.groupby(ads.name)
+		.groupby(ads.name, a.name, a.asset_category, a.company)
 		.orderby(a.creation, order=Order.desc)
 	)
 
