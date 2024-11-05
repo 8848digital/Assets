@@ -365,7 +365,7 @@ def _make_journal_entry_for_depreciation(
 
 def update_dimension_fields(asset_depr_schedule_doc_name, credit_entry, debit_entry):
 	additional_fields = {}
-	fieldnames = frappe.get_list("Accounting Dimension", pluck="fieldname")
+	fieldnames = frappe.get_list("Accounting Dimension", {"disabled":0}, pluck="fieldname")
 	for fieldname in fieldnames:
 		field_data = frappe.db.get_value(
 			"Asset Depreciation Schedule", asset_depr_schedule_doc_name, fieldname

@@ -1,0 +1,104 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2024-10-31 16:46:35.194854",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_khdg",
+  "naming_series",
+  "parent_asset",
+  "amended_from",
+  "column_break_ypyr",
+  "company",
+  "posting_date",
+  "section_break_la2e",
+  "component_asset"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_khdg",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Asset Component Capitalization",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Naming Series",
+   "options": "ACC-"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Company",
+   "options": "Company",
+   "reqd": 1
+  },
+  {
+   "fieldname": "parent_asset",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Parent Asset",
+   "options": "Parent Asset",
+   "reqd": 1
+  },
+  {
+   "fieldname": "component_asset",
+   "fieldtype": "Table",
+   "label": "Component Asset",
+   "options": "Component Asset"
+  },
+  {
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "label": "Posting Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_la2e",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_ypyr",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2024-10-31 16:50:43.368311",
+ "modified_by": "Administrator",
+ "module": "Assets",
+ "name": "Asset Component Capitalization",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

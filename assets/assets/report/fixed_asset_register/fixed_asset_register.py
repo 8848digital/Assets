@@ -107,6 +107,7 @@ def get_data(filters):
 		return data
 
 	fields = [
+		"parent_asset",
 		"name as asset_id",
 		"asset_name",
 		"status",
@@ -141,6 +142,7 @@ def get_data(filters):
 		)
 
 		row = {
+			"parent_asset": asset.parent_asset,
 			"asset_id": asset.asset_id,
 			"asset_name": asset.asset_name,
 			"status": asset.status,
@@ -160,7 +162,45 @@ def get_data(filters):
 		}
 		data.append(row)
 
-	return data
+	new_data = []
+	child_row= []
+	rest_row = []
+	unique_parent_assets = {}
+	child_by_parent = {}
+
+	for row in data:
+		if row["parent_asset"]:
+			child_row.append(row)
+			custom_parent = row["parent_asset"]
+			if custom_parent not in unique_parent_assets:
+				unique_parent_assets[custom_parent] = {
+					"parent_asset": custom_parent,
+					"gross_purchase_amount": 0,
+					"asset_value": 0,
+					"opening_accumulated_depreciation": 0,
+					"depreciated_amount": 0,
+				}
+			unique_parent_assets[custom_parent]["gross_purchase_amount"] += row["gross_purchase_amount"]
+			unique_parent_assets[custom_parent]["asset_value"] += row["asset_value"]
+			unique_parent_assets[custom_parent]["opening_accumulated_depreciation"] += row["opening_accumulated_depreciation"]
+			unique_parent_assets[custom_parent]["depreciated_amount"] += row["depreciated_amount"]
+			if custom_parent not in child_by_parent:
+				child_by_parent[custom_parent] = []
+			child_by_parent[custom_parent].append(row)
+		else:
+			rest_row.append(row)
+
+	for parent_asset, parent_data in unique_parent_assets.items():
+		new_data.append(parent_data)
+		for child_row in child_by_parent[parent_asset]:
+			child_row["indent"] = 1
+			new_data.append(child_row)
+	for rest in rest_row:
+		print(row)
+		rest["indent"] = 0
+		new_data.append(rest)
+
+	return new_data
 
 
 def prepare_chart_data(data, filters):
@@ -454,6 +494,13 @@ def get_columns(filters):
 
 	return [
 		{
+			"label": _("Parent Asset"),
+			"fieldtype": "Link",
+			"fieldname": "parent_asset",
+			"options": "Parent Asset",
+			"width": 110,
+		},
+		{
 			"label": _("Asset ID"),
 			"fieldtype": "Link",
 			"fieldname": "asset_id",
@@ -552,17 +599,17 @@ def get_columns(filters):
 
 @frappe.whitelist()
 def asset_category_filter(doctype, txt, searchfield, start, page_len, filters):
-    company = filters.get("company") 
+    company = filters.get("company")
     ac = frappe.qb.DocType('Asset Category')
     acc = frappe.qb.DocType('Asset Category Account')
     query = (
         frappe.qb.from_(ac)
-        .join(acc) 
+        .join(acc)
         .on(acc.parent == ac.name)
         .select(ac.name)
         .where(
-            (acc.company_name == company) &  
-            (ac.name.like(f"%{txt}%")) 
+            (acc.company_name == company) &
+            (ac.name.like(f"%{txt}%"))
         )
     )
     return query.run()
