@@ -1173,7 +1173,6 @@ def update_existing_asset(asset, remaining_qty, new_asset_name):
 			get_link_to_form("Asset", new_asset_name)
 		),
 	)
-
 	for row in asset.get("finance_books"):
 		value_after_depreciation = flt(
 			(row.value_after_depreciation * remaining_qty) / asset.asset_quantity
@@ -1194,6 +1193,8 @@ def update_existing_asset(asset, remaining_qty, new_asset_name):
 		current_asset_depr_schedule_doc = get_asset_depr_schedule_doc(
 			asset.name, "Active", row.finance_book
 		)
+		if not current_asset_depr_schedule_doc:
+			continue
 		new_asset_depr_schedule_doc = frappe.copy_doc(current_asset_depr_schedule_doc)
 
 		new_asset_depr_schedule_doc.set_draft_asset_depr_schedule_details(asset, row)
@@ -1297,7 +1298,6 @@ def create_new_asset_after_split(asset, split_qty):
 					add_reference_in_jv_on_split(
 						term.journal_entry, new_asset.name, asset.name, term.depreciation_amount
 					)
-
 	return new_asset
 
 
