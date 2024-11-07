@@ -195,7 +195,7 @@ frappe.ui.form.on("Asset Movement Item", {
 						if (asset_doc.cost_center) {
 							frappe.model.set_value(cdt, cdn, "source_cost_center", asset_doc.cost_center);
 						}
-						if (frm.doc.purpose == "Issue" || frm.doc.purpose == "Reciept") {
+						if (frm.doc.purpose == "Reciept") {
 							target_fields.forEach((field) => {
 								const original_field = field.replace("target_", "");
 								if (asset_doc[original_field]) {
