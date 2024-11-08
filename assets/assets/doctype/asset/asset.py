@@ -1039,10 +1039,10 @@ def make_journal_entry(asset_name):
 		depreciation_expense_account,
 	) = get_depreciation_accounts(asset.asset_category, asset.company)
 
-	depreciation_cost_center, depreciation_series = frappe.get_cached_value(
+	depreciation_cost_center, depreciation_series, company_cost_center = frappe.get_cached_value(
 		"Company",
 		asset.company,
-		["depreciation_cost_center", "series_for_depreciation_entry"],
+		["depreciation_cost_center", "series_for_depreciation_entry", "cost_center"],
 	)
 	depreciation_cost_center = asset.cost_center or depreciation_cost_center
 
@@ -1068,6 +1068,7 @@ def make_journal_entry(asset_name):
 			"account": accumulated_depreciation_account,
 			"reference_type": "Asset",
 			"reference_name": asset.name,
+			"cost_center": asset.cost_center or company_cost_center,
 		},
 	)
 

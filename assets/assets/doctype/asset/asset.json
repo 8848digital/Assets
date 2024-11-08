@@ -204,8 +204,8 @@
    "fieldname": "purchase_date",
    "fieldtype": "Date",
    "label": "Purchase Date",
-   "mandatory_depends_on": "eval:!doc.is_existing_asset && !doc.is_composite_asset",
-   "read_only_depends_on": "eval:!doc.is_existing_asset && !doc.is_composite_asset"
+   "read_only_depends_on": "eval:!doc.is_existing_asset && !doc.is_composite_asset",
+   "reqd": 1
   },
   {
    "fieldname": "disposal_date",
@@ -582,7 +582,7 @@
    "link_fieldname": "target_asset"
   }
  ],
- "modified": "2024-10-14 13:33:27.250148",
+ "modified": "2024-11-08 15:22:37.456041",
  "modified_by": "Administrator",
  "module": "Assets",
  "name": "Asset",
