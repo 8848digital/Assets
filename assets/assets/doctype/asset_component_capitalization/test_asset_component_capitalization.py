@@ -41,7 +41,6 @@ class TestAssetComponentCapitalization(FrappeTestCase):
 		asset_component_capitalization = create_asset_component_capitalization(
 			parent_asset, asset, asset1
 		)
-		frappe.db.commit()
 
 		gl_entry = DocType("GL Entry")
 
