@@ -16,6 +16,9 @@ from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedu
 )
 from frappe.utils import cstr, flt
 from frappe.query_builder import DocType
+from assets.assets.doctype.asset_movement.asset_movement import (
+	make_asset_movement_entry,
+)
 
 
 class TestAssetMovement(unittest.TestCase):
@@ -236,7 +239,6 @@ class TestAssetMovement(unittest.TestCase):
 		]
 
 		self.assertEqual(schedules, expected_schedules)
-  
 
 	def test_on_cancel_reverse_depriciation_schedule_entry(self):
 		pr = make_purchase_receipt(
@@ -331,7 +333,7 @@ class TestAssetMovement(unittest.TestCase):
 
 		if not frappe.db.exists("Location", "Test Location 2"):
 			frappe.get_doc({"doctype": "Location", "location_name": "Test Location 2"}).insert()
-   
+
 		create_asset_movement(
 			purpose="Transfer",
 			company=asset.company,
@@ -359,6 +361,66 @@ class TestAssetMovement(unittest.TestCase):
 
 		movement = frappe.get_doc("Asset Movement", movements[0][0])
 		self.assertRaises(frappe.ValidationError, movement.cancel)
+
+	def test_asset_movement_entry(self):
+		pr = make_purchase_receipt(
+			item_code="Macbook Pro",
+			qty=1,
+			rate=100000.0,
+			location="Test Location",
+			posting_date="2020-06-06",
+		)
+
+		asset_name = frappe.db.get_value("Asset", {"purchase_receipt": pr.name}, "name")
+		asset = frappe.get_doc("Asset", asset_name)
+		asset.calculate_depreciation = 1
+		asset.available_for_use_date = "2020-06-06"
+		asset.purchase_date = "2020-06-06"
+		asset.append(
+			"finance_books",
+			{
+				"expected_value_after_useful_life": 10000,
+				"depreciation_start_date": "2021-03-31",
+				"depreciation_method": "Straight Line",
+				"total_number_of_depreciations": 3,
+				"frequency_of_depreciation": 12,
+			},
+		)
+
+		if asset.docstatus == 0:
+			asset.submit()
+
+		if not frappe.db.exists("Location", "Test Location 2"):
+			frappe.get_doc({"doctype": "Location", "location_name": "Test Location 2"}).insert()
+
+		movement1 = create_asset_movement(
+			purpose="Transfer",
+			company=asset.company,
+			transaction_date="2022-10-22",
+			assets=[
+				{
+					"asset": asset.name,
+					"source_location": "Test Location",
+					"target_location": "Test Location 2",
+				}
+			],
+		)
+		movement1 = make_asset_movement_entry(
+			movement1.name, movement1.transaction_date, asset.company
+		)
+
+		expected_gle = (
+			("_Test Fixed Asset - _TC", 28575.34, 0.0),
+			("_Test Fixed Asset - _TC", 0.0, 28575.34),
+		)
+		gle = frappe.db.sql(
+			"""select account, debit, credit from `tabGL Entry`
+			where voucher_type='Journal Entry' and voucher_no = %s
+			order by account""",
+			movement1.journal_entry,
+		)
+
+		self.assertSequenceEqual(gle, expected_gle)
 
 
 def create_asset_movement(**args):
