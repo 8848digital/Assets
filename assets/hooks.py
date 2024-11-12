@@ -43,7 +43,10 @@ app_license = "mit"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-doctype_js = {"Purchase Receipt" : "public/js/purchase_receipt.js"}
+doctype_js = {
+				"Purchase Receipt" : "public/js/erpnext/purchase_receipt.js",
+				"Purchase Invoice" : "public/js/erpnext/purchase_invoice.js"
+            }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -87,7 +90,7 @@ after_install = "assets.setup.after_install"
 # Uninstallation
 # ------------
 
-# before_uninstall = "assets.uninstall.before_uninstall"
+before_uninstall = "assets.setup.before_uninstall"
 # after_uninstall = "assets.uninstall.after_uninstall"
 
 # Integration Setup
@@ -129,12 +132,12 @@ after_install = "assets.setup.after_install"
 # Override standard doctype classes
 
 override_doctype_class = {
-	# "Purchase Receipt": "assets.overrides.purchase_receipt.purchase_receipt.AssetsPurchaseReceipt",
-    # "Material Request": "assets.overrides.material_request.material_request.AssetsMaterialRequest",
-    # "Purchase Invoice": "assets.overrides.purchase_invoice.purchase_invoice.AssetsPurchaseInvoice",
-    # "Purchase Order": "assets.overrides.purchase_order.purchase_order.AssetsPurchaseOrder",
-    # "Request For Quotation": "assets.overrides.request_for_quotation.request_for_quotation.AssetsRequestForQuotation",
-    # "Supplier Quotation": "assets.overrides.supplier_quotation.supplier_quotation.AssetsSupplierQuotation",
+	"Purchase Receipt": "assets.overrides.purchase_receipt.purchase_receipt.AssetsPurchaseReceipt",
+	"Material Request": "assets.overrides.material_request.material_request.AssetsMaterialRequest",
+	"Purchase Invoice": "assets.overrides.purchase_invoice.purchase_invoice.AssetsPurchaseInvoice",
+	"Purchase Order": "assets.overrides.purchase_order.purchase_order.AssetsPurchaseOrder",
+	"Request For Quotation": "assets.overrides.request_for_quotation.request_for_quotation.AssetsRequestForQuotation",
+	"Supplier Quotation": "assets.overrides.supplier_quotation.supplier_quotation.AssetsSupplierQuotation",
 }
 
 # Document Events
@@ -160,13 +163,23 @@ doc_events = {
 	tuple(period_closing_doctypes): {
 		"validate": "erpnext.accounts.doctype.accounting_period.accounting_period.validate_accounting_period_on_doc_save",
 	},
-    "Journal Entry": {
+	"Journal Entry": {
 		"on_submit": "assets.assets.customizations.journal_entry.journal_entry.on_submit",
 		"on_cancel": "assets.assets.customizations.journal_entry.journal_entry.on_cancel",
 	},
-    # "Purchase Receipt": {
-    #     "validate": "assets.overrides.purchase_receipt.purchase_receipt.validate",
-	# },
+	"Purchase Receipt": {
+		"validate": [
+			"assets.controllers.doc_events.buying_controller.validate",
+			"assets.overrides.purchase_receipt.purchase_receipt.validate",
+		],
+		"on_submit": "assets.controllers.doc_events.buying_controller.on_submit",
+		"on_cancel": "assets.controllers.doc_events.buying_controller.on_cancel",
+	},
+	"Purchase Invoice": {
+		"validate": "assets.controllers.doc_events.buying_controller.validate",
+		"on_submit": "assets.controllers.doc_events.buying_controller.on_submit",
+		"on_cancel": "assets.controllers.doc_events.buying_controller.on_cancel",
+	},
 }
 
 # Scheduled Tasks
@@ -198,7 +211,12 @@ global_search_doctypes = {
 # ------------------------------
 #
 override_whitelisted_methods = {
-	"erpnext.stock.doctype.purchase_receipt.purchase_receipt.make_purchase_invoice": "assets.overrides.purchase_receipt.override.make_purchase_invoice"
+	"erpnext.stock.doctype.purchase_receipt.purchase_receipt.make_purchase_invoice": "assets.overrides.purchase_receipt.override.make_purchase_invoice",
+	"erpnext.accounts.doctype.purchase_invoice.purchase_invoice.make_purchase_receipt": "assets.overrides.purchase_invoice.override.make_purchase_receipt",
+	"erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_receipt": "assets.overrides.purchase_order.override.make_purchase_receipt",
+	"erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_invoice_from_portal": "assets.overrides.purchase_order.override.make_purchase_invoice_from_portal",
+	"erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_invoice": "assets.overrides.purchase_order.override.make_purchase_invoice",
+	"erpnext.stock.doctype.material_request.material_request.make_purchase_order": "assets.overrides.material_request.override.make_purchase_order",
 }
 #
 # each overriding function accepts a `data` argument;
