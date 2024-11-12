@@ -8,7 +8,9 @@ from frappe.model.document import Document
 from frappe.utils import get_link_to_form
 from frappe.utils.data import date_diff, getdate
 
-from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import get_accounting_dimensions
+from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
+	get_accounting_dimensions,
+)
 from assets.assets.doctype.asset.depreciation import make_depreciation_entry
 from assets.assets.doctype.asset_activity.asset_activity import add_asset_activity
 
@@ -144,7 +146,9 @@ class AssetMovement(Document):
 			if not frappe.db.exists("Asset Depreciation Schedule", {"asset": asset.asset}):
 				return
 
-			asset_depr_schedule_doc = frappe.get_doc("Asset Depreciation Schedule", {"asset": asset.asset})
+			asset_depr_schedule_doc = frappe.get_doc(
+				"Asset Depreciation Schedule", {"asset": asset.asset}
+			)
 			transaction_date = getdate(self.transaction_date)
 
 			asset_depr_schedule_list = frappe.db.get_all(
@@ -232,8 +236,12 @@ class AssetMovement(Document):
 			if self.purpose == "Transfer" and frappe.db.exists(
 				"Asset Depreciation Schedule", {"asset": d.asset}
 			):
-				asset_depr_schedule_doc = frappe.get_doc("Asset Depreciation Schedule", {"asset": d.asset})
-				update_depreciation_schedule(d.asset, asset_depr_schedule_doc.name, self.transaction_date)
+				asset_depr_schedule_doc = frappe.get_doc(
+					"Asset Depreciation Schedule", {"asset": d.asset}
+				)
+				update_depreciation_schedule(
+					d.asset, asset_depr_schedule_doc.name, self.transaction_date
+				)
 				make_depreciation_entry(asset_depr_schedule_doc.name)
 
 				frappe.db.set_value(
@@ -284,7 +292,9 @@ class AssetMovement(Document):
 					break
 				try:
 					cancel_journal_entry(depreciation_entry["journal_entry"])
-					reverse_depreciation_entry(asset_depr_schedule, depreciation_entry, transaction_date)
+					reverse_depreciation_entry(
+						asset_depr_schedule, depreciation_entry, transaction_date
+					)
 				except Exception as e:
 					frappe.throw(str(e))
 
@@ -313,10 +323,13 @@ class AssetMovement(Document):
 						frappe.throw("You can only cancel the most recent record.")
 
 
-def update_depreciation_schedule(asset_name, asset_depriciation_schedule_name, transaction_date):
+def update_depreciation_schedule(
+	asset_name, asset_depriciation_schedule_name, transaction_date
+):
 	transaction_date = getdate(transaction_date)
-	asset_available_for_use_date = frappe.db.get_value("Asset", asset_name, "available_for_use_date")
-
+	asset_available_for_use_date, gross_purchase_amount = frappe.db.get_value(
+		"Asset", asset_name, ["available_for_use_date", "gross_purchase_amount"]
+	)
 	previous_schedule, next_schedule = find_previous_and_next_schedules(
 		asset_depriciation_schedule_name, transaction_date
 	)
@@ -328,12 +341,15 @@ def update_depreciation_schedule(asset_name, asset_depriciation_schedule_name, t
 		previous_schedule,
 		next_schedule,
 		asset_available_for_use_date,
+		gross_purchase_amount,
 		transaction_date,
 		asset_depriciation_schedule_name,
 	)
 
 
-def find_previous_and_next_schedules(asset_depriciation_schedule_name, transaction_date):
+def find_previous_and_next_schedules(
+	asset_depriciation_schedule_name, transaction_date
+):
 	asset_depr_schedule_list = get_asset_depr_schedule(asset_depriciation_schedule_name)
 	previous_schedule = None
 	next_schedule = None
@@ -359,6 +375,7 @@ def get_asset_depr_schedule(asset_depriciation_schedule_name):
 			"depreciation_amount",
 			"accumulated_depreciation_amount",
 			"journal_entry",
+			"wdv",
 		],
 		order_by="schedule_date",
 	)
@@ -368,15 +385,22 @@ def set_depreciation_schedule(
 	previous_schedule,
 	next_schedule,
 	asset_available_for_use_date,
+	gross_purchase_amount,
 	transaction_date,
 	asset_depriciation_schedule_name,
 ):
 	(
 		dep_amount_for_today,
 		dep_amount_for_next_schedule,
+		wdv_for_today,
+		wdv_for_next_schedule,
 		accumulated_depreciation_amount,
 	) = calculate_depreciation_amounts(
-		previous_schedule, next_schedule, asset_available_for_use_date, transaction_date
+		previous_schedule,
+		next_schedule,
+		asset_available_for_use_date,
+		gross_purchase_amount,
+		transaction_date,
 	)
 
 	if not dep_amount_for_today:
@@ -390,6 +414,7 @@ def set_depreciation_schedule(
 		{
 			"schedule_date": transaction_date,
 			"depreciation_amount": dep_amount_for_today,
+			"wdv": wdv_for_today,
 			"accumulated_depreciation_amount": accumulated_depreciation_amount,
 		},
 	)
@@ -399,18 +424,21 @@ def set_depreciation_schedule(
 		frappe.db.set_value(
 			"Depreciation Schedule",
 			next_schedule["name"],
-			"depreciation_amount",
-			dep_amount_for_next_schedule,
+			{"depreciation_amount": dep_amount_for_next_schedule, "wdv": wdv_for_next_schedule},
 		)
 
 	update_asset_depr_schedule_index(asset_depriciation_schedule_name)
 
 
 def calculate_depreciation_amounts(
-	previous_schedule, next_schedule, asset_available_for_use_date, transaction_date
+	previous_schedule,
+	next_schedule,
+	asset_available_for_use_date,
+	gross_purchase_amount,
+	transaction_date,
 ):
 	if not next_schedule:
-		return None, None, None
+		return None, None, None, None, None
 
 	if previous_schedule:
 		date_diff_between_schedule = date_diff(
@@ -418,25 +446,45 @@ def calculate_depreciation_amounts(
 		)
 		date_difference = date_diff(transaction_date, previous_schedule["schedule_date"])
 	else:
-		date_diff_between_schedule = date_diff(next_schedule["schedule_date"], asset_available_for_use_date)
+		date_diff_between_schedule = date_diff(
+			next_schedule["schedule_date"], asset_available_for_use_date
+		)
 		date_difference = date_diff(transaction_date, asset_available_for_use_date)
 
 	dep_amount_for_today = (
 		next_schedule["depreciation_amount"] / date_diff_between_schedule
 	) * date_difference
-	dep_amount_for_next_schedule = next_schedule["depreciation_amount"] - dep_amount_for_today
+	dep_amount_for_next_schedule = (
+		next_schedule["depreciation_amount"] - dep_amount_for_today
+	)
 	accumulated_depreciation_amount = (
 		previous_schedule["accumulated_depreciation_amount"] + dep_amount_for_today
 		if previous_schedule
 		else dep_amount_for_today
 	)
+	wdv_for_today = (
+		previous_schedule["wdv"] - dep_amount_for_today
+		if previous_schedule
+		else gross_purchase_amount - dep_amount_for_today
+	)
 
-	return dep_amount_for_today, dep_amount_for_next_schedule, accumulated_depreciation_amount
+	wdv_for_next_schedule = wdv_for_today - dep_amount_for_next_schedule
+
+	return (
+		dep_amount_for_today,
+		dep_amount_for_next_schedule,
+		wdv_for_today,
+		wdv_for_next_schedule,
+		accumulated_depreciation_amount,
+	)
 
 
 def update_next_schedule(schedule_name, dep_amount_for_next_schedule):
 	frappe.db.set_value(
-		"Depreciation Schedule", schedule_name, "depreciation_amount", dep_amount_for_next_schedule
+		"Depreciation Schedule",
+		schedule_name,
+		"depreciation_amount",
+		dep_amount_for_next_schedule,
 	)
 
 
@@ -454,12 +502,15 @@ def set_value_in_journal_entry(
 	old_dimension_value,
 	accumulated_depreciation_amount,
 ):
-	print(asset_values.gross_purchase_amount - accumulated_depreciation_amount)
-	reference = {"reference_type": "Asset", "reference_name": asset_movement_child_data.asset}
+	reference = {
+		"reference_type": "Asset",
+		"reference_name": asset_movement_child_data.asset,
+	}
 	if accumulated_depreciation_amount:
 		row1 = {
 			"account": fixed_asset_account,
-			"debit_in_account_currency": asset_values.gross_purchase_amount - accumulated_depreciation_amount,
+			"debit_in_account_currency": asset_values.gross_purchase_amount
+			- accumulated_depreciation_amount,
 			"cost_center": asset_movement_child_data.target_cost_center,
 		}
 		row1.update(reference)
@@ -515,9 +566,13 @@ def cancel_journal_entry(journal_entry_name):
 			journal_entry_doc.cancel()
 
 
-def reverse_depreciation_entry(asset_depr_schedule_name, depreciation_entry, transaction_date):
+def reverse_depreciation_entry(
+	asset_depr_schedule_name, depreciation_entry, transaction_date
+):
 	asset_depr_schedule = get_asset_depr_schedule(asset_depr_schedule_name)
-	previous_schedule, next_schedule = previous_and_next_schedules(asset_depr_schedule, transaction_date)
+	previous_schedule, next_schedule = previous_and_next_schedules(
+		asset_depr_schedule, transaction_date
+	)
 	frappe.get_doc("Depreciation Schedule", depreciation_entry["name"]).cancel()
 	frappe.db.delete("Depreciation Schedule", depreciation_entry["name"])
 
@@ -539,7 +594,9 @@ def previous_and_next_schedules(schedule_list, transaction_date):
 
 def set_depr_schedule_value(previous_schedule, next_schedule, depreciation_entry):
 	if next_schedule:
-		new_dep_amount = next_schedule["depreciation_amount"] + depreciation_entry["depreciation_amount"]
+		new_dep_amount = (
+			next_schedule["depreciation_amount"] + depreciation_entry["depreciation_amount"]
+		)
 		frappe.db.set_value(
 			"Depreciation Schedule", next_schedule["name"], "depreciation_amount", new_dep_amount
 		)
@@ -559,7 +616,7 @@ def set_depr_schedule_value(previous_schedule, next_schedule, depreciation_entry
 @frappe.whitelist()
 def make_asset_movement_entry(asset_movement_name, transaction_date, company):
 	frappe.has_permission("Journal Entry", throw=True)
-	print(type(transaction_date))
+
 	transaction_date = frappe.utils.getdate(transaction_date)
 	asset_movement_doc = frappe.get_doc("Asset Movement", asset_movement_name)
 
@@ -577,25 +634,29 @@ def make_asset_movement_entry(asset_movement_name, transaction_date, company):
 			"Asset Depreciation Schedule", {"asset": asset.asset, "docstatus": 1}, pluck="name"
 		)
 		asset_movement_child_data = frappe.db.get_value(
-			"Asset Movement Item", {"parent": asset_movement_name, "asset": asset.asset}, "*", as_dict=True
+			"Asset Movement Item",
+			{"parent": asset_movement_name, "asset": asset.asset},
+			"*",
+			as_dict=True,
 		)
 
 		old_dimension_value = {
-			fieldname: asset_movement_child_data.get("from_" + fieldname) for fieldname in fieldnames
+			fieldname: asset_movement_child_data.get("from_" + fieldname)
+			for fieldname in fieldnames
 		}
 		new_dimension_value = {
-			fieldname: asset_movement_child_data.get("target_" + fieldname) for fieldname in fieldnames
+			fieldname: asset_movement_child_data.get("target_" + fieldname)
+			for fieldname in fieldnames
 		}
 
 		if asset_values.calculate_depreciation and asset_depr_schedule:
 			for schedule in asset_depr_schedule:
-				print(schedule, transaction_date)
 				accumulated_depreciation_amount = frappe.db.get_value(
 					"Depreciation Schedule",
 					{"parent": schedule, "schedule_date": transaction_date},
 					"accumulated_depreciation_amount",
 				)
-				print(accumulated_depreciation_amount)
+
 				dep_row = set_value_in_journal_entry(
 					asset_values,
 					fixed_asset_account,
@@ -636,7 +697,9 @@ def make_asset_movement_entry(asset_movement_name, transaction_date, company):
 @frappe.whitelist()
 def make_delivery_note(**kwargs):
 	transaction_date = getdate(kwargs.get("transaction_date"))
-	asset_movement_item_list = frappe.db.get_all("Asset Movement Item", {"parent": kwargs.get("name")}, ["*"])
+	asset_movement_item_list = frappe.db.get_all(
+		"Asset Movement Item", {"parent": kwargs.get("name")}, ["*"]
+	)
 
 	fieldnames = frappe.get_list("Accounting Dimension", pluck="fieldname")
 
@@ -644,14 +707,14 @@ def make_delivery_note(**kwargs):
 	assets_info = frappe.db.get_all(
 		"Asset",
 		filters={"name": ["in", asset_names]},
-		fields=["name", "item_code", "asset_quantity"]
+		fields=["name", "item_code", "asset_quantity"],
 	)
 
 	item_codes = [asset["item_code"] for asset in assets_info]
 	item_details = frappe.db.get_all(
 		"Item",
 		filters={"item_code": ["in", item_codes]},
-		fields=["item_code", "item_name", "stock_uom"]
+		fields=["item_code", "item_name", "stock_uom"],
 	)
 
 	assets_info_dict = {asset["name"]: asset for asset in assets_info}
@@ -663,15 +726,19 @@ def make_delivery_note(**kwargs):
 		asset_info = assets_info_dict.get(item.asset)
 		item_info = item_details_dict.get(asset_info["item_code"])
 
-		asset_schedule = frappe.db.get_all("Asset Depreciation Schedule", {"asset": item.asset}, pluck="name")
+		asset_schedule = frappe.db.get_all(
+			"Asset Depreciation Schedule", {"asset": item.asset}, pluck="name"
+		)
 
 		depreciation_data = frappe.db.get_all(
 			"Depreciation Schedule",
 			filters={"parent": ["in", asset_schedule], "schedule_date": transaction_date},
-			fields=["parent", "accumulated_depreciation_amount"]
+			fields=["parent", "accumulated_depreciation_amount"],
 		)
 
-		depreciation_dict = {dep["parent"]: dep["accumulated_depreciation_amount"] for dep in depreciation_data}
+		depreciation_dict = {
+			dep["parent"]: dep["accumulated_depreciation_amount"] for dep in depreciation_data
+		}
 
 		for schedule in asset_schedule:
 			accumulated_depreciation = depreciation_dict.get(schedule)
@@ -681,7 +748,7 @@ def make_delivery_note(**kwargs):
 				"rate": accumulated_depreciation or 0,
 				"item_name": item_info["item_name"],
 				"uom": item_info["stock_uom"],
-				"qty": asset_info["asset_quantity"]
+				"qty": asset_info["asset_quantity"],
 			}
 
 			for fieldname in fieldnames:
