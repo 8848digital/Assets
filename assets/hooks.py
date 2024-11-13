@@ -45,8 +45,9 @@ app_license = "mit"
 # include js in doctype views
 doctype_js = {
 				"Purchase Receipt" : "public/js/erpnext/purchase_receipt.js",
-				"Purchase Invoice" : "public/js/erpnext/purchase_invoice.js"
-            }
+				"Purchase Invoice" : "public/js/erpnext/purchase_invoice.js",
+				"Item" : "public/js/erpnext/item.js",
+			}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -159,26 +160,30 @@ accounting_dimension_doctypes = [
 	"Asset Depreciation Schedule",
 ]
 
+buying_controller_doctypes = [
+	"Purchase Receipt",
+	"Purchase Invoice"
+]
+
 doc_events = {
 	tuple(period_closing_doctypes): {
 		"validate": "erpnext.accounts.doctype.accounting_period.accounting_period.validate_accounting_period_on_doc_save",
+	},
+	tuple(buying_controller_doctypes): {
+		"validate": "assets.controllers.doc_events.buying_controller.validate",
+		"on_submit": "assets.controllers.doc_events.buying_controller.on_submit",
+		"on_cancel": "assets.controllers.doc_events.buying_controller.on_cancel",
 	},
 	"Journal Entry": {
 		"on_submit": "assets.assets.customizations.journal_entry.journal_entry.on_submit",
 		"on_cancel": "assets.assets.customizations.journal_entry.journal_entry.on_cancel",
 	},
 	"Purchase Receipt": {
-		"validate": [
-			"assets.controllers.doc_events.buying_controller.validate",
-			"assets.overrides.purchase_receipt.purchase_receipt.validate",
-		],
-		"on_submit": "assets.controllers.doc_events.buying_controller.on_submit",
-		"on_cancel": "assets.controllers.doc_events.buying_controller.on_cancel",
+		"validate": "assets.overrides.purchase_receipt.purchase_receipt.validate",
 	},
-	"Purchase Invoice": {
-		"validate": "assets.controllers.doc_events.buying_controller.validate",
-		"on_submit": "assets.controllers.doc_events.buying_controller.on_submit",
-		"on_cancel": "assets.controllers.doc_events.buying_controller.on_cancel",
+	"Item": {
+		"onload": "assets.overrides.item.item.onload",
+		"validate": "assets.overrides.item.item.validate",
 	},
 }
 
@@ -217,13 +222,15 @@ override_whitelisted_methods = {
 	"erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_invoice_from_portal": "assets.overrides.purchase_order.override.make_purchase_invoice_from_portal",
 	"erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_invoice": "assets.overrides.purchase_order.override.make_purchase_invoice",
 	"erpnext.stock.doctype.material_request.material_request.make_purchase_order": "assets.overrides.material_request.override.make_purchase_order",
+	"erpnext.stock.get_item_details.get_item_details": "assets.overrides.item.get_item_details.get_item_details",
 }
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
 override_doctype_dashboards = {
-	"Purchase Receipt": "assets.overrides.purchase_receipt.purchase_receipt_dashboard.get_data"
+	"Purchase Receipt": "assets.overrides.purchase_receipt.purchase_receipt_dashboard.get_data",
+	"Purchase Invoice": "assets.overrides.purchase_invoice.purchase_invoice_dashboard.get_data",
 }
 
 # exempt linked doctypes from being automatically cancelled
