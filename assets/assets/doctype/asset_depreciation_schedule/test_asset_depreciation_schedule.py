@@ -415,3 +415,39 @@ class TestAssetDepreciationSchedule(FrappeTestCase):
 			for d in get_depr_schedule(asset.name, "Draft")
 		]
 		self.assertEqual(schedules, expected_schedules)
+	
+	def test_wvd_for_asset_depreciation(self):
+		
+		asset = create_asset(
+			calculate_depreciation=1,
+			available_for_use_date="2030-01-01",
+			purchase_date="2030-01-01",
+			expected_value_after_useful_life=10000,
+			depreciation_start_date="2030-12-31",
+			total_number_of_depreciations=12,
+			frequency_of_depreciation=1,
+		)
+
+		self.assertEqual(asset.status, "Draft")
+
+		expected_wdv = [
+			["2030-12-31", 92500.00],
+			["2031-01-31", 85000.00],
+			["2031-02-28", 77500.00],
+			["2031-03-31", 70000.00],
+			["2031-04-30", 62500.00],
+			["2031-05-31", 55000.00],
+			["2031-06-30", 47500.00],
+			["2031-07-31", 40000.00],
+			["2031-08-31", 32500.00],
+			["2031-09-30", 25000.00],
+			["2031-10-31", 17500.00],
+			["2031-11-30", 10000.00],
+		]
+
+		wdv = [
+			[cstr(d.schedule_date), d.wdv]
+			for d in get_depr_schedule(asset.name, "Draft")
+		]
+
+		self.assertEqual(wdv, expected_wdv)
