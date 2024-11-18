@@ -1,6 +1,7 @@
 import frappe
 from frappe.utils import flt, cint
 from frappe import _
+from erpnext.controllers.buying_controller import get_asset_items
 
 
 def validate(doc, method = None):
@@ -202,9 +203,3 @@ def get_asset_item_details(asset_items):
 		asset_items_data.setdefault(d.name, d)
 
 	return asset_items_data
-
-def get_asset_items(doc):
-		if doc.doctype not in ["Purchase Order", "Purchase Invoice", "Purchase Receipt"]:
-			return []
-
-		return [d.item_code for d in doc.items if d.is_fixed_asset]

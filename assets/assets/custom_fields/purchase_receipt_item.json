@@ -1,0 +1,44 @@
+{
+    "Purchase Receipt Item": [
+        {
+            "default": "0",
+            "fieldname": "is_fixed_asset",
+            "fieldtype": "Check",
+            "hidden": 1,
+            "label": "Is Fixed Asset",
+            "no_copy": 1,
+            "print_hide": 1,
+            "read_only": 1,
+            "insert_after": "column_break_40",
+            "module": "Assets"
+        },
+        {
+            "depends_on": "is_fixed_asset",
+            "fieldname": "asset_location",
+            "fieldtype": "Link",
+            "label": "Asset Location",
+            "options": "Location",
+            "insert_after": "manufacturer_part_no",
+            "module": "Assets"
+        },
+        {
+            "depends_on": "is_fixed_asset",
+            "fetch_from": "item_code.asset_category",
+            "fieldname": "asset_category",
+            "fieldtype": "Link",
+            "label": "Asset Category",
+            "options": "Asset Category",
+            "read_only": 1,
+            "insert_after": "asset_location",
+            "module": "Assets"
+        },
+        {
+            "fieldname": "wip_composite_asset",
+            "fieldtype": "Link",
+            "label": "WIP Composite Asset",
+            "options": "Asset",
+            "insert_after": "add_serial_batch_bundle",
+            "module": "Assets"
+        }
+    ]
+}

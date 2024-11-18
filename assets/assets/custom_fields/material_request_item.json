@@ -1,0 +1,12 @@
+{
+    "Material Request Item": [
+        {
+            "fieldname": "wip_composite_asset",
+            "fieldtype": "Link",
+            "label": "WIP Composite Asset",
+            "options": "Asset",
+            "insert_after": "column_break_glru",
+            "module": "Assets"
+        }
+    ]
+}

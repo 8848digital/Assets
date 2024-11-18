@@ -1,0 +1,49 @@
+{
+    "Purchase Invoice Item": [
+        {
+            "fieldname": "cost_center",
+            "property": "depends_on",
+            "value": "eval:!doc.is_fixed_asset",
+            "property_type": "Text",
+			"for_doctype": false,
+            "validate_fields_for_doctype": false,
+            "module": "Assets"
+        },
+		{
+            "fieldname": "batch_no",
+            "property": "depends_on",
+            "value": "eval:!doc.is_fixed_asset && doc.use_serial_batch_fields === 1 && parent.update_stock === 1",
+            "property_type": "Text",
+			"for_doctype": false,
+            "validate_fields_for_doctype": false,
+            "module": "Assets"
+        },
+		{
+            "fieldname": "serial_no",
+            "property": "depends_on",
+            "value": "eval:!doc.is_fixed_asset && doc.use_serial_batch_fields === 1 && parent.update_stock === 1",
+            "property_type": "Text",
+			"for_doctype": false,
+            "validate_fields_for_doctype": false,
+            "module": "Assets"
+        },
+		{
+            "fieldname": "rejected_serial_no",
+            "property": "depends_on",
+            "value": "eval:!doc.is_fixed_asset && doc.use_serial_batch_fields === 1 && parent.update_stock === 1",
+            "property_type": "Text",
+			"for_doctype": false,
+            "validate_fields_for_doctype": false,
+            "module": "Assets"
+        },
+		{
+            "fieldname": "section_break_rqbe",
+            "property": "depends_on",
+            "value": "eval:!doc.is_fixed_asset && doc.use_serial_batch_fields === 1 && parent.update_stock === 1",
+            "property_type": "Text",
+			"for_doctype": false,
+            "validate_fields_for_doctype": false,
+            "module": "Assets"
+        }
+    ]
+}

@@ -1,9 +1,13 @@
 from erpnext.accounts.doctype.purchase_invoice.purchase_invoice import PurchaseInvoice
-from assets.controllers.overrides.buying_controller import AssetsBuyingController
-from assets.overrides.purchase_invoice.override import set_expense_account, check_asset_cwip_enabled, make_item_gl_entries, update_gross_purchase_amount_for_linked_assets
+from assets.assets.customizations.accounts.purchase_invoice.override import (
+    set_expense_account,
+    check_asset_cwip_enabled,
+    make_item_gl_entries,
+    update_gross_purchase_amount_for_linked_assets
+)
 
 
-class AssetsPurchaseInvoice(PurchaseInvoice, AssetsBuyingController):
+class AssetsPurchaseInvoice(PurchaseInvoice):
     def set_expense_account(self, for_validate=False):
         set_expense_account(self, for_validate)
 

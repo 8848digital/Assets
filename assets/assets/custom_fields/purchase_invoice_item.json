@@ -1,0 +1,45 @@
+{
+    "Purchase Invoice Item": [
+        {
+            "fieldname": "wip_composite_asset",
+            "fieldtype": "Link",
+            "label": "WIP Composite Asset",
+            "options": "Asset",
+            "insert_after": "expense_account",
+            "module": "Assets"
+        },
+        {
+            "default": "0",
+            "fetch_from": "item_code.is_fixed_asset",
+            "fieldname": "is_fixed_asset",
+            "fieldtype": "Check",
+            "hidden": 1,
+            "label": "Is Fixed Asset",
+            "no_copy": 1,
+            "print_hide": 1,
+            "read_only": 1,
+            "insert_after": "col_break5",
+            "module": "Assets"
+        },
+        {
+            "depends_on": "is_fixed_asset",
+            "fieldname": "asset_location",
+            "fieldtype": "Link",
+            "label": "Asset Location",
+            "options": "Location",
+            "insert_after": "is_fixed_asset",
+            "module": "Assets"
+        },
+        {
+            "depends_on": "is_fixed_asset",
+            "fetch_from": "item_code.asset_category",
+            "fieldname": "asset_category",
+            "fieldtype": "Link",
+            "label": "Asset Category",
+            "options": "Asset Category",
+            "read_only": 1,
+            "insert_after": "asset_location",
+            "module": "Assets"
+        }
+    ]
+}

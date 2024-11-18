@@ -1,0 +1,51 @@
+{
+    "Item": [
+        {
+            "allow_in_quick_entry": 1,
+            "default": "0",
+            "fieldname": "is_fixed_asset",
+            "fieldtype": "Check",
+            "label": "Is Fixed Asset",
+            "set_only_once": 1,
+            "insert_after": "standard_rate",
+            "module": "Assets"
+        },
+        {
+            "default": "0",
+            "depends_on": "is_fixed_asset",
+            "fieldname": "auto_create_assets",
+            "fieldtype": "Check",
+            "label": "Auto Create Assets on Purchase",
+            "insert_after": "is_fixed_asset",
+            "module": "Assets"
+        },
+        {
+            "default": "0",
+            "depends_on": "auto_create_Assets",
+            "fieldname": "is_grouped_asset",
+            "fieldtype": "Check",
+            "label": "Create Grouped Asset",
+            "insert_after": "auto_create_Assets",
+            "module": "Assets"
+        },
+        {
+            "allow_in_quick_entry": 1,
+            "depends_on": "is_fixed_asset",
+            "fieldname": "asset_category",
+            "fieldtype": "Link",
+            "label": "Asset Category",
+            "mandatory_depends_on": "is_fixed_asset",
+            "options": "Asset Category",
+            "insert_after": "is_grouped_asset",
+            "module": "Assets"
+        },
+        {
+            "depends_on": "is_fixed_asset",
+            "fieldname": "asset_naming_series",
+            "fieldtype": "Select",
+            "label": "Asset Naming Series",
+            "insert_after": "asset_category",
+            "module": "Assets"
+        }
+    ]
+}
