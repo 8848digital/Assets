@@ -70,13 +70,13 @@ frappe.ui.form.on("Asset", {
 
 		frm.set_query("purchase_receipt", (doc) => {
 			return {
-				query: "assets.controllers.queries.get_purchase_receipts",
+				query: "assets.assets.controllers.queries.get_purchase_receipts",
 				filters: { item_code: doc.item_code, company: frm.doc.company},
 			};
 		});
 		frm.set_query("purchase_invoice", (doc) => {
 			return {
-				query: "assets.controllers.queries.get_purchase_invoices",
+				query: "assets.assets.controllers.queries.get_purchase_invoices",
 				filters: {
 					item_code: doc.item_code,
 					company: frm.doc.company,

@@ -1,0 +1,76 @@
+{
+    "Item": [
+        {
+            "fieldname": "is_stock_item",
+            "property": "depends_on",
+            "value": "eval:!doc.is_fixed_asset",
+            "property_type": "Text",
+			"for_doctype": false,
+            "validate_fields_for_doctype": false,
+            "module": "Assets"
+        },
+		{
+            "fieldname": "include_item_in_manufacturing",
+            "property": "depends_on",
+            "value": "eval:!doc.is_fixed_asset",
+            "property_type": "Text",
+			"for_doctype": false,
+            "validate_fields_for_doctype": false,
+            "module": "Assets"
+        },
+		{
+            "fieldname": "variants_section",
+            "property": "depends_on",
+            "value": "eval:!doc.is_fixed_asset",
+            "property_type": "Text",
+			"for_doctype": false,
+            "validate_fields_for_doctype": false,
+            "module": "Assets"
+        },
+		{
+            "fieldname": "supplier_details",
+            "property": "depends_on",
+            "value": "eval:!doc.is_fixed_asset",
+            "property_type": "Text",
+			"for_doctype": false,
+            "validate_fields_for_doctype": false,
+            "module": "Assets"
+        },
+		{
+            "fieldname": "customer_details",
+            "property": "depends_on",
+            "value": "eval:!doc.is_fixed_asset",
+            "property_type": "Text",
+			"for_doctype": false,
+            "validate_fields_for_doctype": false,
+            "module": "Assets"
+        },
+		{
+            "fieldname": "over_delivery_receipt_allowance",
+            "property": "depends_on",
+            "value": "eval:!doc.__islocal && !doc.is_fixed_asset",
+            "property_type": "Text",
+			"for_doctype": false,
+            "validate_fields_for_doctype": false,
+            "module": "Assets"
+        },
+		{
+            "fieldname": "over_billing_allowance",
+            "property": "depends_on",
+            "value": "eval:!doc.__islocal && !doc.is_fixed_asset",
+            "property_type": "Text",
+			"for_doctype": false,
+            "validate_fields_for_doctype": false,
+            "module": "Assets"
+        },
+		{
+            "fieldname": "accounting",
+            "property": "depends_on",
+            "value": "eval:!doc.is_fixed_asset",
+            "property_type": "Text",
+			"for_doctype": false,
+            "validate_fields_for_doctype": false,
+            "module": "Assets"
+        }
+    ]
+}

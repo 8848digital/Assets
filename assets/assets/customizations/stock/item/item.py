@@ -1,4 +1,4 @@
-from assets.overrides.item.doc_events import validate_fixed_asset, validate_item_type
+from assets.assets.customizations.stock.item.doc_events import validate_fixed_asset, validate_item_type
 import frappe
 
 def onload(doc, method = None):
