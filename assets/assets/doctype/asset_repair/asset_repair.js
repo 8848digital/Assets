@@ -12,13 +12,6 @@ frappe.ui.form.on("Asset Repair", {
 			};
 		};
 
-		frm.fields_dict.project.get_query = function (doc) {
-			return {
-				filters: {
-					company: doc.company,
-				},
-			};
-		};
 
 		frm.set_query("asset", function () {
 			return {
