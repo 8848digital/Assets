@@ -44,9 +44,11 @@ app_license = "mit"
 
 # include js in doctype views
 doctype_js = {
-				"Purchase Receipt" : "assets/assets/customizations/stock/purchase_receipt/purchase_receipt.js",
-				"Purchase Invoice" : "assets/assets/customizations/accounts/purchase_invoice/purchase_invoice.js",
-				"Item" : "assets/assets/customizations/stock/item/item.js",
+				"Purchase Receipt" : "assets/customizations/stock/purchase_receipt/purchase_receipt.js",
+				"Purchase Invoice" : "assets/customizations/accounts/purchase_invoice/purchase_invoice.js",
+				"Item" : "assets/customizations/stock/item/item.js",
+                "Sales Invoice" : "assets/customizations/accounts/sales_invoice/sales_invoice.js",
+                "Journal Entry" : "assets/customizations/accounts/journal_entry/journal_entry.js",
 			}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -135,6 +137,7 @@ before_uninstall = "assets.uninstall.before_uninstall"
 override_doctype_class = {
 	"Purchase Receipt": "assets.assets.customizations.stock.purchase_receipt.purchase_receipt.AssetsPurchaseReceipt",
 	"Purchase Invoice": "assets.assets.customizations.accounts.purchase_invoice.purchase_invoice.AssetsPurchaseInvoice",
+    "Sales Invoice": "assets.assets.customizations.accounts.sales_invoice.sales_invoice.AssetsSalesInvoice",
 }
 
 # Document Events
@@ -171,6 +174,7 @@ doc_events = {
 		"on_cancel": "assets.assets.controllers.doc_events.buying_controller.on_cancel",
 	},
 	"Journal Entry": {
+        "validate": "assets.assets.customizations.accounts.journal_entry.journal_entry.validate",
 		"on_submit": "assets.assets.customizations.accounts.journal_entry.journal_entry.on_submit",
 		"on_cancel": "assets.assets.customizations.accounts.journal_entry.journal_entry.on_cancel",
 	},
@@ -180,6 +184,9 @@ doc_events = {
 	"Item": {
 		"onload": "assets.assets.customizations.stock.item.item.onload",
 		"validate": "assets.assets.customizations.stock.item.item.validate",
+	},
+    "Sales Invoice": {
+		"validate": "assets.assets.customizations.accounts.sales_invoice.sales_invoice.validate",
 	},
 }
 
