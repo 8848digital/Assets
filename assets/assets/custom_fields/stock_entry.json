@@ -1,0 +1,14 @@
+{
+    "Stock Entry": [
+        {
+            "depends_on": "eval:doc.asset_repair",
+            "fieldname": "asset_repair",
+            "fieldtype": "Link",
+            "label": "Asset Repair",
+            "options": "Asset Repair",
+            "read_only": 1,
+            "insert_after": "purchase_receipt_no",
+            "module": "Assets"
+        }
+    ]
+}

@@ -188,6 +188,9 @@ doc_events = {
     "Sales Invoice": {
 		"validate": "assets.assets.customizations.accounts.sales_invoice.sales_invoice.validate",
 	},
+	# "Landed Cost Voucher": {
+	# 	"validate": "assets.assets.customizations.stock.landed_cost_voucher.landed_cost_voucher.validate",
+	# },
 }
 
 # Scheduled Tasks
