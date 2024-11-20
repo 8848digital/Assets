@@ -1,0 +1,34 @@
+{
+    "POS Invoice Item": [
+        {
+            "default": "0",
+            "fieldname": "is_fixed_asset",
+            "fieldtype": "Check",
+            "hidden": 1,
+            "label": "Is Fixed Asset",
+            "no_copy": 1,
+            "print_hide": 1,
+            "read_only": 1,
+            "insert_after": "income_account",
+            "module": "Assets"
+        },
+        {
+            "fieldname": "asset",
+            "fieldtype": "Link",
+            "label": "Asset",
+            "no_copy": 1,
+            "options": "Asset",
+            "insert_after": "is_fixed_asset",
+            "module": "Assets"
+        },
+        {
+            "depends_on": "asset",
+            "fieldname": "finance_book",
+            "fieldtype": "Link",
+            "label": "Finance Book",
+            "options": "Finance Book",
+            "insert_after": "asset",
+            "module": "Assets"
+        }
+    ]
+}
