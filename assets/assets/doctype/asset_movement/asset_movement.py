@@ -206,7 +206,7 @@ class AssetMovement(Document):
 					asm.company=%(company)s and
 					asm.docstatus=1
 				ORDER BY
-					asm.transaction_date desc limit 1
+					asm.creation desc limit 1
 				""",
 				args,
 				as_dict=True,

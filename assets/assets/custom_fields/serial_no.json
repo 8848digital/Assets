@@ -1,0 +1,41 @@
+{
+    "Serial No": [
+        {
+            "fieldname": "asset_details",
+            "fieldtype": "Section Break",
+            "label": "Asset Details",
+            "insert_after": "brand",
+            "module": "Assets"
+        },
+        {
+            "fieldname": "asset",
+            "fieldtype": "Link",
+            "label": "Asset",
+            "no_copy": 1,
+            "options": "Asset",
+            "print_hide": 1,
+            "read_only": 1,
+            "insert_after": "asset_details",
+            "module": "Assets"
+        },
+        {
+            "depends_on": "asset",
+            "fieldname": "asset_status",
+            "fieldtype": "Select",
+            "label": "Asset Status",
+            "options": "\nIssue\nReceipt\nTransfer",
+            "read_only": 1,
+            "insert_after": "asset",
+            "module": "Assets"
+        },
+        {
+            "fieldname": "location",
+            "fieldtype": "Link",
+            "label": "Location",
+            "options": "Location",
+            "read_only": 1,
+            "insert_after": "column_break_24",
+            "module": "Assets"
+        }
+    ]
+}
