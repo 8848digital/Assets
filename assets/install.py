@@ -167,7 +167,7 @@ ASSETS_PROPERTY_SETTERS = {
 		{
             "fieldname": "batch_no",
             "property": "depends_on",
-            "value": "eval:!doc.is_fixed_asset && doc.use_serial_batch_fields === 1 && parent.update_stock === 1",
+            "value": "eval:!doc.is_fixed_asset && doc.use_serial_batch_fields === 1 && parent.update_stock === 1 && doc.has_batch_no === 1",
             "property_type": "Text",
 			"for_doctype": False,
             "validate_fields_for_doctype": False,
@@ -175,7 +175,7 @@ ASSETS_PROPERTY_SETTERS = {
 		{
             "fieldname": "serial_no",
             "property": "depends_on",
-            "value": "eval:!doc.is_fixed_asset && doc.use_serial_batch_fields === 1 && parent.update_stock === 1",
+            "value": "eval:!doc.is_fixed_asset && doc.use_serial_batch_fields === 1 && parent.update_stock === 1 && doc.has_serial_no === 1",
             "property_type": "Text",
 			"for_doctype": False,
             "validate_fields_for_doctype": False,
@@ -183,7 +183,7 @@ ASSETS_PROPERTY_SETTERS = {
 		{
             "fieldname": "rejected_serial_no",
             "property": "depends_on",
-            "value": "eval:!doc.is_fixed_asset && doc.use_serial_batch_fields === 1 && parent.update_stock === 1",
+            "value": "eval:!doc.is_fixed_asset && doc.use_serial_batch_fields === 1 && parent.update_stock === 1 && doc.has_serial_no === 1",
             "property_type": "Text",
 			"for_doctype": False,
             "validate_fields_for_doctype": False,
