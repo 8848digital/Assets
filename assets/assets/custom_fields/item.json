@@ -21,11 +21,11 @@
         },
         {
             "default": "0",
-            "depends_on": "auto_create_Assets",
+            "depends_on": "auto_create_assets",
             "fieldname": "is_grouped_asset",
             "fieldtype": "Check",
             "label": "Create Grouped Asset",
-            "insert_after": "auto_create_Assets",
+            "insert_after": "auto_create_assets",
             "module": "Assets"
         },
         {
