@@ -1,0 +1,84 @@
+{
+    "Company": [
+        {
+            "fieldname": "fixed_asset_defaults",
+            "fieldtype": "Section Break",
+            "label": "Fixed Asset Defaults",
+            "insert_after": "exception_budget_approver_role",
+            "module": "Assets"
+        },
+        {
+            "fieldname": "accumulated_depreciation_account",
+            "fieldtype": "Link",
+            "label": "Accumulated Depreciation Account",
+            "no_copy": 1,
+            "options": "Account",
+            "insert_after": "fixed_asset_defaults",
+            "module": "Assets"
+        },
+        {
+            "fieldname": "depreciation_expense_account",
+            "fieldtype": "Link",
+            "label": "Depreciation Expense Account",
+            "no_copy": 1,
+            "options": "Account",
+            "insert_after": "accumulated_depreciation_account",
+            "module": "Assets"
+        },
+        {
+            "fieldname": "series_for_depreciation_entry",
+            "fieldtype": "Data",
+            "label": "Series for Asset Depreciation Entry (Journal Entry)",
+            "insert_after": "depreciation_expense_account",
+            "module": "Assets"
+        },
+        {
+            "fieldname": "expenses_included_in_asset_valuation",
+            "fieldtype": "Link",
+            "label": "Expenses Included In Asset Valuation",
+            "options": "Account",
+            "insert_after": "series_for_depreciation_entry",
+            "module": "Assets"
+        },
+        {
+            "fieldname": "column_break_40",
+            "fieldtype": "Column Break",
+            "insert_after": "expenses_included_in_asset_valuation",
+            "module": "Assets"
+        },
+        {
+            "fieldname": "disposal_account",
+            "fieldtype": "Link",
+            "label": "Gain/Loss Account on Asset Disposal",
+            "no_copy": 1,
+            "options": "Account",
+            "insert_after": "column_break_40",
+            "module": "Assets"
+        },
+        {
+            "fieldname": "depreciation_cost_center",
+            "fieldtype": "Link",
+            "label": "Asset Depreciation Cost Center",
+            "no_copy": 1,
+            "options": "Cost Center",
+            "insert_after": "disposal_account",
+            "module": "Assets"
+        },
+        {
+            "fieldname": "capital_work_in_progress_account",
+            "fieldtype": "Link",
+            "label": "Capital Work In Progress Account",
+            "options": "Account",
+            "insert_after": "depreciation_cost_center",
+            "module": "Assets"
+        },
+        {
+            "fieldname": "asset_received_but_not_billed",
+            "fieldtype": "Link",
+            "label": "Asset Received But Not Billed",
+            "options": "Account",
+            "insert_after": "capital_work_in_progress_account",
+            "module": "Assets"
+        }     
+    ]
+}

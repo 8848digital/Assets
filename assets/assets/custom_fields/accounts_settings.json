@@ -1,0 +1,41 @@
+{
+    "Accounts Settings": [
+        {
+            "fieldname": "assets_tab",
+            "fieldtype": "Tab Break",
+            "label": "Assets",
+            "insert_after": "post_change_gl_entries",
+            "module": "Assets"
+        },
+        {
+            "fieldname": "asset_settings_section",
+            "fieldtype": "Section Break",
+            "label": "Asset Settings",
+            "insert_after": "assets_tab",
+            "module": "Assets"
+        },
+        {
+            "default": "0",
+            "description": "Enable this option to calculate daily depreciation by considering the total number of days in the entire depreciation period, (including leap years) while using daily pro-rata based depreciation",
+            "fieldname": "calculate_depr_using_total_days",
+            "fieldtype": "Check",
+            "label": "Calculate daily depreciation using total days in depreciation period",
+            "insert_after": "asset_settings_section",
+            "module": "Assets"
+        },
+        {
+            "fieldname": "column_break_gjcc",
+            "fieldtype": "Column Break",
+            "insert_after": "calculate_depr_using_total_days",
+            "module": "Assets"
+        },
+        {
+            "default": "1",
+            "fieldname": "book_asset_depreciation_entry_automatically",
+            "fieldtype": "Check",
+            "label": "Book Asset Depreciation Entry Automatically",
+            "insert_after": "column_break_gjcc",
+            "module": "Assets"
+        }
+    ]
+}

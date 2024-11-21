@@ -6,7 +6,7 @@ from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
 )
 
 
-class AssetsTestPurchaseInvoice(TestLandedCostVoucher):
+class AssetsTestLandedCostVoucher(TestLandedCostVoucher):
 
     def test_asset_lcv(self):
             "Check if LCV for an Asset updates the Assets Gross Purchase Amount correctly."
