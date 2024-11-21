@@ -8,7 +8,7 @@ def after_install():
 		print("Setting up Frappe Asset...")
 		setup()
 
-		click.secho("Thank you for installing Frappe Fixed Asset!", fg="green")
+		click.secho("Thank you for installing Frappe Asset!", fg="green")
 
 	except Exception as e:
 		click.secho(
