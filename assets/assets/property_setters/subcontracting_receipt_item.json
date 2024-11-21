@@ -1,0 +1,22 @@
+{
+    "Subcontracting Receipt Item": [
+        {            
+            "fieldname": "serial_no",
+            "property": "depends_on",
+            "value": "eval:!doc.is_fixed_asset && doc.use_serial_batch_fields === 1",
+            "property_type": "Text",
+            "for_doctype": false,
+            "validate_fields_for_doctype": false,
+            "module": "Assets"
+        },
+        {
+            "fieldname": "batch_no",
+            "property": "depends_on",
+            "value": "eval:!doc.is_fixed_asset && doc.use_serial_batch_fields === 1",
+            "property_type": "Text",
+            "for_doctype": false,
+            "validate_fields_for_doctype": false,
+            "module": "Assets"
+        }
+    ]
+}

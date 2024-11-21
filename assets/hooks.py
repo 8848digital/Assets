@@ -50,6 +50,8 @@ doctype_js = {
                 "Sales Invoice" : "assets/customizations/accounts/sales_invoice/sales_invoice.js",
                 "Journal Entry" : "assets/customizations/accounts/journal_entry/journal_entry.js",
                 "Serial and Batch Bundle" : "assets/customizations/stock/serial_and_batch_bundle/serial_and_batch_bundle.js",
+                "Company" : "assets/customizations/setup/company/company.js",
+                "BOM": "assets/customizations/manufacturing/bom/bom.js",
 			}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -193,6 +195,15 @@ doc_events = {
 		"on_submit": "assets.assets.customizations.stock.landed_cost_voucher.landed_cost_voucher.on_submit",
         "on_cancel": "assets.assets.customizations.stock.landed_cost_voucher.landed_cost_voucher.on_cancel",
 	},
+    "Company": {
+		"on_update": "assets.assets.customizations.setup.company.company.on_update",
+	},
+    "Product Bundle": {
+		"validate": "assets.assets.customizations.selling.product_bundle.product_bundle.validate",
+	},
+    "GL Entry": {
+		"validate": "assets.assets.customizations.accounts.gl_entry.gl_entry.validate",
+	},
 }
 
 # Scheduled Tasks
@@ -223,18 +234,14 @@ global_search_doctypes = {
 # Overriding Methods
 # ------------------------------
 #
-override_whitelisted_methods = {
-	"erpnext.stock.doctype.purchase_receipt.purchase_receipt.make_purchase_invoice": "assets.assets.customizations.stock.purchase_receipt.override.make_purchase_invoice",
-	"erpnext.stock.get_item_details.get_item_details": "assets.assets.customizations.stock.item.get_item_details.get_item_details",
-}
+# override_whitelisted_methods = {
+# }
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
-override_doctype_dashboards = {
-	"Purchase Receipt": "assets.assets.customizations.stock.purchase_receipt.purchase_receipt_dashboard.get_data",
-	"Purchase Invoice": "assets.assets.customizations.accounts.purchase_invoice.purchase_invoice_dashboard.get_data",
-}
+# override_doctype_dashboards = {
+# }
 
 # exempt linked doctypes from being automatically cancelled
 #
