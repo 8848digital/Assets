@@ -1,0 +1,18 @@
+{
+    "Landed Cost Item": [
+        {
+            "default": "0",
+            "fetch_from": "item_code.is_fixed_asset",
+            "fieldname": "is_fixed_asset",
+            "fieldtype": "Check",
+            "hidden": 1,
+            "label": "Is Fixed Asset",
+            "read_only": 1,
+            "show_days": 1,
+            "show_seconds": 1,
+            "insert_after": "amount",
+            "module": "Assets"
+        }
+            
+    ]
+}
