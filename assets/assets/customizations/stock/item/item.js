@@ -27,7 +27,7 @@ frappe.ui.form.on("Item", {
 		frm.toggle_enable(["has_serial_no", "serial_no_series"], !frm.doc.is_fixed_asset);
 
 		frappe.call({
-			method: "assets.overrides.item.item.get_asset_naming_series",
+			method: "assets.assets.customizations.stock.item.item.get_asset_naming_series",
 			callback: function (r) {
 				frm.set_value("is_stock_item", frm.doc.is_fixed_asset ? 0 : 1);
 				frm.events.set_asset_naming_series(frm, r.message);

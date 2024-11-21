@@ -49,6 +49,7 @@ doctype_js = {
 				"Item" : "assets/customizations/stock/item/item.js",
                 "Sales Invoice" : "assets/customizations/accounts/sales_invoice/sales_invoice.js",
                 "Journal Entry" : "assets/customizations/accounts/journal_entry/journal_entry.js",
+                "Serial and Batch Bundle" : "assets/customizations/stock/serial_and_batch_bundle/serial_and_batch_bundle.js",
 			}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -188,9 +189,10 @@ doc_events = {
     "Sales Invoice": {
 		"validate": "assets.assets.customizations.accounts.sales_invoice.sales_invoice.validate",
 	},
-	# "Landed Cost Voucher": {
-	# 	"validate": "assets.assets.customizations.stock.landed_cost_voucher.landed_cost_voucher.validate",
-	# },
+	"Landed Cost Voucher": {
+		"on_submit": "assets.assets.customizations.stock.landed_cost_voucher.landed_cost_voucher.on_submit",
+        "on_cancel": "assets.assets.customizations.stock.landed_cost_voucher.landed_cost_voucher.on_cancel",
+	},
 }
 
 # Scheduled Tasks
