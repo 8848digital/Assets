@@ -9,6 +9,10 @@ def after_install():
 	create_custom_fields()
 	create_property_setter()
 
+def after_migrate():
+	create_custom_fields()
+	create_property_setter()
+
 def before_uninstall():
 	delete_property_setters()
 	delete_custom_fields()
@@ -16,7 +20,7 @@ def before_uninstall():
 
 def create_custom_fields():
 	CUSTOM_FIELDS = {}
-	print("Creating/Updating Custom Fields....")
+	print("Creating/Updating Custom Fields For Assets....")
 	path = os.path.join(os.path.dirname(__file__), "assets/custom_fields")
 	for file in os.listdir(path):
 		with open(os.path.join(path, file), "r") as f:
@@ -25,7 +29,7 @@ def create_custom_fields():
 
 def create_property_setter():
 	PROPERTY_SETTERS = {}
-	print("Creating/Updating Property Setter....")
+	print("Creating/Updating Property Setter For Assets....")
 	path = os.path.join(os.path.dirname(__file__), "assets/property_setters")
 	for file in os.listdir(path):
 		with open(os.path.join(path, file), "r") as f:
@@ -45,7 +49,7 @@ def create_property_setter():
 
 def delete_property_setters():
 	PROPERTY_SETTERS = {}
-	print("Removing Property Setters....")
+	print("Removing Property Setters For Assets....")
 	path = os.path.join(os.path.dirname(__file__), "assets/property_setters")
 	for file in os.listdir(path):
 		with open(os.path.join(path, file), "r") as f:
@@ -66,7 +70,7 @@ def delete_property_setters():
 
 def delete_custom_fields():
 	CUSTOM_FIELDS = {}
-	print("Removing Custom Fields....")
+	print("Removing Custom Fields For Assets....")
 	path = os.path.join(os.path.dirname(__file__), "assets/custom_fields")
 	for file in os.listdir(path):
 		with open(os.path.join(path, file), "r") as f:
