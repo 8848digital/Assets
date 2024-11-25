@@ -278,6 +278,7 @@ class AssetRepair(AccountsController):
 					"basic_rate": stock_item.valuation_rate,
 					"serial_and_batch_bundle": stock_item.serial_and_batch_bundle,
 					"cost_center": self.cost_center,
+					"project": self.get("project") if "projects" in frappe.get_installed_apps() else "",
 				},
 			)
 
