@@ -191,6 +191,7 @@ doc_events = {
 	},
     "Sales Invoice": {
 		"validate": "assets.assets.customizations.accounts.sales_invoice.sales_invoice.validate",
+		"on_submit": "assets.assets.customizations.accounts.sales_invoice.sales_invoice.on_submit",
 	},
 	"Landed Cost Voucher": {
 		"on_submit": "assets.assets.customizations.stock.landed_cost_voucher.landed_cost_voucher.on_submit",

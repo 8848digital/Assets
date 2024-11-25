@@ -34,3 +34,8 @@ def set_income_account_for_fixed_assets(doc):
             d.income_account = disposal_account
             if not d.cost_center:
                 d.cost_center = depreciation_cost_center
+
+def check_n_update_asset_doc(doc):
+    for d in doc.get("items"):
+        if d.get("asset"): 
+            frappe.db.set_value('Asset', d.get("asset"), {"sales_invoice" : doc.name})

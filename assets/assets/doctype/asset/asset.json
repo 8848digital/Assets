@@ -19,6 +19,7 @@
   "customer",
   "image",
   "journal_entry_for_scrap",
+  "sales_invoice",
   "column_break_3",
   "naming_series",
   "asset_name",
@@ -564,6 +565,13 @@
    "hidden": 1,
    "label": "Is Capitalized",
    "read_only": 1
+  },
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "label": "Sales Invoice",
+   "options": "Sales Invoice",
+   "read_only": 1
   }
  ],
  "idx": 72,
@@ -607,7 +615,7 @@
    "link_fieldname": "target_asset"
   }
  ],
- "modified": "2024-11-04 11:54:52.442603",
+ "modified": "2024-11-21 14:59:07.456081",
  "modified_by": "Administrator",
  "module": "Assets",
  "name": "Asset",
