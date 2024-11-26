@@ -215,7 +215,7 @@ class Asset(AccountsController):
 
 			doc_field = "purchase_invoice" if self.purchase_invoice else "purchase_receipt"
 			existing_doc = frappe.get_all(
-				"Asset", 
+				"Asset",
 				filters = {
 					"name": ["!=", self.name],
 					doc_field: self.get(doc_field),
