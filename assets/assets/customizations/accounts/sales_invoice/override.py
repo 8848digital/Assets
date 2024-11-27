@@ -11,7 +11,7 @@ from assets.assets.doctype.asset.depreciation import (
 from assets.assets.doctype.asset_activity.asset_activity import add_asset_activity
 import erpnext
 from erpnext.accounts.utils import get_account_currency
-from erpnext.controllers.stock_controller import StockController
+from erpnext.controllers.selling_controller import SellingController
 
 
 
@@ -116,7 +116,7 @@ def make_item_gl_entries(self, gl_entries):
 
 		# expense account gl entries
 		if cint(self.update_stock) and erpnext.is_perpetual_inventory_enabled(self.company):
-			gl_entries += super(StockController, self).get_gl_entries()
+			gl_entries += super(SellingController, self).get_gl_entries()
 
 def get_asset(doc, item):
     if item.get("asset"):
