@@ -8,8 +8,9 @@
             "label": "Is Fixed Asset",
             "set_only_once": 1,
             "insert_after": "standard_rate",
-            "module": "Assets"
-        },
+            "module": "Assets",
+            "read_only_depends_on": "eval: doc.is_stock_item || !doc.__islocal"
+        },        
         {
             "default": "0",
             "depends_on": "is_fixed_asset",
