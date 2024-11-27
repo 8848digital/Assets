@@ -213,6 +213,22 @@ class Asset(AccountsController):
 					)
 				)
 
+			doc_field = "purchase_invoice" if self.purchase_invoice else "purchase_receipt"
+			existing_doc = frappe.get_all(
+				"Asset",
+				filters = {
+					"name": ["!=", self.name],
+					doc_field: self.get(doc_field),
+					"docstatus": ["!=", 2],
+				},
+				pluck = "asset_quantity"
+			)
+
+			if sum(existing_doc) >= next((i.qty for i in reference_doc.items if i.item_code == self.item_code), 0):
+				frappe.throw(
+					_("Asset has already been created against this Asset Purchase.")
+				)
+
 		if self.is_existing_asset and self.purchase_invoice:
 			frappe.throw(
 				_("Purchase Invoice cannot be made against an existing asset {0}").format(self.name)
