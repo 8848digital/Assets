@@ -16,6 +16,7 @@ def after_migrate():
 def before_uninstall():
 	delete_property_setters()
 	delete_custom_fields()
+	delete_auto_created_custom_fields()
 
 
 def create_custom_fields():
@@ -93,3 +94,9 @@ def delete_custom_fields():
 				},
 			)
 			frappe.clear_cache(doctype=doctype)
+
+def delete_auto_created_custom_fields():
+	doctype_list = frappe.get_all("DocType", {"module": "Assets"}, pluck = "name")
+	custom_field_list = frappe.get_all("Custom Field",  {"fieldtype": "Link", "options": ["In", doctype_list]}, pluck = "name")
+	for custom_field in custom_field_list:
+		frappe.db.delete("Custom Field", {"name": custom_field})
