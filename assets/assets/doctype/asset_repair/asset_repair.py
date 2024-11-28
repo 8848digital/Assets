@@ -507,7 +507,7 @@ def expense_item_pi_query(
 		filters, 
 		doctype = None , 
 		txt = None , 
-		searchfield = "NAME" , 
+		searchfield = "name" , 
 		start = 0 , 
 		page_len = 10 , 
 	):
