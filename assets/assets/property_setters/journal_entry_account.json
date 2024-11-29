@@ -12,7 +12,7 @@
         {
             "fieldname": "reference_due_date",
             "property": "depends_on",
-            "value": "eval:doc.reference_type&&!in_list(doc.reference_type, ['Expense Claim', 'Asset', 'Employee Loan', 'Employee Advance']",
+            "value": "eval:doc.reference_type&&!in_list(doc.reference_type, ['Expense Claim', 'Asset', 'Employee Loan', 'Employee Advance'])",
             "property_type": "Text",
 			"for_doctype": false,
             "validate_fields_for_doctype": false,
