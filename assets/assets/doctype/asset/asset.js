@@ -74,6 +74,16 @@ frappe.ui.form.on("Asset", {
 				filters: { item_code: doc.item_code, company: frm.doc.company},
 			};
 		});
+		frm.set_query("purchase_invoice", (doc) => {
+			return {
+				query: "assets.assets.controllers.queries.get_purchase_invoices",
+				filters: {
+					item_code: doc.item_code,
+					company: frm.doc.company,
+					update_stock: 1
+				},
+			};
+		});
 	},
 
 	refresh: function (frm) {
@@ -884,14 +894,3 @@ erpnext.asset.transfer_asset = function () {
 		},
 	});
 };
-
-cur_frm.set_query("purchase_invoice", (doc) => {
-	return {
-		query: "assets.assets.controllers.queries.get_purchase_invoices",
-		filters: {
-			item_code: doc.item_code,
-			company: cur_frm.doc.company,
-			update_stock: 1
-		},
-	};
-});
