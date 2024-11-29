@@ -498,6 +498,7 @@ def get_downtime(failure_date, completion_date):
 
 
 @frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
 def get_purchase_invoice(doctype, txt, searchfield, start, page_len, filters):
 	query = expense_item_pi_query(filters, doctype, txt, searchfield, start, page_len)
 	return query.run(as_list=1)
