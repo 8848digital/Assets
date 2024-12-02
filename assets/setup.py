@@ -106,12 +106,11 @@ def delete_auto_created_custom_fields():
 def make_accounting_dimension():
 	accounting_dimensions = frappe.get_all("Accounting Dimension", pluck= "name")
 	from assets.hooks import accounting_dimension_doctypes
-	doclist = accounting_dimension_doctypes
 	for dimension in accounting_dimensions:
 		frappe.enqueue(
 				"erpnext.accounts.doctype.accounting_dimension.accounting_dimension.make_dimension_in_accounting_doctypes", 
 				doc=frappe.get_doc("Accounting Dimension", dimension), 
-				doclist = doclist, 
+				doclist = accounting_dimension_doctypes, 
 				queue="long", 
 				enqueue_after_commit=True
 			)
