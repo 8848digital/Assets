@@ -498,12 +498,20 @@ def get_downtime(failure_date, completion_date):
 
 
 @frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
 def get_purchase_invoice(doctype, txt, searchfield, start, page_len, filters):
-	query = expense_item_pi_query(filters.get("company"))
+	query = expense_item_pi_query(filters, doctype, txt, searchfield, start, page_len)
 	return query.run(as_list=1)
 
 
-def expense_item_pi_query(company):
+def expense_item_pi_query(
+		filters, 
+		doctype = None , 
+		txt = None , 
+		searchfield = "name" , 
+		start = 0 , 
+		page_len = 10 , 
+	):
 	PurchaseInvoice = DocType("Purchase Invoice")
 	PurchaseInvoiceItem = DocType("Purchase Invoice Item")
 	Item = DocType("Item")
@@ -518,8 +526,18 @@ def expense_item_pi_query(company):
 		.where(
 			(Item.is_stock_item == 0)
 			& (Item.is_fixed_asset == 0)
-			& (PurchaseInvoice.company == company)
-			& (PurchaseInvoice.docstatus == 1)
 		)
+		.limit(page_len)
+		.offset(start)
 	)
+
+	if filters.get("company"):
+		query = query.where(PurchaseInvoice.company == filters.get("company"))
+	
+	if filters.get("docstatus"):
+		query = query.where(PurchaseInvoice.docstatus == filters.get("docstatus"))
+
+	if txt:
+		query = query.where(getattr(PurchaseInvoice, searchfield).like("%" + txt + "%"))
+
 	return query
