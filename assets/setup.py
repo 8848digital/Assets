@@ -8,10 +8,12 @@ import frappe
 def after_install():
 	create_custom_fields()
 	create_property_setter()
+	make_accounting_dimension()
 
 def after_migrate():
 	create_custom_fields()
 	create_property_setter()
+	make_accounting_dimension()
 
 def before_uninstall():
 	delete_property_setters()
@@ -100,3 +102,16 @@ def delete_auto_created_custom_fields():
 	custom_field_list = frappe.get_all("Custom Field",  {"fieldtype": "Link", "options": ["In", doctype_list]}, pluck = "name")
 	for custom_field in custom_field_list:
 		frappe.db.delete("Custom Field", {"name": custom_field})
+
+def make_accounting_dimension():
+	accounting_dimensions = frappe.get_all("Accounting Dimension", pluck= "name")
+	from assets.hooks import accounting_dimension_doctypes
+	doclist = accounting_dimension_doctypes
+	for dimension in accounting_dimensions:
+		frappe.enqueue(
+				"erpnext.accounts.doctype.accounting_dimension.accounting_dimension.make_dimension_in_accounting_doctypes", 
+				doc=frappe.get_doc("Accounting Dimension", dimension), 
+				doclist = doclist, 
+				queue="long", 
+				enqueue_after_commit=True
+			)
