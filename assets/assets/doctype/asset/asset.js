@@ -156,13 +156,15 @@ frappe.ui.form.on("Asset", {
 			);
 
 			if (frm.doc.status != "Fully Depreciated") {
-				frm.add_custom_button(
-					__("Adjust Asset Value"),
-					function () {
-						frm.trigger("create_asset_value_adjustment");
-					},
-					__("Manage")
-				);
+				if (frm.doc.calculate_depreciation) {
+					frm.add_custom_button(
+						__("Adjust Asset Value"),
+						function () {
+							frm.trigger("create_asset_value_adjustment");
+						},
+						__("Manage")
+					);
+				}
 			}
 
 			if (!frm.doc.calculate_depreciation) {
