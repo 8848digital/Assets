@@ -123,6 +123,7 @@ class Asset(AccountsController):
 	# end: auto-generated types
 
 	def validate(self):
+		self.validate_precision()
 		self.validate_asset_values()
 		self.validate_asset_and_reference()
 		self.validate_item()
@@ -334,6 +335,15 @@ class Asset(AccountsController):
 					title=_("Missing Finance Book"),
 				)
 
+	def validate_precision(self):
+		float_precision = cint(frappe.db.get_default("float_precision")) or 2
+		if self.gross_purchase_amount:
+			self.gross_purchase_amount = flt(self.gross_purchase_amount, float_precision)
+		if self.opening_accumulated_depreciation:
+			self.opening_accumulated_depreciation = flt(
+				self.opening_accumulated_depreciation, float_precision
+			)
+
 	def validate_asset_values(self):
 		if not self.asset_category:
 			self.asset_category = frappe.get_cached_value(
@@ -525,6 +535,9 @@ class Asset(AccountsController):
 
 	def validate_expected_value_after_useful_life(self):
 		for row in self.get("finance_books"):
+			row.expected_value_after_useful_life = flt(
+				row.expected_value_after_useful_life, self.precision("gross_purchase_amount")
+			)
 			depr_schedule = get_depr_schedule(self.name, "Draft", row.finance_book)
 
 			if not depr_schedule:
@@ -835,8 +848,8 @@ class Asset(AccountsController):
 					args.get("value_after_depreciation")
 				)
 			else:
-				value = flt(args.get("expected_value_after_useful_life")) / flt(
-					self.gross_purchase_amount
+				value = flt(args.get("expected_value_after_useful_life")) / (
+					flt(self.gross_purchase_amount) - flt(self.opening_accumulated_depreciation)
 				)
 
 			depreciation_rate = math.pow(
@@ -844,7 +857,10 @@ class Asset(AccountsController):
 				1.0
 				/ (
 					(
-						flt(args.get("total_number_of_depreciations"), 2)
+						(
+							flt(args.get("total_number_of_depreciations"), 2)
+							- flt(self.opening_number_of_booked_depreciations)
+						)
 						* flt(args.get("frequency_of_depreciation"))
 					)
 					/ 12

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../apps/assets/assets/public/js/help_links.js"],
+  "sourcesContent": ["frappe.provide(\"frappe.help.help_links\");\n\nconst docsUrl = \"https://erpnext.com/docs/\";\n\nfrappe.help.help_links[\"List/Asset\"] = [\n\t{\n\t\tlabel: \"Managing Fixed Assets\",\n\t\turl: docsUrl + \"user/manual/en/asset\",\n\t},\n];\n\nfrappe.help.help_links[\"List/Asset Category\"] = [\n\t{\n\t\tlabel: \"Asset Category\",\n\t\turl: docsUrl + \"user/manual/en/asset-category\",\n\t},\n];\n\nfrappe.help.help_links[\"List/Item\"].push({\n\tlabel: \"Managing Fixed Assets\",\n\turl: docsUrl + \"user/manual/en/asset\",\n\t})\n\nfrappe.help.help_links[\"Form/Item\"].push({\n\tlabel: \"Managing Fixed Assets\",\n\turl: docsUrl + \"user/manual/en/asset\",\n\t})"],
+  "mappings": ";;AAAA,SAAO,QAAQ,wBAAwB;AAEvC,MAAM,UAAU;AAEhB,SAAO,KAAK,WAAW,gBAAgB;AAAA,IACtC;AAAA,MACC,OAAO;AAAA,MACP,KAAK,UAAU;AAAA,IAChB;AAAA,EACD;AAEA,SAAO,KAAK,WAAW,yBAAyB;AAAA,IAC/C;AAAA,MACC,OAAO;AAAA,MACP,KAAK,UAAU;AAAA,IAChB;AAAA,EACD;AAEA,SAAO,KAAK,WAAW,aAAa,KAAK;AAAA,IACxC,OAAO;AAAA,IACP,KAAK,UAAU;AAAA,EACf,CAAC;AAEF,SAAO,KAAK,WAAW,aAAa,KAAK;AAAA,IACxC,OAAO;AAAA,IACP,KAAK,UAAU;AAAA,EACf,CAAC;",
+  "names": []
+}
