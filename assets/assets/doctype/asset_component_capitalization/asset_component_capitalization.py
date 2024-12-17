@@ -8,11 +8,11 @@ from erpnext.accounts.utils import get_fiscal_year
 class AssetComponentCapitalization(Document):
 	def on_submit(self):
 		self.validate_asset_is_capitalized_or_draft()
-		self.gl_entry(cancelled=False)
+		# self.gl_entry(cancelled=False)
 		self.update_asset_is_capitalized(is_capitalized=1)
 
 	def before_cancel(self):
-		self.gl_entry(cancelled=True)
+		# self.gl_entry(cancelled=True)
 		self.update_asset_is_capitalized(is_capitalized=0)
 
 	def validate_asset_is_capitalized_or_draft(self):
@@ -31,92 +31,92 @@ class AssetComponentCapitalization(Document):
 
 		return asset_not_submitted_list
 
-	def gl_entry(self, cancelled):
-		posting_date = self.posting_date
-		current_fiscal_year = get_fiscal_year(posting_date, as_dict=True).get("name")
+	# def gl_entry(self, cancelled):
+	# 	posting_date = self.posting_date
+	# 	current_fiscal_year = get_fiscal_year(posting_date, as_dict=True).get("name")
 
-		components = {}
+	# 	components = {}
 
-		for row in self.component_asset:
-			asset_category_data = frappe.db.get_value(
-				"Asset", row.asset, ["asset_category", "gross_purchase_amount"], as_dict=True
-			)
-			cwip_account = frappe.db.get_value(
-				"Asset Category Account",
-				{"parent": asset_category_data["asset_category"], "company_name": self.company},
-				"capital_work_in_progress_account",
-			)
+	# 	for row in self.component_asset:
+	# 		asset_category_data = frappe.db.get_value(
+	# 			"Asset", row.asset, ["asset_category", "gross_purchase_amount"], as_dict=True
+	# 		)
+	# 		cwip_account = frappe.db.get_value(
+	# 			"Asset Category Account",
+	# 			{"parent": asset_category_data["asset_category"], "company_name": self.company},
+	# 			"capital_work_in_progress_account",
+	# 		)
 
-			if cwip_account in components:
-				components[cwip_account]["credit_in_account_currency"] += asset_category_data[
-					"gross_purchase_amount"
-				]
-			else:
-				components[cwip_account] = {
-					"account": cwip_account,
-					"credit_in_account_currency": asset_category_data["gross_purchase_amount"],
-				}
+	# 		if cwip_account in components:
+	# 			components[cwip_account]["credit_in_account_currency"] += asset_category_data[
+	# 				"gross_purchase_amount"
+	# 			]
+	# 		else:
+	# 			components[cwip_account] = {
+	# 				"account": cwip_account,
+	# 				"credit_in_account_currency": asset_category_data["gross_purchase_amount"],
+	# 			}
 
-		fixed_account = frappe.db.get_value(
-			"Asset Category Account",
-			{
-				"parent": frappe.db.get_value("Parent Asset", self.parent_asset, "asset_category"),
-				"company_name": self.company,
-			},
-			"fixed_asset_account",
-		)
+	# 	fixed_account = frappe.db.get_value(
+	# 		"Asset Category Account",
+	# 		{
+	# 			"parent": frappe.db.get_value("Parent Asset", self.parent_asset, "asset_category"),
+	# 			"company_name": self.company,
+	# 		},
+	# 		"fixed_asset_account",
+	# 	)
 
-		total_debit_in_account_currency = sum(
-			component["credit_in_account_currency"] for component in components.values()
-		)
+	# 	total_debit_in_account_currency = sum(
+	# 		component["credit_in_account_currency"] for component in components.values()
+	# 	)
 
-		components[fixed_account] = {
-			"account": fixed_account,
-			"debit_in_account_currency": total_debit_in_account_currency,
-			"against": ", ".join(components.keys()),
-		}
+	# 	components[fixed_account] = {
+	# 		"account": fixed_account,
+	# 		"debit_in_account_currency": total_debit_in_account_currency,
+	# 		"against": ", ".join(components.keys()),
+	# 	}
 
-		for component in components.values():
-			debit = component.get("debit_in_account_currency", 0)
-			credit = component.get("credit_in_account_currency", 0)
+	# 	for component in components.values():
+	# 		debit = component.get("debit_in_account_currency", 0)
+	# 		credit = component.get("credit_in_account_currency", 0)
 
-			gl_data = {
-				"doctype": "GL Entry",
-				"posting_date": posting_date,
-				"account": component["account"],
-				"against": component.get("against", fixed_account),
-				"voucher_type": self.doctype,
-				"voucher_subtype": self.doctype,
-				"voucher_no": self.name,
-				"fiscal_year": current_fiscal_year,
-				"company": self.company,
-				"debit": debit,
-				"credit": credit,
-				"debit_in_account_currency": debit,
-				"credit_in_account_currency": credit,
-				"debit_in_transaction_currency": debit,
-				"credit_in_transaction_currency": credit,
-			}
+	# 		gl_data = {
+	# 			"doctype": "GL Entry",
+	# 			"posting_date": posting_date,
+	# 			"account": component["account"],
+	# 			"against": component.get("against", fixed_account),
+	# 			"voucher_type": self.doctype,
+	# 			"voucher_subtype": self.doctype,
+	# 			"voucher_no": self.name,
+	# 			"fiscal_year": current_fiscal_year,
+	# 			"company": self.company,
+	# 			"debit": debit,
+	# 			"credit": credit,
+	# 			"debit_in_account_currency": debit,
+	# 			"credit_in_account_currency": credit,
+	# 			"debit_in_transaction_currency": debit,
+	# 			"credit_in_transaction_currency": credit,
+	# 		}
 
-			# Adjust for canceled entries
-			if cancelled:
-				gl_data.update(
-					{
-						"debit": credit,
-						"credit": debit,
-						"debit_in_account_currency": credit,
-						"credit_in_account_currency": debit,
-						"debit_in_transaction_currency": credit,
-						"credit_in_transaction_currency": debit,
-						"is_cancelled": 1,
-					}
-				)
+	# 		# Adjust for canceled entries
+	# 		if cancelled:
+	# 			gl_data.update(
+	# 				{
+	# 					"debit": credit,
+	# 					"credit": debit,
+	# 					"debit_in_account_currency": credit,
+	# 					"credit_in_account_currency": debit,
+	# 					"debit_in_transaction_currency": credit,
+	# 					"credit_in_transaction_currency": debit,
+	# 					"is_cancelled": 1,
+	# 				}
+	# 			)
 
-			# Create and save GL Entry
-			doc = frappe.get_doc(gl_data)
-			doc.save()
+	# 		# Create and save GL Entry
+	# 		doc = frappe.get_doc(gl_data)
+	# 		doc.save()
 
-		return doc.name
+	# 	return doc.name
 
 	def update_asset_is_capitalized(self, is_capitalized):
 		if self.component_asset:
