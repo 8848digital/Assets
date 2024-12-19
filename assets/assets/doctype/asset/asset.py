@@ -456,6 +456,10 @@ class Asset(AccountsController):
 			)
 
 	def validate_asset_finance_books(self, row):
+		row.expected_value_after_useful_life = flt(
+			row.expected_value_after_useful_life, self.precision("gross_purchase_amount")
+		)
+
 		if flt(row.expected_value_after_useful_life) >= flt(self.gross_purchase_amount):
 			frappe.throw(
 				_(
@@ -476,8 +480,9 @@ class Asset(AccountsController):
 			self.opening_accumulated_depreciation = 0
 			self.opening_number_of_booked_depreciations = 0
 		else:
-			depreciable_amount = flt(self.gross_purchase_amount) - flt(
-				row.expected_value_after_useful_life
+			depreciable_amount = flt(
+				flt(self.gross_purchase_amount) - flt(row.expected_value_after_useful_life),
+				self.precision("gross_purchase_amount"),
 			)
 			if flt(self.opening_accumulated_depreciation) > depreciable_amount:
 				frappe.throw(
@@ -843,7 +848,9 @@ class Asset(AccountsController):
 			):
 				return args.get("rate_of_depreciation")
 
-			if self.flags.increase_in_asset_value_due_to_repair:
+			if args.get("rate_of_depreciation") and not flt(args.get("expected_value_after_useful_life")):
+				return args.get("rate_of_depreciation")
+				
 				value = flt(args.get("expected_value_after_useful_life")) / flt(
 					args.get("value_after_depreciation")
 				)
