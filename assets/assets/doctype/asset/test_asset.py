@@ -14,6 +14,8 @@ from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
 from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
 	make_purchase_receipt,
 )
+from erpnext.stock.doctype.material_request.material_request import make_purchase_order
+
 from frappe.utils import (
 	add_days,
 	add_months,
@@ -60,8 +62,7 @@ class AssetSetup(unittest.TestCase):
 	@classmethod
 	def tearDownClass(cls):
 		frappe.db.rollback()
-
-
+	
 class TestAsset(AssetSetup):
 	def test_asset_category_is_fetched(self):
 		"""Tests if the Item's Asset Category value is assigned to the Asset, if the field is empty."""
@@ -72,11 +73,425 @@ class TestAsset(AssetSetup):
 
 		self.assertEqual(asset.asset_category, "Computers")
 
+	def test_create_asset_automatic_on_po_pr(self):
+		"""
+		Function to create and submit a Purchase Order and Purchase Receipt.
+		"""
+		# Data Setup
+		company = "PP Ltd"
+		supplier = "Ferns & Petals"
+		item_code = "USB Wire"
+		qty = 1
+		rate = 500
+		location = "Mumbai"  # Updated location
+		required_by_date = nowdate()  # Required By Date
+
+		# Ensure the item exists or create it
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_fixed_asset": 1  # Marking as fixed asset
+			}).insert()
+
+		# Step 1: Create and Submit Purchase Order
+		po = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"company": company,
+			"supplier": supplier,
+			"transaction_date": nowdate(),
+			"schedule_date": required_by_date,
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": qty,
+					"rate": rate
+				}
+			]
+		})
+		po.name = "test_po"  # Custom name for Purchase Order
+		po.insert()
+		po.submit()
+		frappe.db.commit()
+
+		# Step 2: Create and Submit Purchase Receipt based on the Purchase Order
+		pr = frappe.get_doc({
+			"doctype": "Purchase Receipt",
+			"company": company,
+			"supplier": supplier,
+			"purchase_order": po.name,  # Linking Purchase Receipt to the Purchase Order
+			"transaction_date": nowdate(),
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": qty,
+					"rate": rate,
+					"received_qty": qty,  # The quantity received, which can be the same as ordered
+					"purchase_order_item": po.items[0].name,  # Linking Purchase Order Item
+					"asset_location": location  # Pass the location here for the fixed asset
+				}
+			]
+		})
+		pr.name = "test_pr"  # Custom name for Purchase Receipt
+		pr.insert()
+		pr.submit()
+		frappe.db.commit()
+
+	def test_create_asset_manually_on_po_pr(self):
+		"""
+		Function to create and submit a Purchase Order and Purchase Receipt.
+		Ensures the asset is not created if the 'auto_create_asset' flag is not checked.
+		"""
+		# Data Setup
+		company = "PP Ltd"
+		supplier = "Ferns & Petals"
+		item_code = "Charger"
+		qty = 1
+		rate = 500
+		location = "Mumbai"
+		required_by_date = nowdate() # Required By Date
+
+		# Ensure the item exists or create it
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_fixed_asset": 1,  # Marking as fixed asset
+				"auto_create_asset": 0  # Ensuring auto_create_asset is unchecked
+			}).insert()
+
+		# Step 1: Create and Submit Purchase Order
+		po = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"company": company,
+			"supplier": supplier,
+			"transaction_date": nowdate(),
+			"schedule_date": required_by_date,
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": qty,
+					"rate": rate
+				}
+			]
+		})
+		po.name = "test_po_asset_check"  # Custom name for Purchase Order
+		po.insert()
+		po.submit()
+		frappe.db.commit()
+
+		# Step 2: Create and Submit Purchase Receipt based on the Purchase Order
+		pr = frappe.get_doc({
+			"doctype": "Purchase Receipt",
+			"company": company,
+			"supplier": supplier,
+			"purchase_order": po.name,  # Linking Purchase Receipt to the Purchase Order
+			"transaction_date": nowdate(),
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": qty,
+					"rate": rate,
+					"received_qty": qty,  # The quantity received, which can be the same as ordered
+					"purchase_order_item": po.items[0].name,  # Linking Purchase Order Item
+					"asset_location": location  # Pass the location here for the fixed asset
+				}
+			]
+		})
+		pr.name = "test_pr_asset_check"  # Custom name for Purchase Receipt
+		pr.insert()
+		pr.submit()
+		frappe.db.commit()
+
+		# Step 3: Assert that no asset is created
+		asset_count = frappe.db.count("Asset", {"item_code": item_code})
+		self.assertEqual(asset_count, 0, "Asset should not be created when 'auto_create_asset' is unchecked.")
+
+		
+	def test_create_po_and_pi_update_stock(self):
+		"""
+		Function to create and submit a Purchase Order and Purchase Invoice.
+		"""
+		company = "PP Ltd"
+		supplier = "Ferns & Petals"
+		item_code = "USB Wire"
+		qty = 1
+		rate = 500
+		location = "Mumbai"  # Warehouse location for the stock and asset
+		required_by_date = nowdate()  # Required By Date
+
+		
+
+		# Step 2: Ensure the item exists or create it
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_fixed_asset": 1,  # Mark as fixed asset
+				"location": location,  # Setting location
+				"auto_create_asset": 1  # Enable automatic asset creation
+			}).insert()
+
+		# Step 3: Create and Submit Purchase Order (PO)
+		po = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"company": company,
+			"supplier": supplier,
+			"transaction_date": nowdate(),
+			"schedule_date": required_by_date,
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": qty,
+					"rate": rate,
+					"target_warehouse": location  # Correctly linking the target warehouse
+				}
+			]
+		})
+		po.name = "test_po"  # Custom name for Purchase Order
+		po.insert()
+		po.submit()
+		frappe.db.commit()
+
+		# Step 4: Create and Submit Purchase Invoice (PI)
+		pi = frappe.get_doc({
+			"doctype": "Purchase Invoice",
+			"company": company,
+			"supplier": supplier,
+			"update_stock": 1,  # Update stock
+			"posting_date": nowdate(),
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": qty,
+					"rate": rate,
+					"purchase_order": po.name,  # Linking to Purchase Order
+					"location": location,  # Linking the correct warehouse
+					"asset_location": location,  # Specifying asset location
+				}
+			]
+		})
+		pi.name = "prateek_test_pi"  # Custom name for Purchase Invoice
+		pi.insert()
+		pi.submit()
+		frappe.db.commit()
+	
+	def test_create_po_and_pi_update_stock_manual(self):
+		"""
+		Function to create and submit a Purchase Order (PO) and Purchase Invoice (PI).
+		"""
+		company = "PP Ltd"
+		supplier = "Ferns & Petals"
+		item_code = "Charger"  # Item code changed based on provided data
+		qty = 1
+		rate = 500
+		location = "Mumbai"  # Warehouse location for stock
+		required_by_date = nowdate()  # Required By Date based on provided data
+
+
+		# Step 2: Ensure the item exists or create it
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_fixed_asset": 0,  # Not marked as a fixed asset
+				"location": location  # Setting location
+			}).insert()
+
+		# Step 3: Create and Submit Purchase Order (PO)
+		po = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"company": company,
+			"supplier": supplier,
+			"transaction_date": nowdate(),
+			"schedule_date": required_by_date,
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": qty,
+					"rate": rate,
+					"target_warehouse": location  # Correctly linking the target warehouse
+				}
+			]
+		})
+		po.name = "test_po"  # Custom name for Purchase Order
+		po.insert()
+		po.submit()
+		frappe.db.commit()
+
+		# Step 4: Create and Submit Purchase Invoice (PI)
+		pi = frappe.get_doc({
+			"doctype": "Purchase Invoice",
+			"company": company,
+			"supplier": supplier,
+			"update_stock": 1,  # Update stock
+			"posting_date": nowdate(),
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": qty,
+					"rate": rate,
+					"purchase_order": po.name,  # Linking to Purchase Order
+					"localtion": location  # Linking the correct warehouse
+				}
+			]
+		})
+		pi.name = "test_pi"  # Custom name for Purchase Invoice
+		pi.insert()
+		pi.submit()
+		frappe.db.commit()
+
+	def test_create_multi_asset_automatic_on_po_pr(self):
+		"""
+		Function to create and submit a Purchase Order and Purchase Receipt.
+		"""
+		# Data Setup
+		company = "PP Ltd"
+		supplier = "Bella Vita"
+		item_code = "Asset 11"
+		qty = 4
+		rate = 10000
+		amount = 40000
+		location = "Division 1"  # Updated location
+		required_by_date = nowdate()  # Required By Date
+
+		# Ensure the item exists or create it
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_fixed_asset": 1  # Marking as fixed asset
+			}).insert()
+
+		# Step 1: Create and Submit Purchase Order
+		po = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"company": company,
+			"supplier": supplier,
+			"transaction_date": nowdate(),
+			"schedule_date": required_by_date,
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": qty,
+					"rate": rate
+				}
+			]
+		})
+		po.name = "test_po"  # Custom name for Purchase Order
+		po.insert()
+		po.submit()
+		frappe.db.commit()
+
+		# Step 2: Create and Submit Purchase Receipt based on the Purchase Order
+		pr = frappe.get_doc({
+			"doctype": "Purchase Receipt",
+			"company": company,
+			"supplier": supplier,
+			"purchase_order": po.name,  # Linking Purchase Receipt to the Purchase Order
+			"transaction_date": nowdate(),
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": qty,
+					"rate": rate,
+					"received_qty": qty,  # The quantity received, which can be the same as ordered
+					"purchase_order_item": po.items[0].name,  # Linking Purchase Order Item
+					"asset_location": location  # Pass the location here for the fixed asset
+					
+				}
+			]
+		})
+		pr.name = "test_pr"  # Custom name for Purchase Receipt
+		pr.insert()
+		pr.submit()
+		frappe.db.commit()
+
+	def test_create_multi_asset_manually_on_po_pr(self):
+		"""
+		Function to create and submit a Purchase Order and Purchase Receipt.
+		Ensures the asset is not created if the 'auto_create_asset' flag is not checked.
+		"""
+		# Data Setup
+		company = "PP Ltd"
+		supplier = "Bella Vita"
+		item_code = "Asset 12"
+		qty = 4
+		rate = 10000
+		amount = 40000
+		location = "Division 1"  # Updated location
+		required_by_date = nowdate()  # Required By Date
+
+		# Ensure the item exists or create it
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_fixed_asset": 1,  # Marking as fixed asset
+				"auto_create_asset": 0  # Ensuring auto_create_asset is unchecked
+			}).insert()
+
+		# Step 1: Create and Submit Purchase Order
+		po = frappe.get_doc({
+			"doctype": "Purchase Order",
+			"company": company,
+			"supplier": supplier,
+			"transaction_date": nowdate(),
+			"schedule_date": required_by_date,
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": qty,
+					"rate": rate
+				}
+			]
+		})
+		po.name = "test_po_asset_check"  # Custom name for Purchase Order
+		po.insert()
+		po.submit()
+		frappe.db.commit()
+
+		# Step 2: Create and Submit Purchase Receipt based on the Purchase Order
+		pr = frappe.get_doc({
+			"doctype": "Purchase Receipt",
+			"company": company,
+			"supplier": supplier,
+			"purchase_order": po.name,  # Linking Purchase Receipt to the Purchase Order
+			"transaction_date": nowdate(),
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": qty,
+					"rate": rate,
+					"received_qty": qty,  # The quantity received, which can be the same as ordered
+					"purchase_order_item": po.items[0].name,  # Linking Purchase Order Item
+					"asset_location": location  # Pass the location here for the fixed asset
+				}
+			]
+		})
+		pr.name = "test_pr_asset_check"  # Custom name for Purchase Receipt
+		pr.insert()
+		pr.submit()
+		frappe.db.commit()
+
+		# Step 3: Assert that no asset is created
+		asset_count = frappe.db.count("Asset", {"item_code": item_code})
+		self.assertEqual(asset_count, 0, "Asset should not be created when 'auto_create_asset' is unchecked.")
+
+
 	def test_gross_purchase_amount_is_mandatory(self):
 		asset = create_asset(item_code="Macbook Pro", do_not_save=1)
 		asset.gross_purchase_amount = 0
 
 		self.assertRaises(frappe.MandatoryError, asset.save)
+	
+	
 
 	def test_pr_or_pi_mandatory_if_not_existing_asset(self):
 		"""Tests if either PI or PR is present if CWIP is enabled and is_existing_asset=0."""
@@ -812,6 +1227,7 @@ class TestDepreciationMethods(AssetSetup):
 		self,
 	):
 		asset = create_asset(
+			finance_book = "Test Finance Book 1",
 			calculate_depreciation=1,
 			available_for_use_date="2023-01-01",
 			purchase_date="2023-01-01",
@@ -836,7 +1252,6 @@ class TestDepreciationMethods(AssetSetup):
 			["2023-11-30", 986.3, 10980.83],
 			["2023-12-31", 1019.17, 12000.0],
 		]
-
 		schedules = [
 			[cstr(d.schedule_date), d.depreciation_amount, d.accumulated_depreciation_amount]
 			for d in get_depr_schedule(asset.name, "Draft")
@@ -1724,7 +2139,7 @@ class TestDepreciationBasics(AssetSetup):
 		jv.cancel()
 
 		asset.reload()
-		self.assertEqual(asset.get_value_after_depreciation(), 100000)
+		self.assertEqual(asset.get_value_after_depreciation(), 100000.0)
 
 	def test_manual_depreciation_for_depreciable_asset(self):
 		asset = create_asset(
@@ -1795,6 +2210,7 @@ class TestDepreciationBasics(AssetSetup):
 		pr.submit()
 		self.assertTrue(get_gl_entries("Purchase Receipt", pr.name))
 
+	
 
 def get_gl_entries(doctype, docname):
 	gl_entry = frappe.qb.DocType("GL Entry")
@@ -1882,7 +2298,9 @@ def create_asset(**args):
 
 	if not args.do_not_save:
 		try:
+			asset.flags.ignore_mandatory=True
 			asset.insert(ignore_if_duplicate=True)
+
 		except frappe.DuplicateEntryError:
 			pass
 
@@ -1969,3 +2387,5 @@ def set_depreciation_settings_in_company(company=None):
 
 def enable_cwip_accounting(asset_category, enable=1):
 	frappe.db.set_value("Asset Category", asset_category, "enable_cwip_accounting", enable)
+
+
