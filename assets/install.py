@@ -4,8 +4,6 @@ from assets.setup import after_install as setup
 import frappe
 import os
 
-from frappe.installer import _delete_doctypes, _delete_modules
-
 
 def after_install():
     try:
