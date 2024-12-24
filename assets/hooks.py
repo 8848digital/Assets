@@ -91,7 +91,7 @@ doctype_js = {
 # Installation
 # ------------
 
-# before_install = "assets.install.before_install"
+before_install = "assets.install.before_install"
 after_install = "assets.install.after_install"
 after_migrate = "assets.setup.after_migrate"
 # Uninstallation
