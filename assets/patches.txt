@@ -10,6 +10,7 @@ assets.patches.v11_0.rename_asset_adjustment_doctype
 assets.patches.v12_0.set_cwip_and_delete_asset_settings
 assets.patches.v13_0.update_asset_quantity_field
 assets.patches.v13_0.create_accounting_dimensions_for_asset_repair
+assets.patches.v15_0.delete_duplicate_module
 
 [post_model_sync]
 assets.patches.v15_0.create_asset_depreciation_schedules_from_assets
