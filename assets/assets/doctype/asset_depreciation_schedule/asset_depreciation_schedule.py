@@ -826,7 +826,7 @@ def get_daily_depr_amount(asset, row, schedule_idx, amount):
 	else:
 		total_years = (
 			flt(
-				(row.total_number_of_depreciations - row.total_number_of_booked_depreciations)
+				(row.total_number_of_depreciations - (row.total_number_of_booked_depreciations if row.total_number_of_booked_depreciations else 0))
 				* row.frequency_of_depreciation
 			)
 			/ 12
