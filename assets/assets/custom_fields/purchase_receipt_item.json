@@ -37,7 +37,7 @@
             "fieldtype": "Link",
             "label": "WIP Composite Asset",
             "options": "Asset",
-            "insert_after": "add_serial_batch_bundle",
+            "insert_after": "expense_account",
             "module": "Assets"
         }
     ]
