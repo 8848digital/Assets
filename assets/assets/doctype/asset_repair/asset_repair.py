@@ -84,7 +84,8 @@ class AssetRepair(AccountsController):
 			)
 
 	def validate_purchase_invoice(self):
-		query = expense_item_pi_query(self.company)
+		filters = {"company":self.company}
+		query = expense_item_pi_query(filters)
 		purchase_invoice_list = [item[0] for item in query.run()]
 		for pi in self.invoices:
 			if pi.purchase_invoice not in purchase_invoice_list:
