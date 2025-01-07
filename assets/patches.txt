@@ -12,6 +12,7 @@ assets.patches.v13_0.update_asset_quantity_field
 assets.patches.v13_0.create_accounting_dimensions_for_asset_repair
 assets.patches.v15_0.delete_duplicate_module
 assets.patches.v15_0.update_json_datatype_postgres
+assets.patches.v15_0.grant_permission
 
 [post_model_sync]
 assets.patches.v15_0.create_asset_depreciation_schedules_from_assets
@@ -32,4 +33,3 @@ assets.patches.v15_0.update_asset_repair_field_in_stock_entry
 assets.patches.v15_0.update_total_number_of_booked_depreciations
 assets.patches.v15_0.set_difference_amount_in_asset_value_adjustment
 assets.patches.v15_0.setup_after_install_fields #11
-assets.patches.v15_0.grant_permission
