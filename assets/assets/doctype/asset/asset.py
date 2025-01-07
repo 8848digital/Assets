@@ -221,6 +221,7 @@ class Asset(AccountsController):
 					"name": ["!=", self.name],
 					doc_field: self.get(doc_field),
 					"docstatus": ["!=", 2],
+					"item_code": self.item_code
 				},
 				pluck = "asset_quantity"
 			)
