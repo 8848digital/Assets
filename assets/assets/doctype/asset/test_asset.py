@@ -1365,6 +1365,309 @@ class TestAsset(AssetSetup):
 			"Company", "_Test Company", "capital_work_in_progress_account", cwip_acc
 		)
 
+	def test_case_fix_asset_tc_fa_013(self):
+		# Set up variables based on your scenario
+		company = "_Test Company"
+		supplier = "_Test Supplier"
+		item_code = "Test Macbook Pro"
+		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
+		required_by_date = nowdate()
+		location = "Ahmedabad"
+		finance_book = "2024-2025"
+		depreciation_method = "Staight Line"
+		total_depreciations = 12
+		depreciation_frequency_months = 1
+
+		# Create the Purchase Receipt (PR)
+		pr = make_purchase_receipt(
+			company=company,
+			supplier=supplier,
+			item_code=item_code,
+			warehouse=warehouse,
+			qty=qty,
+			rate=rate,
+			posting_date=nowdate(),
+			location=location,
+			do_not_submit=False
+		)
+		pr.submit()
+		print(pr.name)
+
+		# # Fetch the created Asset linked to the item in PR
+		asset = frappe.get_value("Asset", {"item_code": item_code, "location": location, "purchase_receipt": pr.name}, "name")
+
+		if asset:
+			asset_doc = frappe.get_doc("Asset", asset)
+			asset_doc.calculate_depreciation = 1
+			asset_doc.available_for_use_date = nowdate()
+			asset_doc.append("finance_books", {
+			"finance_book": finance_book,
+			"depreciation_method": depreciation_method,
+			"total_number_of_depreciations": total_depreciations,
+			"frequency_of_depreciation": depreciation_frequency_months,
+			"calculate_depreciation": 1
+		})
+			asset_doc.save()
+
+			asset_dep = frappe.get_value("Asset Depreciation Schedule", {"asset": asset_doc.name,}, "name")
+			asset_dep_doc = frappe.get_doc("Asset Depreciation Schedule", asset_dep)
+			asset_dep_doc.submit()
+			asset_doc.submit()
+			frappe.db.commit()
+
+	def test_case_fix_asset_tc_fa_014(self):
+		# Set up variables based on your scenario
+		company = "_Test Company"
+		supplier = "_Test Supplier"
+		item_code = "Test Macbook Pro"
+		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
+		required_by_date = nowdate()
+		location = "Ahmedabad"
+		finance_book = "2024-2025"
+		depreciation_method = "Written Down Value"
+		total_depreciations = 12
+		depreciation_frequency_months = 1
+
+		# Create the Purchase Receipt (PR)
+		pr = make_purchase_receipt(
+			company=company,
+			supplier=supplier,
+			item_code=item_code,
+			warehouse=warehouse,
+			qty=qty,
+			rate=rate,
+			posting_date=nowdate(),
+			location=location,
+			do_not_submit=False
+		)
+		frappe.db.commit()
+		print(pr.name)
+
+		# # Fetch the created Asset linked to the item in PR
+		asset = frappe.get_value("Asset", {"item_code": item_code, "location": location, "purchase_receipt": pr.name}, "name")
+
+		if asset:
+			asset_doc = frappe.get_doc("Asset", asset)
+			asset_doc.calculate_depreciation = 1
+			asset_doc.available_for_use_date = nowdate()
+			asset_doc.append("finance_books", {
+			"finance_book": finance_book,
+			"depreciation_method": depreciation_method,
+			"total_number_of_depreciations": total_depreciations,
+			"frequency_of_depreciation": depreciation_frequency_months,
+			"calculate_depreciation": 1
+		})
+			asset_doc.save()
+
+			asset_dep = frappe.get_value("Asset Depreciation Schedule", {"asset": asset_doc.name,}, "name")
+			asset_dep_doc = frappe.get_doc("Asset Depreciation Schedule", asset_dep)
+			asset_dep_doc.submit()
+			asset_doc.submit()
+			frappe.db.commit()
+
+	def test_case_fix_asset_tc_fa_015(self):
+		# Set up variables based on your scenario
+		company = "_Test Company"
+		supplier = "_Test Supplier"
+		item_code = "Test Macbook Pro"
+		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
+		required_by_date = nowdate()
+		location = "Ahmedabad"
+		finance_book = "2024-2025"
+		depreciation_method = "Double Declining Balance"
+		total_depreciations = 12
+		depreciation_frequency_months = 1
+
+		# Create the Purchase Receipt (PR)
+		pr = make_purchase_receipt(
+			company=company,
+			supplier=supplier,
+			item_code=item_code,
+			warehouse=warehouse,
+			qty=qty,
+			rate=rate,
+			posting_date=nowdate(),
+			location=location,
+			do_not_submit=False
+		)
+		frappe.db.commit()
+		print(pr.name)
+
+		# # Fetch the created Asset linked to the item in PR
+		asset = frappe.get_value("Asset", {"item_code": item_code, "location": location, "purchase_receipt": pr.name}, "name")
+
+		if asset:
+			asset_doc = frappe.get_doc("Asset", asset)
+			asset_doc.calculate_depreciation = 1
+			asset_doc.available_for_use_date = nowdate()
+			asset_doc.append("finance_books", {
+			"finance_book": finance_book,
+			"depreciation_method": depreciation_method,
+			"total_number_of_depreciations": total_depreciations,
+			"frequency_of_depreciation": depreciation_frequency_months,
+			"calculate_depreciation": 1
+		})
+			asset_doc.save()
+
+			asset_dep = frappe.get_value("Asset Depreciation Schedule", {"asset": asset_doc.name,}, "name")
+			asset_dep_doc = frappe.get_doc("Asset Depreciation Schedule", asset_dep)
+			asset_dep_doc.submit()
+			asset_doc.submit()
+			frappe.db.commit()
+
+	def test_case_fix_asset_tc_fa_016(self):
+		# Set up variables based on your scenario
+		company = "_Test Company"
+		supplier = "_Test Supplier"
+		item_code = "Test Macbook Pro"
+		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
+		required_by_date = nowdate()
+		location = "Ahmedabad"
+		finance_book = "2024-2025"
+		depreciation_method = "Manual"
+		total_depreciations = 12
+		depreciation_frequency_months = 1
+
+		# Create the Purchase Receipt (PR)
+		pr = make_purchase_receipt(
+			company=company,
+			supplier=supplier,
+			item_code=item_code,
+			warehouse=warehouse,
+			qty=qty,
+			rate=rate,
+			posting_date=nowdate(),
+			location=location,
+			do_not_submit=False
+		)
+		frappe.db.commit()
+		print(pr.name)
+
+		# # Fetch the created Asset linked to the item in PR
+		asset = frappe.get_value("Asset", {"item_code": item_code, "location": location, "purchase_receipt": pr.name}, "name")
+
+		if asset:
+			asset_doc = frappe.get_doc("Asset", asset)
+			asset_doc.calculate_depreciation = 1
+			asset_doc.available_for_use_date = nowdate()
+			asset_doc.append("finance_books", {
+			"finance_book": finance_book,
+			"depreciation_method": depreciation_method,
+			"total_number_of_depreciations": total_depreciations,
+			"frequency_of_depreciation": depreciation_frequency_months,
+			"calculate_depreciation": 1
+		})
+			asset_doc.save()
+
+			asset_dep = frappe.get_value("Asset Depreciation Schedule", {"asset": asset_doc.name,}, "name")
+			asset_dep_doc = frappe.get_doc("Asset Depreciation Schedule", asset_dep)
+			asset_dep_doc.submit()
+			asset_doc.submit()
+			frappe.db.commit()
+
+
+	def test_case_fix_asset_tc_fa_017(self):
+		# Set up variables based on your scenario
+		company = "_Test Company"
+		supplier = "_Test Supplier"
+		item_code = "Test Macbook Pro"
+		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
+		required_by_date = nowdate()
+		location = "Ahmedabad"
+		finance_book = "2024-2025"
+		depreciation_method = "Staight Line"
+		total_depreciations = 12
+		depreciation_frequency_months = 1
+
+		# Create the Purchase Invoice (PR)
+		pi = make_purchase_invoice(
+			company=company,
+			supplier=supplier,
+			item_code=item_code,
+			warehouse=warehouse,
+			update_stock = 1,
+			qty=qty,
+			rate=rate,
+			posting_date=nowdate(),
+			location=location,
+			do_not_submit=False
+		)
+		pi.submit()
+		print(pi.name)
+
+		# # Fetch the created Asset linked to the item in PR
+		asset = frappe.get_value("Asset", {"item_code": item_code, "location": location, "purchase_invoice": pi.name}, "name")
+
+		if asset:
+			asset_doc = frappe.get_doc("Asset", asset)
+			asset_doc.calculate_depreciation = 1
+			asset_doc.available_for_use_date = nowdate()
+			asset_doc.append("finance_books", {
+			"finance_book": finance_book,
+			"depreciation_method": depreciation_method,
+			"total_number_of_depreciations": total_depreciations,
+			"frequency_of_depreciation": depreciation_frequency_months,
+			"calculate_depreciation": 1
+		})
+			asset_doc.save()
+
+			asset_dep = frappe.get_value("Asset Depreciation Schedule", {"asset": asset_doc.name,}, "name")
+			asset_dep_doc = frappe.get_doc("Asset Depreciation Schedule", asset_dep)
+			asset_dep_doc.submit()
+			asset_doc.submit()
+			frappe.db.commit()
+
+	def test_case_fix_asset_tc_fa_018(self):
+		# Set up variables based on your scenario
+		company = "_Test Company"
+		supplier = "_Test Supplier"
+		item_code = "Test Macbook Pro"
+		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
+		required_by_date = nowdate()
+		location = "Ahmedabad"
+		finance_book = "2024-2025"
+		depreciation_method = "Written Down Value"
+		total_depreciations = 12
+		depreciation_frequency_months = 1
+
+		# Create the Purchase Invoice (PR)
+		pi = make_purchase_invoice(
+			company=company,
+			supplier=supplier,
+			item_code=item_code,
+			warehouse=warehouse,
+			update_stock = 1,
+			qty=qty,
+			rate=rate,
+			posting_date=nowdate(),
+			location=location,
+			do_not_submit=False
+		)
+		pi.submit()
+		print(pi.name)
+
+		# # Fetch the created Asset linked to the item in PR
+		asset = frappe.get_value("Asset", {"item_code": item_code, "location": location, "purchase_invoice": pi.name}, "name")
+
+		if asset:
+			asset_doc = frappe.get_doc("Asset", asset)
+			asset_doc.calculate_depreciation = 1
+			asset_doc.available_for_use_date = nowdate()
+			asset_doc.append("finance_books", {
+			"finance_book": finance_book,
+			"depreciation_method": depreciation_method,
+			"total_number_of_depreciations": total_depreciations,
+			"frequency_of_depreciation": depreciation_frequency_months,
+			"calculate_depreciation": 1
+		})
+			asset_doc.save()
+
+			asset_dep = frappe.get_value("Asset Depreciation Schedule", {"asset": asset_doc.name,}, "name")
+			asset_dep_doc = frappe.get_doc("Asset Depreciation Schedule", asset_dep)
+			asset_dep_doc.submit()
+			asset_doc.submit()
+			frappe.db.commit()
+
 
 class TestDepreciationMethods(AssetSetup):
 	def test_schedule_for_straight_line_method(self):
@@ -2556,5 +2859,3 @@ def set_depreciation_settings_in_company(company=None):
 
 def enable_cwip_accounting(asset_category, enable=1):
 	frappe.db.set_value("Asset Category", asset_category, "enable_cwip_accounting", enable)
-
-
