@@ -19,7 +19,7 @@ def execute():
         if frappe.db.exists("Module Def", module_name):
             print(f"Deleting module {module_name} ")
             delete_module(module_name)
-        create_module(app_name, module_name)
+            create_module(app_name, module_name)
         
 def delete_module(module_name):
     try:
