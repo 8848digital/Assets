@@ -1668,6 +1668,160 @@ class TestAsset(AssetSetup):
 			asset_doc.submit()
 			frappe.db.commit()
 
+	def test_case_fix_asset_tc_fa_019(self):
+		# Set up variables based on your scenario
+		company = "_Test Company"
+		supplier = "_Test Supplier"
+		item_code = "Test Macbook Pro"
+		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
+		required_by_date = nowdate()
+		location = "Ahmedabad"
+		finance_book = "2024-2025"
+		depreciation_method = "Double Declining Balance"
+		total_depreciations = 12
+		depreciation_frequency_months = 1
+
+		# Create the Purchase Invoice (PR)
+		pi = make_purchase_invoice(
+			company=company,
+			supplier=supplier,
+			item_code=item_code,
+			warehouse=warehouse,
+			update_stock = 1,
+			qty=qty,
+			rate=rate,
+			posting_date=nowdate(),
+			location=location,
+			do_not_submit=False
+		)
+		pi.submit()
+		print(pi.name)
+
+		# # Fetch the created Asset linked to the item in PR
+		asset = frappe.get_value("Asset", {"item_code": item_code, "location": location, "purchase_invoice": pi.name}, "name")
+
+		if asset:
+			asset_doc = frappe.get_doc("Asset", asset)
+			asset_doc.calculate_depreciation = 1
+			asset_doc.available_for_use_date = nowdate()
+			asset_doc.append("finance_books", {
+			"finance_book": finance_book,
+			"depreciation_method": depreciation_method,
+			"total_number_of_depreciations": total_depreciations,
+			"frequency_of_depreciation": depreciation_frequency_months,
+			"calculate_depreciation": 1
+		})
+			asset_doc.save()
+
+			asset_dep = frappe.get_value("Asset Depreciation Schedule", {"asset": asset_doc.name,}, "name")
+			asset_dep_doc = frappe.get_doc("Asset Depreciation Schedule", asset_dep)
+			asset_dep_doc.submit()
+			asset_doc.submit()
+			frappe.db.commit()
+
+
+	def test_case_fix_asset_tc_fa_020(self):
+		# Set up variables based on your scenario
+		company = "_Test Company"
+		supplier = "_Test Supplier"
+		item_code = "Test Macbook Pro"
+		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
+		required_by_date = nowdate()
+		location = "Ahmedabad"
+		finance_book = "2024-2025"
+		depreciation_method = "Manual"
+		total_depreciations = 12
+		depreciation_frequency_months = 1
+
+		# Create the Purchase Invoice (PR)
+		pi = make_purchase_invoice(
+			company=company,
+			supplier=supplier,
+			item_code=item_code,
+			warehouse=warehouse,
+			update_stock = 1,
+			qty=qty,
+			rate=rate,
+			posting_date=nowdate(),
+			location=location,
+			do_not_submit=False
+		)
+		pi.submit()
+		print(pi.name)
+
+		# # Fetch the created Asset linked to the item in PR
+		asset = frappe.get_value("Asset", {"item_code": item_code, "location": location, "purchase_invoice": pi.name}, "name")
+
+		if asset:
+			asset_doc = frappe.get_doc("Asset", asset)
+			asset_doc.calculate_depreciation = 1
+			asset_doc.available_for_use_date = nowdate()
+			asset_doc.append("finance_books", {
+			"finance_book": finance_book,
+			"depreciation_method": depreciation_method,
+			"total_number_of_depreciations": total_depreciations,
+			"frequency_of_depreciation": depreciation_frequency_months,
+			"calculate_depreciation": 1
+		})
+			asset_doc.save()
+
+			asset_dep = frappe.get_value("Asset Depreciation Schedule", {"asset": asset_doc.name,}, "name")
+			asset_dep_doc = frappe.get_doc("Asset Depreciation Schedule", asset_dep)
+			asset_dep_doc.submit()
+			asset_doc.submit()
+			frappe.db.commit()
+
+	def test_case_fix_asset_tc_fa_026(self):
+		asset_doc = frappe.new_doc("Asset")
+		asset_doc.calculate_depreciation = 1
+		asset_doc.available_for_use_date = nowdate()
+		asset_doc.company = "_Test Company"
+		asset_doc.item_code = "Macbook Pro"
+		asset_doc.location = "Test Location"
+		asset_doc.gross_purchase_amount = 12000
+		asset_doc.is_existing_asset = 1
+		asset_doc.purchase_date = nowdate()
+		asset_doc.append("finance_books", {
+		"finance_book": "Depreciation as per Companies Act",
+		"depreciation_method": "Straight Line",
+		"total_number_of_depreciations": 12,
+		"frequency_of_depreciation": 1,
+		"daily_prorata_based":1,
+		})
+		try:
+			asset_doc.insert()
+			asset_doc.submit()
+			frappe.db.commit()
+			print(f"Asset Created: {asset_doc.name}")
+		except Exception as e:
+			print(f"Error: {str(e)}")
+
+
+	def test_case_fix_asset_tc_fa_027(self):
+		asset_doc = frappe.new_doc("Asset")
+		asset_doc.calculate_depreciation = 1
+		asset_doc.available_for_use_date = nowdate()
+		asset_doc.company = "_Test Company"
+		asset_doc.item_code = "Macbook Pro"
+		asset_doc.location = "Test Location"
+		asset_doc.gross_purchase_amount = 12000
+		asset_doc.is_existing_asset = 1
+		asset_doc.purchase_date = nowdate()
+		asset_doc.append("finance_books", {
+		"finance_book": "Depreciation as per Companies Act",
+		"depreciation_method": "Straight Line",
+		"total_number_of_depreciations": 12,
+		"frequency_of_depreciation": 1,
+		"shift_based":1,
+		})
+		try:
+			asset_doc.insert()
+			asset_doc.submit()
+			frappe.db.commit()
+			print(f"Asset Created: {asset_doc.name}")
+		except Exception as e:
+			print(f"Error: {str(e)}")
+
 
 class TestDepreciationMethods(AssetSetup):
 	def test_schedule_for_straight_line_method(self):
