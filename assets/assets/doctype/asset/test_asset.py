@@ -1653,6 +1653,33 @@ class TestAsset(AssetSetup):
 		except Exception as e:
 			print(f"Error: {str(e)}")
 
+	def test_case_fix_asset_tc_fa_028(self):
+		salvage_value_percentage = 2
+		asset_doc = frappe.new_doc("Asset")
+		asset_doc.calculate_depreciation = 1
+		asset_doc.available_for_use_date = nowdate()
+		asset_doc.company = "_Test Company"
+		asset_doc.item_code = "Macbook Pro"
+		asset_doc.location = "Test Location"
+		asset_doc.gross_purchase_amount = 12000
+		asset_doc.is_existing_asset = 1
+		asset_doc.purchase_date = nowdate()
+		asset_doc.append("finance_books", {
+		"finance_book": "Depreciation as per Companies Act",
+		"depreciation_method": "Straight Line",
+		"total_number_of_depreciations": 12,
+		"frequency_of_depreciation": 1,
+		"salvage_value_percentage":salvage_value_percentage,
+		"expected_value_after_useful_life": (asset_doc.gross_purchase_amount * salvage_value_percentage)/100
+		})
+		try:
+			asset_doc.insert()
+			asset_doc.submit()
+			frappe.db.commit()
+			print(f"Asset Created: {asset_doc.name}")
+		except Exception as e:
+			print(f"Error: {str(e)}")
+
 
 class TestDepreciationMethods(AssetSetup):
 	def test_schedule_for_straight_line_method(self):
