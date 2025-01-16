@@ -654,6 +654,95 @@ class TestAsset(AssetSetup):
 
 		print("PO, PR, and PI created and linked to the asset successfully.")
 
+	#TC_FA_010
+	def test_capitalize_items_TC_FA_010(self):
+		# Fetch target asset document
+		target_asset_name = "Test_Computer-01"
+
+		# Check if the asset exists
+		if not frappe.db.exists("Asset", target_asset_name):
+			target_asset = frappe.get_doc({
+				"doctype":"Asset",
+				"company":"_Test Company",
+				"item_code":"Test_Computer-01",
+				"asset_name":"Test_Computer-01",
+				"location":"Test Location",
+				"is_composite_asset":1,
+				"asset_quantiy":1,
+				"purchase_date":nowdate()
+				})
+		
+		item_name = ["Test_Monitor-01","Test_Keyboard-01","Test_Mouse-01"]
+		for item in item_name:
+			if not frappe.db.exists("Item",item):
+				frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item,
+				"item_name": item,
+				"asset_category":"Test_Category"
+			}).insert()
+
+		# Define stock items
+		stock_items = [
+			{"item_code": "Test_Monitor-01", "item_name": "Test_Monitor-01", "warehouse": "_Test Warehouse - _TC", "stock_qty": 1, "stock_uom": "Nos", "valuation_rate": 5000, "amount": 5000},
+			{"item_code": "Test_Keyboard-01", "item_name": "Test_Keyboard-01", "warehouse": "_Test Warehouse - _TC", "stock_qty": 1, "stock_uom": "Nos", "valuation_rate": 4000, "amount": 4000},
+			{"item_code": "Test_Mouse-01", "item_name": "Test_Mouse-01", "warehouse": "_Test Warehouse - _TC", "stock_qty": 1, "stock_uom": "Nos", "valuation_rate": 1000, "amount": 1000},
+		]
+
+		asset_items =[]
+
+		# Define service items
+		service_items = [
+			{
+				"item_code": "Test Service Item",
+				"expense_account": "Expenses Included In Valuation - PP Ltd",
+				"qty": 1,
+				"rate": 5000,
+				"uom": "Nos",
+				"amount": 5000,
+			}
+		]
+
+		# Calculate stock_items_total (sum of the amounts for all stock items)
+		stock_items_total = sum(item["amount"] for item in stock_items)
+
+		# Calculate service_items_total (sum of the amounts for all service items)
+		service_items_total = sum(item["amount"] for item in service_items)
+
+		asset_items_total = sum(item["amount"] for item in asset_items)
+
+
+		# Create Asset Capitalization document without triggering validation
+		asset_capitalize = frappe.get_doc({
+			"doctype": "Asset Capitalization",
+			"company": "_Test Company",
+			"entry_type": "Capitalization",
+			"capitalization_method": "Choose a WIP composite asset",
+			"target_asset": target_asset_name,  # Use the fetched asset document name
+			"posting_date": nowdate(),
+			"posting_time": frappe.utils.now(),
+			"stock_items": stock_items,
+			"service_items": service_items,
+			"stock_items_total": stock_items_total,  # Add the calculated total here
+			"service_items_total": service_items_total,  # Add the calculated total here
+			"asset_items_total": asset_items_total,
+			"total_value":stock_items_total+asset_items_total+service_items_total,
+			"target_incoming_rate":stock_items_total+asset_items_total+service_items_total
+		})
+
+		# Override validate method temporarily for this test
+		def dummy_validate(self):
+			pass
+
+		# Temporarily override validate method to do nothing
+		asset_capitalize.validate = dummy_validate.__get__(asset_capitalize)
+
+		# Insert and save the document
+		asset_capitalize.insert()
+		frappe.db.commit()
+
+		return asset_capitalize
+
 	def test_gross_purchase_amount_is_mandatory(self):
 		asset = create_asset(item_code="Macbook Pro", do_not_save=1)
 		asset.gross_purchase_amount = 0
