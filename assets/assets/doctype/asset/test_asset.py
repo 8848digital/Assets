@@ -1386,6 +1386,91 @@ class TestAsset(AssetSetup):
 		# Assertions or Verifications
 		self.assertEqual(asset_doc.docstatus, 2)  # Ensure Asset is canceled
 		self.assertEqual(pr.docstatus, 2)        # Ensure Purchase Invoice is canceled
+	
+	# TC_FA_069
+	def test_pi_cancelation_on_asset_depr_scgedule_TC_FA_069(self):
+		supplier = "_Test Supplier"
+		item = "Test_item_cancel_pi"
+
+		# Step 1: Create the Item if it doesn't exist
+		if not frappe.db.exists("Item", item):
+			fa_item = frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item,
+				"item_name": item,
+				"item_group": "Products",
+				"stock_uom": "Nos",
+				"is_fixed_asset": 1,
+				"auto_create_assets": 1,
+				"is_stock_item": 0,  # Non-stock item
+				"asset_category": "Test_Category"  # Link to Asset Category
+			})
+			fa_item.insert()
+			frappe.db.commit()
+
+		# Step 2: Create and Submit the Purchase Invoice
+		pi = frappe.get_doc({
+			"doctype": "Purchase Invoice",
+			"company": "_Test Company",
+			"supplier": supplier,
+			"update_stock": 1,
+			"items": [{
+				"item_code": item,
+				"qty": 1,
+				"rate": 2500,
+				"asset_location": "Test Location",
+				"location": "Test Location",
+				"warehouse": "_Test Warehouse - _TC",
+			}]
+		}).insert()
+		pi.submit()
+		frappe.db.commit()
+
+		# Step 3: Retrieve the Auto-Created Asset
+		asset = frappe.get_all(
+			"Asset",
+			filters={"purchase_invoice": pi.name, "item_code": item},
+			fields=["name"]
+		)
+
+		# Ensure the asset exists
+		if not asset:
+			frappe.throw("No Asset created for Purchase Invoice {0}".format(pi.name))
+
+		asset_name = asset[0]["name"]
+		asset_doc = frappe.get_doc("Asset", asset_name)
+
+		# Step 4: Set `available_for_use_date` and Submit the Asset
+		asset_doc.available_for_use_date = frappe.utils.nowdate()  # Set the current date
+		asset_doc.submit()
+		frappe.db.commit()
+
+		# Step 5: Handle Asset Movement
+		asset_movements = frappe.get_all(
+			"Asset Movement",
+			filters={"asset": asset_name},
+			fields=["name"]
+		)
+
+		# Cancel all submitted Asset Movements
+		for movement in asset_movements:
+			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
+			if movement_doc.docstatus == 1:  # Check if submitted
+				movement_doc.cancel()
+				frappe.db.commit()
+
+		# Step 6: Cancel the Asset
+		asset_doc.cancel()
+		frappe.db.commit()
+
+		# Step 7: Cancel the Purchase Invoice
+		pi = frappe.get_doc("Purchase Invoice", pi.name)
+		pi.cancel()
+		frappe.db.commit()
+
+		# Assertions or Verifications
+		self.assertEqual(asset_doc.docstatus, 2)  # Ensure Asset is canceled
+		self.assertEqual(pi.docstatus, 2)        # Ensure Purchase Invoice is canceled
 		
 	def test_gross_purchase_amount_is_mandatory(self):
 		asset = create_asset(item_code="Macbook Pro", do_not_save=1)
