@@ -1070,6 +1070,7 @@ class TestAsset(AssetSetup):
 		}).insert()
 			target_asset.submit()
 			frappe.db.commit()
+
 	# TC_FA_024
 	def test_finance_book_creation_on_asset_TC_FA_024(self):
 		items = [
@@ -1142,7 +1143,81 @@ class TestAsset(AssetSetup):
 			}).insert()
 			target_asset.submit()
 			frappe.db.commit()
-					
+	
+	# TC_FA_025
+	def test_finance_book_creation_on_asset_TC_FA_025(self):
+		items = [
+			{"item_name": "Test_Item (FB -Income tax act)", "asset_category": "Test_Asset Category-17"},
+		]
+		company = "_Test Company"
+
+		# Ensure the company exists
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+
+		# Ensure the items exist or create them
+		for item in items:
+			if not frappe.db.exists("Item", item["item_name"]):
+				frappe.get_doc({
+					"doctype": "Item",
+					"item_code": item["item_name"],
+					"item_name": item["item_name"],
+					"item_group": "Products",
+					"is_stock_item": 0,
+					"is_fixed_asset": 1,  # Marking as fixed asset
+					"asset_category": item["asset_category"],
+				}).insert()
+				frappe.db.commit()
+
+		# Define asset components
+		asset_components = [
+			
+			{
+				"asset_name": "Test_Item (FB -Income tax act)",
+				"item_code": "Test_Item (FB -Income tax act)",
+				"gross_purchase_amount": 12000,
+				"total_asset_cost": 12000,
+				"finance_book": "Test Finance Book 2",
+				"total_number_of_depreciations": 12,
+				"depreciation_method": "Written Down Value",
+				"total_number_of_booked_depreciations": 0,
+				"value_after_depreciation": 12000,
+				"rate_of_depreciation": 15,
+			}
+		]
+		
+
+		# Create and submit assets
+		for asset in asset_components:
+			target_asset = frappe.get_doc({
+				"doctype": "Asset",
+				"company": company,
+				"item_code": asset["item_code"],
+				"asset_name": asset["asset_name"],
+				"asset_category": "Test_Category",
+				"location": "Test Location",
+				"is_existing_asset": 1,
+				"component_asset": 0,
+				"available_for_use_date": "2025-01-02",
+				"gross_purchase_amount": asset["gross_purchase_amount"],
+				"asset_quantity": 1,
+				"total_asset_cost": asset["total_asset_cost"],
+				"purchase_date": "2025-01-01",
+				"calculate_depreciation": 1,
+				"finance_books": [{
+					"finance_book": asset["finance_book"],
+					"frequency_of_depreciation": 1,
+					"depreciation_method": asset["depreciation_method"],
+					"depreciation_start_date": "2025-01-02",
+					"total_number_of_depreciations": asset["total_number_of_depreciations"],
+					"total_number_of_booked_depreciations": asset["total_number_of_booked_depreciations"],
+					"value_after_depreciation": asset["value_after_depreciation"],
+					"rate_of_depreciation": asset["rate_of_depreciation"],
+				}],
+			}).insert()
+			target_asset.submit()
+			frappe.db.commit()
+
 	def test_gross_purchase_amount_is_mandatory(self):
 		asset = create_asset(item_code="Macbook Pro", do_not_save=1)
 		asset.gross_purchase_amount = 0
