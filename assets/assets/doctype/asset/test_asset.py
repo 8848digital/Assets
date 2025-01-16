@@ -974,7 +974,103 @@ class TestAsset(AssetSetup):
 		}).insert()
 		target_asset.submit()
 		frappe.db.commit()
-		
+	
+	#TC_FA_023
+	def test_component_asset_parent_asset_TC_FA_023(self):
+		item_code = ["Test_Asset (Component asset)-parent","Test_Asset (Component1)","Test_Asset (Component2)","Test_Asset (Component3)"]
+		company = "_Test Company"
+
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+
+		# Ensure the item exists or create it
+		for item in item_code:
+			if not frappe.db.exists("Item", item):
+				frappe.get_doc({
+					"doctype": "Item",
+					"item_code": item,
+					"item_name": item,
+					"item_group":"Products",
+					"is_stock_item":0,
+					"is_fixed_asset": 1 , # Marking as fixed asset
+					"asset_category":"Test_Category"
+				}).insert()
+				frappe.db.commit()
+
+		parent_asset = frappe.get_doc({
+			"doctype":"Parent Asset",
+			"naming_series":"PA-",
+			"company":"_Test Company",
+			"item_code": "Test_Asset (Component asset)-parent",
+			"item_name": "Test_Asset (Component asset)-parent",
+			"asset_name": "Test_Asset (Component asset)-parent",
+			"asset_category":"Test_Category"
+		})
+		parent_asset.insert()
+		parent_asset.submit()
+		frappe.db.commit()
+
+		asset_components = [
+		{
+			"asset_name": "Test_Asset (Component1)",
+			"component_asset": 1,
+			"gross_purchase_amount": 3000,  # Removed quotes for numeric value
+			"total_asset_cost": 3000,
+			"total_number_of_depreciations": 12,
+			"total_number_of_booked_depreciations": 0,
+			"value_after_depreciation": 3000,
+		},
+		{
+			"asset_name": "Test_Asset (Component2)",
+			"component_asset": 1,
+			"gross_purchase_amount": 5000,
+			"total_asset_cost": 5000,
+			"total_number_of_depreciations": 12,
+			"total_number_of_booked_depreciations": 0,
+			"value_after_depreciation": 5000,
+		},
+		{
+			"asset_name": "Test_Asset (Component3)",
+			"component_asset": 1,
+			"gross_purchase_amount": 4000,
+			"total_asset_cost": 4000,
+			"total_number_of_depreciations": 12,
+			"total_number_of_booked_depreciations": 0,
+			"value_after_depreciation": 4000,
+		},
+	]
+
+		for assets in asset_components:
+			target_asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item_code,
+			"asset_name": assets["asset_name"],
+			"asset_category":"Test_Category",
+			"location": "Test Location",
+			"is_existing_asset":1,
+			"component_asset":1,
+			"parent_asset":parent_asset.name,
+			"available_for_use_date":"02-04-2024",
+			"gross_purchase_amount": assets["gross_purchase_amount"],
+			"asset_quantity":1,
+			"total_asset_cost":assets["total_asset_cost"],
+			"purchase_date":"01-04-2024",
+			"calculate_depreciation":1,
+			
+			"finance_books":[{
+				"finance_book":"2024-2025",
+				"frequency_of_depreciation":1,
+				"depreciation_method":"Straight Line",
+				"depreciation_start_date":"01-06-2025",
+				"total_number_of_depreciations":assets["total_number_of_depreciations"],
+				"total_number_of_booked_depreciations":assets["total_number_of_booked_depreciations"],
+				"value_after_depreciation":assets["value_after_depreciation"]
+					}]
+		}).insert()
+			target_asset.submit()
+			frappe.db.commit()
+			
 	def test_gross_purchase_amount_is_mandatory(self):
 		asset = create_asset(item_code="Macbook Pro", do_not_save=1)
 		asset.gross_purchase_amount = 0
