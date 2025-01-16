@@ -925,6 +925,55 @@ class TestAsset(AssetSetup):
 		}).insert()
 		target_asset.submit()
 		frappe.db.commit()
+	
+	# TC_FA_022
+	def test_existing_asset_fully_depreciated_TC_FA_022(self):
+		item_code = "Test_Asset (Existing Asset)"
+		company = "_Test Company"
+
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+
+		# Ensure the item exists or create it
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"item_group":"Products",
+				"is_fixed_asset": 1 , # Marking as fixed asset
+				"asset_category":"Test_Category"
+			}).insert()
+
+		target_asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item_code,
+			"asset_name": item_code,
+			"asset_category":"Test_Category",
+			"location": "Test Location",
+			"is_existing_asset":1,
+			"available_for_use_date":"02-04-2024",
+			"gross_purchase_amount":8000,
+			"total_asset":8000,
+			"asset_quantity":1,
+			"purchase_date":"01-04-2024",
+			"calculate_depreciation":0,
+			"opening_accumulated_depreciation":8000,
+			"opening_number_of_booked_depreciations":8,
+			"is_fully_depreciated":1,
+			"finance_books":[{
+				"finance_book":"2024-2025",
+				"frequency_of_depreciation":1,
+				"depreciation_method":"Straight Line",
+				"depreciation_start_date":"01-06-2025",
+				"total_number_of_depreciations":12,
+				"total_number_of_booked_depreciations":7,
+				"value_after_depreciation":5000
+					}]
+		}).insert()
+		target_asset.submit()
+		frappe.db.commit()
 		
 	def test_gross_purchase_amount_is_mandatory(self):
 		asset = create_asset(item_code="Macbook Pro", do_not_save=1)
