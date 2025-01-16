@@ -8,7 +8,7 @@ from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
 	make_purchase_receipt,
 )
 from frappe.utils import add_days, get_last_day, nowdate
-
+from erpnext.setup.doctype.company.test_company import create_child_company
 from assets.assets.doctype.asset_maintenance.asset_maintenance import (
 	calculate_next_due_date,
 )
@@ -19,6 +19,83 @@ class TestAssetMaintenance(unittest.TestCase):
 		set_depreciation_settings_in_company()
 		create_asset_data()
 		create_maintenance_team()
+
+	# TC_FA_038
+	def test_asset_maintenance_creation_planned_TC_FA_038(self):
+		company = "_Test Company"
+		item_code = "Test_maintain_item"
+		asset_name = "Test_asset_maintainance"
+		# Ensure the company exists
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+
+		# Create the item if it doesn't exist
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_stock_item": 0,
+				"is_fixed_asset": 1,
+				"auto_create_assets": 1,
+				"asset_category": "Test_Category"
+			}).insert()
+
+		
+		target_asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item_code,
+			"asset_name": item_code,
+			"asset_category":"Test_Category",
+			"location": "Test Location",
+			"is_existing_asset":1,
+			"available_for_use_date":"02-04-2024",
+			"gross_purchase_amount":8000,
+			"total_asset":8000,
+			"asset_quantity":1,
+			"purchase_date":"01-04-2024",
+			"calculate_depreciation":0,
+			"opening_accumulated_depreciation":8000,
+			"opening_number_of_booked_depreciations":8,
+			"is_fully_depreciated":1,
+			"maintenance_required":1,
+			"finance_books":[{
+				"finance_book":"2024-2025",
+				"frequency_of_depreciation":1,
+				"depreciation_method":"Straight Line",
+				"depreciation_start_date":"01-06-2025",
+				"total_number_of_depreciations":12,
+				"total_number_of_booked_depreciations":7,
+				"value_after_depreciation":5000
+					}]
+		}).insert()
+		target_asset.submit()
+		frappe.db.commit()
+	
+		asset_maintenance = frappe.get_doc({
+		"doctype": "Asset Maintenance",
+		"asset_name":target_asset,
+		"asset_category": "Test_Category",
+		"company": "_Test Company",
+		"item_code": "Test_item_receipt_01",
+		"item_name": "Test_item_receipt_01",
+		"maintenance_team": "Service team",
+		"asset_maintenance_tasks": [{
+			"maintenance_task": "Regular Task",
+			"maintenance_type": "Preventive Maintenance",
+			"maintenance_status": "Planned",
+			"start_date": "2025-01-15",
+			"periodicity": "Weekly",
+			"certificate_required": 0,
+			"assign_to": "abc@gmail.com",
+			"assign_to_name": "ABC",
+			"next_due_date": "2025-01-22"
+			}]
+		})
+		asset_maintenance.insert()
+		frappe.db.commit()
+
 
 	def test_create_asset_maintenance(self):
 		pr = make_purchase_receipt(
