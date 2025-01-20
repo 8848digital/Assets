@@ -212,8 +212,10 @@ class TestAsset(AssetSetup):
 				"item_name": item_code,
 				"is_stock_item": 0,
 				"is_fixed_asset": 1,
+				"gst_hsn_code":"01011010",
 				"auto_create_assets": 1,
-				"asset_category": "Test_Category"
+				"asset_category": "Test_Category",
+				"asset_naming_series": "ACC-ASS-.YYYY.-"
 				
 			}).insert()
 
@@ -248,7 +250,7 @@ class TestAsset(AssetSetup):
 					"purchase_order": po.name,  # Linking to Purchase Order
 					"location": "Test Location",  # Linking the correct warehouse
 					"asset_location": "Test Location",  # Specifying asset location
-					"expense_account":"_Test Comapny - _TC"
+					"expense_account":"_Test Account Cost for Goods Sold - _TC"
 				}
 			]
 		})
