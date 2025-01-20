@@ -95,9 +95,11 @@ class TestAsset(AssetSetup):
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
+				"gst_hsn_code":"01011010",
 				"is_stock_item": 0,
 				"is_fixed_asset": 1,
 				"auto_create_assets": 1,
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category": "Test_Category"
 			}).insert()
 
