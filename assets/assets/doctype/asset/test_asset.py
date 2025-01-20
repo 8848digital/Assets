@@ -278,6 +278,8 @@ class TestAsset(AssetSetup):
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
+				"gst_hsn_code":"01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"is_stock_item": 0,
 				"is_fixed_asset": 1,
 				"asset_category": "Test_Category"
@@ -312,7 +314,7 @@ class TestAsset(AssetSetup):
 					"purchase_order": po.name,  # Linking to Purchase Order
 					"location": "Test Location",  # Linking the correct warehouse
 					"asset_location": "Test Location",  # Specifying asset location
-					"expense_account":"_Test Comapny - _TC"
+					"expense_account":"_Test Account Cost for Goods Sold - _TC"
 				}
 			]
 		})
