@@ -473,10 +473,11 @@ class TestAsset(AssetSetup):
 				"item_name": item_code,
 				"is_stock_item":0,
 				"is_fixed_asset":1,
+				"gst_hsn_code":"01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"is_grouped_asset": 1,  # Enable grouped asset
 				"auto_create_assets": 1 , # Auto-create asset on purchase
 				"asset_category":"Test_Category",
-				"asset_naming_series":"ACC-ASS-.YYYY.-"
 			}).insert()
 
 		# Step 1: Create and Submit Purchase Order
