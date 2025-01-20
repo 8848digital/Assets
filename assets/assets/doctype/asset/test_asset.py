@@ -346,6 +346,8 @@ class TestAsset(AssetSetup):
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
+				"gst_hsn_code":"01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"is_fixed_asset": 1 , # Marking as fixed asset
 				"auto_create_assets":1,
 				"is_grouped_asset":1,
