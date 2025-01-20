@@ -518,6 +518,8 @@ class TestAsset(AssetSetup):
 			"item_code": "Test_Computer-01",
 			"item_name": "Test_Computer-01",
 			"item_group": "Products",
+			"gst_hsn_code":"01011010",
+			"asset_naming_series": "ACC-ASS-.YYYY.-",
 			"stock_uom": "Nos",
 			"is_fixed_asset": 1,
 			"is_stock_item": 0,  # Non-stock item
