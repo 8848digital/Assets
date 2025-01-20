@@ -154,8 +154,10 @@ class TestAsset(AssetSetup):
 				"item_code": item_code,
 				"item_name": item_code,
 				"is_stock_item": 0,
+				"gst_hsn_code":"01011010",
 				"is_fixed_asset": 1,
-				"asset_category": "Test_Category"
+				"asset_category": "Test_Category",
+				"asset_naming_series": "ACC-ASS-.YYYY.-"
 			}).insert()
 
 		# Create and submit Purchase Order
