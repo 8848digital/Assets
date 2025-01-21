@@ -95,9 +95,11 @@ class TestAsset(AssetSetup):
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
+				"gst_hsn_code":"01011010",
 				"is_stock_item": 0,
 				"is_fixed_asset": 1,
 				"auto_create_assets": 1,
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category": "Test_Category"
 			}).insert()
 
@@ -152,8 +154,10 @@ class TestAsset(AssetSetup):
 				"item_code": item_code,
 				"item_name": item_code,
 				"is_stock_item": 0,
+				"gst_hsn_code":"01011010",
 				"is_fixed_asset": 1,
-				"asset_category": "Test_Category"
+				"asset_category": "Test_Category",
+				"asset_naming_series": "ACC-ASS-.YYYY.-"
 			}).insert()
 
 		# Create and submit Purchase Order
@@ -208,8 +212,10 @@ class TestAsset(AssetSetup):
 				"item_name": item_code,
 				"is_stock_item": 0,
 				"is_fixed_asset": 1,
+				"gst_hsn_code":"01011010",
 				"auto_create_assets": 1,
-				"asset_category": "Test_Category"
+				"asset_category": "Test_Category",
+				"asset_naming_series": "ACC-ASS-.YYYY.-"
 				
 			}).insert()
 
@@ -244,7 +250,7 @@ class TestAsset(AssetSetup):
 					"purchase_order": po.name,  # Linking to Purchase Order
 					"location": "Test Location",  # Linking the correct warehouse
 					"asset_location": "Test Location",  # Specifying asset location
-					"expense_account":"_Test Comapny - _TC"
+					"expense_account":"_Test Account Cost for Goods Sold - _TC"
 				}
 			]
 		})
@@ -272,6 +278,8 @@ class TestAsset(AssetSetup):
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
+				"gst_hsn_code":"01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"is_stock_item": 0,
 				"is_fixed_asset": 1,
 				"asset_category": "Test_Category"
@@ -306,7 +314,7 @@ class TestAsset(AssetSetup):
 					"purchase_order": po.name,  # Linking to Purchase Order
 					"location": "Test Location",  # Linking the correct warehouse
 					"asset_location": "Test Location",  # Specifying asset location
-					"expense_account":"_Test Comapny - _TC"
+					"expense_account":"_Test Account Cost for Goods Sold - _TC"
 				}
 			]
 		})
@@ -338,6 +346,8 @@ class TestAsset(AssetSetup):
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
+				"gst_hsn_code":"01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"is_fixed_asset": 1 , # Marking as fixed asset
 				"auto_create_assets":1,
 				"is_grouped_asset":1,
@@ -399,6 +409,8 @@ class TestAsset(AssetSetup):
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
+				"gst_hsn_code":"01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"is_fixed_asset": 1 , # Marking as fixed asset
 				"asset_category":"Test_Category"
 			}).insert()
@@ -461,10 +473,11 @@ class TestAsset(AssetSetup):
 				"item_name": item_code,
 				"is_stock_item":0,
 				"is_fixed_asset":1,
+				"gst_hsn_code":"01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"is_grouped_asset": 1,  # Enable grouped asset
 				"auto_create_assets": 1 , # Auto-create asset on purchase
 				"asset_category":"Test_Category",
-				"asset_naming_series":"ACC-ASS-.YYYY.-"
 			}).insert()
 
 		# Step 1: Create and Submit Purchase Order
@@ -505,6 +518,8 @@ class TestAsset(AssetSetup):
 			"item_code": "Test_Computer-01",
 			"item_name": "Test_Computer-01",
 			"item_group": "Products",
+			"gst_hsn_code":"01011010",
+			"asset_naming_series": "ACC-ASS-.YYYY.-",
 			"stock_uom": "Nos",
 			"is_fixed_asset": 1,
 			"is_stock_item": 0,  # Non-stock item
@@ -679,6 +694,8 @@ class TestAsset(AssetSetup):
 				"doctype": "Item",
 				"item_code": item,
 				"item_name": item,
+				"gst_hsn_code":"01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category":"Test_Category"
 			}).insert()
 
