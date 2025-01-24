@@ -36,6 +36,22 @@ class TestLocation(unittest.TestCase):
 			}).insert()
 			frappe.db.commit()
 
+	# TC_FA_090
+	def test_create_group_location_TC_FA_090(self):
+		if not frappe.db.exists("Location", "Test_group_location"):
+			grouped_location = frappe.get_doc({
+				"doctype":"Location",
+				"location_name":"Test_group_location",	
+				"is_group":1
+			}).insert()
+			frappe.db.commit()
+			location = frappe.get_doc({
+				"doctype":"Location",
+				"location_name":"Test_child",	
+				"parent_location":grouped_location
+			}).insert()
+			frappe.db.commit()
+			
 	def runTest(self):
 		locations = ["Basil Farm", "Division 1", "Field 1", "Block 1"]
 		area = 0
