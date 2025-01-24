@@ -10,6 +10,16 @@ test_records = frappe.get_test_records("Location")
 
 
 class TestLocation(unittest.TestCase):
+
+	# TC_FA_088
+	def test_create_location_TC_FA_088(self):
+		if not frappe.db.exists("Location", "Test_newyork"):
+			location = frappe.get_doc({
+				"doctype":"Location",
+				"location_name":"Test_newyork",	
+			}).insert()
+			frappe.db.commit()
+			
 	def runTest(self):
 		locations = ["Basil Farm", "Division 1", "Field 1", "Block 1"]
 		area = 0
