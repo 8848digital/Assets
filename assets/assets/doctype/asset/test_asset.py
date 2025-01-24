@@ -1625,7 +1625,78 @@ class TestAsset(AssetSetup):
 		for schedule in depreciation_schedules:
 			dep_doc.reload()
 			assert dep_doc.docstatus == 2, f"Depreciation Schedule {dep_doc.name} was not cancelled"
+
+	# TC_FA_098
+	def test_cancel_asset_and_asset_depreciation_schedule_TC_FA_098(self):
+		item_code = "Test_Asset (Existing Asset)"
+		company = "_Test Company"
+
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+
+		# Ensure the item exists or create it
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"item_group": "Products",
+				"is_fixed_asset": 1,  # Marking as fixed asset
+				"is_stock_item": 0,
+				"gst_hsn_code": "01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
+				"asset_category": "Test_Category"
+			}).insert()
+
+		target_asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item_code,
+			"asset_name": item_code,
+			"asset_category": "Test_Category",
+			"location": "Test Location",
+			"is_existing_asset": 1,
+			"available_for_use_date": "2024-04-02",
+			"gross_purchase_amount": "12000",
+			"asset_quantity": 1,
+			"purchase_date": "2024-04-01",
+			"calculate_depreciation": 1,
+			"opening_accumulated_depreciation": "7000",
+			"opening_number_of_booked_depreciations": 7,
+			"finance_books": [{
+				"finance_book": "2024-2025",
+				"frequency_of_depreciation": 1,
+				"depreciation_method": "Written Down Value",
+				"depreciation_start_date": "2025-06-01",
+				"total_number_of_depreciations": 12,
+				"total_number_of_booked_depreciations": 7,
+				"value_after_depreciation": 5000
+			}]
+		}).insert()
+		target_asset.submit()
+		frappe.db.commit()
+
+		# Cancel the asset
+		target_asset.reload()
+		target_asset.cancel()
+		frappe.db.commit()
+
+		# Verify that asset depreciation schedule is also cancelled
+		depreciation_schedules = frappe.get_all("Asset Depreciation Schedule", 
+			filters={"asset": target_asset.name, "docstatus": 1})
 		
+		for schedule in depreciation_schedules:
+			dep_doc = frappe.get_doc("Asset Depreciation Schedule", schedule.name)
+			dep_doc.cancel()
+			frappe.db.commit()
+
+		# Ensure asset and schedules are in cancelled state
+		target_asset.reload()
+		assert target_asset.docstatus == 2, "Asset was not cancelled"
+		for schedule in depreciation_schedules:
+			dep_doc.reload()
+			assert dep_doc.docstatus == 2, f"Depreciation Schedule {dep_doc.name} was not cancelled"
+				
 	def test_gross_purchase_amount_is_mandatory(self):
 		asset = create_asset(item_code="Macbook Pro", do_not_save=1)
 		asset.gross_purchase_amount = 0
