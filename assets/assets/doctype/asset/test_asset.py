@@ -41,6 +41,7 @@ from assets.assets.doctype.asset.depreciation import (
 	post_depreciation_entries,
 	restore_asset,
 	scrap_asset,
+	make_depreciation_entry
 )
 from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	_check_is_pro_rata,
@@ -3007,15 +3008,127 @@ class TestAsset(AssetSetup):
 		"frequency_of_depreciation": 1,
 		"depreciation_start_date":"23-01-2025"
 		})
-		try:
-			asset_scrapped.insert()
-			asset_scrapped.submit()
-			scrap_asset(asset_scrapped.name, scrap_date=None)
-			frappe.db.commit()
-			print(f"Asset Created:{asset_scrapped.name}")
-		except Exception as e:
-			print(f"error{e}")
+		asset_scrapped.insert()
+		asset_scrapped.submit()
+		asset_scrapped.reload()
+		self.assertEquals(asset_scrapped.status,"Partially Depreciated")
+		scrap_asset(asset_scrapped.name, scrap_date=None)
+		frappe.db.commit()
+		print(f"Asset Created:{asset_scrapped.name}")
 
+	def test_fully_depretiated_scrapped_asset_tc_53(self):
+		asset_scrapped = frappe.new_doc("Asset")
+		asset_scrapped.company = "PP Ltd"
+		asset_scrapped.item_code = "Test Item"
+		asset_scrapped.is_existing_asset = 1
+		asset_scrapped.location  = "Test"
+		asset_scrapped.available_for_use_date = "01-09-2024"#frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset_scrapped.purchase_date = "01-08-2024" #frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset_scrapped.is_fully_depreciated = 1
+		asset_scrapped.gross_purchase_amount = 80000
+		asset_scrapped.opening_accumulated_depreciation = 8000
+		asset_scrapped.opening_number_of_booked_depreciations = 1
+		asset_scrapped.insert()
+		asset_scrapped.submit()
+		asset_scrapped.reload()
+		self.assertEquals(asset_scrapped.status,"Fully Depreciated")
+		scrap_asset(asset_scrapped.name, scrap_date=None)
+		frappe.db.commit()
+		print(f"Asset Created:{asset_scrapped.name}")
+
+	def test_partialy_depretiated_scrapped_asset_rs_tc_54(self):
+		asset_scrapped = frappe.new_doc("Asset")
+		asset_scrapped.company = "PP Ltd"
+		asset_scrapped.item_code = "Test Item"
+		asset_scrapped.is_existing_asset = 1
+		asset_scrapped.location  = "Test"
+		asset_scrapped.available_for_use_date = "01-09-2024"#frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset_scrapped.purchase_date = "01-08-2024" #frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset_scrapped.calculate_depreciation = 1
+		asset_scrapped.gross_purchase_amount = 50000
+		asset_scrapped.opening_accumulated_depreciation = 4000
+		asset_scrapped.opening_number_of_booked_depreciations = 2
+		asset_scrapped.append("finance_books", {
+		"finance_book": "2024-2025",
+		"depreciation_method": "Straight Line",
+		"total_number_of_depreciations": 12,
+		"total_number_of_booked_depreciations":2,
+		"frequency_of_depreciation": 1,
+		"depreciation_start_date":"23-01-2025"
+		})
+		asset_scrapped.insert()
+		asset_scrapped.submit()
+		asset_scrapped.reload()
+		self.assertEquals(asset_scrapped.status,"Partially Depreciated")
+		scrap_asset(asset_scrapped.name, scrap_date=None)
+		restore_asset(asset_scrapped.name)
+		frappe.db.commit()
+		print(f"Asset Created:{asset_scrapped.name}")
+
+	def test_fully_depretiated_scrapped_asset_rs_tc_55(self):
+		asset_scrapped = frappe.new_doc("Asset")
+		asset_scrapped.company = "PP Ltd"
+		asset_scrapped.item_code = "Test Item"
+		asset_scrapped.is_existing_asset = 1
+		asset_scrapped.location  = "Test"
+		asset_scrapped.available_for_use_date = "01-09-2024"#frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset_scrapped.purchase_date = "01-08-2024" #frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset_scrapped.is_fully_depreciated = 1
+		asset_scrapped.gross_purchase_amount = 80000
+		asset_scrapped.opening_accumulated_depreciation = 8000
+		asset_scrapped.opening_number_of_booked_depreciations = 1
+		asset_scrapped.insert()
+		asset_scrapped.submit()
+		asset_scrapped.reload()
+		self.assertEquals(asset_scrapped.status,"Fully Depreciated")
+		scrap_asset(asset_scrapped.name, scrap_date=None)
+		restore_asset(asset_scrapped.name)
+		frappe.db.commit()
+		print(f"Asset Created:{asset_scrapped.name}")
+
+	def test_cases_residual_scrapped_tc_56(self):
+		pi=frappe.new_doc("Purchase Invoice")
+		pi.company="PP Ltd"
+		pi.supplier="_Test Supplier"
+		pi.posting_date="01-01-2024"#frappe.utils.nowdate()
+		pi.update_stock = 1
+		pi.append("items",{
+			"item_code":"Crane",
+			"qty":1,
+			"uom":"Nos",
+			"rate":25000,
+			"asset_location":"Test"
+		})
+		pi.save()
+		pi.submit()
+		pi_asset=frappe.get_doc("Asset",{"purchase_invoice":pi.name})
+		pi_asset.available_for_use_date = "01-01-2024" #frappe.utils.nowdate()
+		pi_asset.purchase_date = "01-01-2024"
+		pi_asset.calculate_depreciation=1
+		pi_asset.append("finance_books",{
+			"finance_book":"Depreciation as per Companies Act",
+			"depreciation_method":"Straight Line",
+			"total_number_of_depreciations":12,
+			"frequency_of_depreciation":1,
+			"salvage_value_percentage":10,
+			"depreciation_start_date":"31-01-2024"
+		})
+		pi_asset.save()
+		pi_asset.submit()
+		asset_depr_schedule=frappe.db.get_value("Asset Depreciation Schedule",{"asset":pi_asset.name},"name")
+		make_depreciation_entry(asset_depr_schedule,
+						date=None,
+						sch_start_idx=None,
+						sch_end_idx=None,
+						credit_and_debit_accounts=None,
+						depreciation_cost_center_and_depreciation_series=None,
+						accounting_dimensions=None,)
+		pi_asset.reload()
+		self.assertEquals(pi_asset.status,"Fully Depreciated")
+		scrap_asset(pi_asset.name, scrap_date=None)
+		
+		frappe.db.commit()
+		print(f"Asset Created: {pi.name},{pi_asset.name}")
 
 
 class TestDepreciationMethods(AssetSetup):
