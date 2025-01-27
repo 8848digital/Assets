@@ -14,6 +14,7 @@ from assets.assets.doctype.asset.test_asset import create_asset_data
 from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_depr_schedule,
 )
+from erpnext.setup.doctype.company.test_company import create_child_company
 from frappe.utils import cstr, flt
 from frappe.query_builder import DocType
 from assets.assets.doctype.asset_movement.asset_movement import (
@@ -22,12 +23,77 @@ from assets.assets.doctype.asset_movement.asset_movement import (
 
 
 class TestAssetMovement(unittest.TestCase):
+
+	#TC_FA_115
+	def test_asset_movement_receipt_location_change_TC_FA_115(self):
+		company = "_Test Company"
+		item_code = "Test_item_grouped_transfer"
+		# Ensure prerequisites exist
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_stock_item": 0,
+				"is_fixed_asset": 1,
+				"gst_hsn_code":"01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
+				"auto_create_assets": 1,
+				"asset_category": "Test_Category"
+			}).insert()
+		
+		target_asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item_code,
+			"asset_name": item_code,
+			"asset_category":"Test_Category",
+			"location": "Test Location",
+			"is_existing_asset":1,
+			"asset_owner":"Company",
+			"available_for_use_date":"02-04-2024",
+			"gross_purchase_amount":8000,
+			"total_asset":8000,
+			"asset_quantity":8,
+			"purchase_date":"01-04-2024",
+			"finance_books":[{
+				"finance_book":"2024-2025",
+				"frequency_of_depreciation":1,
+				"depreciation_method":"Straight Line",
+				"depreciation_start_date":"01-06-2025",
+				"total_number_of_depreciations":12,
+				"total_number_of_booked_depreciations":7,
+				"value_after_depreciation":5000
+					}]
+		}).insert()
+		target_asset.submit()
+		frappe.db.commit()
+
+		if target_asset:
+			asset_movement = frappe.get_doc({
+				"doctype":"Asset Movement",
+				"company":company,
+				"purpose":"Transfer",
+				"assets":[{
+					"asset":target_asset,
+					"source_location":"Test Location",
+					"target_location":"Field 1",
+					"source_cost_center":"_Test Cost Center - _TC"
+				}]
+			}) 
+			asset_movement.insert()
+			asset_movement.submit()
+			frappe.db.commit()
+
 	def setUp(self):
 		frappe.db.set_value(
 			"Company", "_Test Company", "capital_work_in_progress_account", "CWIP Account - _TC"
 		)
 		create_asset_data()
 		make_location()
+		
 
 	def test_movement(self):
 		pr = make_purchase_receipt(
