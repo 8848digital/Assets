@@ -1258,11 +1258,14 @@ class TestAsset(AssetSetup):
 				"item_code": item,
 				"item_name": item,
 				"item_group": "Products",
+				"gst_hsn_code": "01011010",
 				"stock_uom": "Nos",
 				"is_fixed_asset": 1,
 				"auto_create_assets": 1,
 				"is_stock_item": 0,  # Non-stock item
+				"asset_naming_series": "ACC-ASS-.YYYY.-",  # Add the missing naming series
 				"asset_category": "Test_Category"  # Link to Asset Category
+				
 			})
 			fa_item.insert()
 			frappe.db.commit()
@@ -1298,7 +1301,6 @@ class TestAsset(AssetSetup):
 
 		asset_name = asset[0]["name"]
 		asset_doc = frappe.get_doc("Asset", asset_name)
-
 		# Step 4: Set `available_for_use_date` and Submit the Asset
 		asset_doc.available_for_use_date = frappe.utils.nowdate()  # Set the current date
 		asset_doc.submit()
