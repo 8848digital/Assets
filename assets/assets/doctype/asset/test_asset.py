@@ -1174,7 +1174,7 @@ class TestAsset(AssetSetup):
 	# TC_FA_025
 	def test_finance_book_creation_on_asset_TC_FA_025(self):
 		items = [
-			{"item_name": "Test_Item (FB -Income tax act)", "asset_category": "Test_Asset Category-17"},
+			{"item_name": "Test_Item (FB -Income tax act)", "asset_category": "Test_Category"},
 		]
 		company = "_Test Company"
 
@@ -1192,6 +1192,7 @@ class TestAsset(AssetSetup):
 					"item_group": "Products",
 					"is_stock_item": 0,
 					"is_fixed_asset": 1,  # Marking as fixed asset
+					"gst_hsn_code":"01011010",
 					"asset_category": item["asset_category"],
 				}).insert()
 				frappe.db.commit()
