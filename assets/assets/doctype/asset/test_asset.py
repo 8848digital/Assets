@@ -1347,6 +1347,7 @@ class TestAsset(AssetSetup):
 				"item_name": item,
 				"item_group": "Products",
 				"stock_uom": "Nos",
+				"gst_hsn_code": "01011010",
 				"is_fixed_asset": 1,
 				"auto_create_assets": 1,
 				"is_stock_item": 0,  # Non-stock item
