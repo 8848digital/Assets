@@ -912,7 +912,10 @@ class TestAsset(AssetSetup):
 				"item_code": item_code,
 				"item_name": item_code,
 				"item_group":"Products",
+				"is_stock_item": 0,
 				"is_fixed_asset": 1 , # Marking as fixed asset
+				"gst_hsn_code":"01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category":"Test_Category"
 			}).insert()
 
