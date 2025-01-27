@@ -1432,6 +1432,7 @@ class TestAsset(AssetSetup):
 				"item_group": "Products",
 				"stock_uom": "Nos",
 				"is_fixed_asset": 1,
+				"gst_hsn_code": "01011010",
 				"auto_create_assets": 1,
 				"is_stock_item": 0,  # Non-stock item
 				"asset_category": "Test_Category"  # Link to Asset Category
@@ -1517,6 +1518,7 @@ class TestAsset(AssetSetup):
 				"item_group": "Products",
 				"stock_uom": "Nos",
 				"is_fixed_asset": 1,
+				"gst_hsn_code": "01011010",
 				"auto_create_assets": 1,
 				"is_stock_item": 0,  # Non-stock item
 				"naming_series": "ACC-ASS-.YYYY.-",
