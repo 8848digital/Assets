@@ -123,7 +123,6 @@ class AssetMovement(Document):
 		for d in self.assets:
 			if d.from_employee:
 				current_custodian = frappe.db.get_value("Asset", d.asset, "custodian")
-
 				if current_custodian != d.from_employee:
 					frappe.throw(
 						_("Asset {0} does not belongs to the custodian {1}").format(

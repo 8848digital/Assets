@@ -161,6 +161,81 @@ class TestAssetMovement(unittest.TestCase):
 			asset_movement.insert()
 			asset_movement.submit()
 			frappe.db.commit()
+	
+	#TC_FA_117
+	def test_asset_movement_issue_from_employee_to_employee_TC_FA_117(self):
+		company = "_Test Company"
+		item_code = "Test_item_grouped_frm_employe"
+		# Ensure prerequisites exist
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_stock_item": 0,
+				"is_fixed_asset": 1,
+				"gst_hsn_code":"01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
+				"auto_create_assets": 1,
+				"asset_category": "Test_Category"
+			}).insert()
+		
+		target_asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item_code,
+			"asset_name": item_code,
+			"asset_category":"Test_Category",
+			"location": "Test Location",
+			"is_existing_asset":1,
+			"asset_owner":"Company",
+			"available_for_use_date":"02-04-2024",
+			"gross_purchase_amount":8000,
+			"total_asset":8000,
+			"asset_quantity":8,
+			"purchase_date":"01-04-2024",
+			"finance_books":[{
+				"finance_book":"2024-2025",
+				"frequency_of_depreciation":1,
+				"depreciation_method":"Straight Line",
+				"depreciation_start_date":"01-06-2025",
+				"total_number_of_depreciations":12,
+				"total_number_of_booked_depreciations":7,
+				"value_after_depreciation":5000
+					}]
+		}).insert()
+		target_asset.submit()
+		frappe.db.commit()
+
+		if not frappe.db.exists("Employee", "Test_employee_issue"):
+			employee_doc = frappe.get_doc({
+					"doctype": "Employee",
+					"employee_name": "Test_employee_issue",
+					"first_name": "Test_employee_issue",
+					"gender": "Male",
+					"date_of_birth": "1990-01-01",
+					"date_of_joining": "2023-01-01",
+					"status": "Active",
+					"company": company
+				}).insert()
+
+		if target_asset:
+			asset_movement = frappe.get_doc({
+				"doctype":"Asset Movement",
+				"company":company,
+				"purpose":"Issue",
+				"assets":[{
+					"asset":target_asset,
+					"source_location":"Test Location",
+					"to_employee":employee_doc.name,
+					"source_cost_center":"_Test Cost Center - _TC"
+				}]
+			}) 
+			asset_movement.insert()
+			asset_movement.submit()
+			frappe.db.commit()
 
 	def setUp(self):
 		frappe.db.set_value(
