@@ -1100,7 +1100,7 @@ class TestAsset(AssetSetup):
 	# TC_FA_024
 	def test_finance_book_creation_on_asset_TC_FA_024(self):
 		items = [
-			{"item_name": "Test_Item (FB-companies act)", "asset_category": "Test_Asset Category-16"},
+			{"item_name": "Test_Item (FB-companies act)", "asset_category": "Test_Category"},
 		]
 		company = "_Test Company"
 
@@ -1117,6 +1117,7 @@ class TestAsset(AssetSetup):
 					"item_name": item["item_name"],
 					"item_group": "Products",
 					"is_stock_item": 0,
+					"gst_hsn_code":"01011010",
 					"is_fixed_asset": 1,  # Marking as fixed asset
 					"asset_category": item["asset_category"],
 				}).insert()
