@@ -1020,6 +1020,86 @@ class TestAssetMovement(unittest.TestCase):
 			asset_movement.submit()
 			frappe.db.commit()
 
+	# TC_FA_037
+	def test_asset_movement_issue_type_TC_FA_037(self):
+		company = "_Test Company"
+		item_code = "Test_item_grouped_issue"
+
+		# Ensure the company exists
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+
+		# Create the item if it doesn't exist
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"gst_hsn_code":"01011010",
+				"is_stock_item": 0,
+				"is_fixed_asset": 1,
+				"auto_create_assets": 1,
+				"asset_category": "Test_Category"
+			}).insert()
+
+		# Create the employee document
+		employe_doc = frappe.get_doc({
+			"doctype": "Employee",
+			"employee_name": "Test_Employee_Grouped_issue1",
+			"first_name": "Test_Employee_Grouped_issue1",
+			"gender": "Male",
+			"date_of_birth": "1990-01-01",
+			"date_of_joining": "2023-01-01",
+			"status": "Active",
+			"company": company
+		}).insert()
+
+		# Create the asset document
+		target_asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item_code,
+			"asset_name": item_code,
+			"asset_category": "Test_Category",
+			"location": "Test Location",
+			"is_existing_asset": 1,
+			"asset_owner": "Company",
+			"custodian": employe_doc.name,  # Use the name (primary key) of the Employee document
+			"available_for_use_date": "2024-04-02",
+			"gross_purchase_amount": 8000,
+			"total_asset": 8000,
+			"asset_quantity": 6,
+			"purchase_date": "2024-04-01",
+			"finance_books": [{
+				"finance_book": "2024-2025",
+				"frequency_of_depreciation": 1,
+				"depreciation_method": "Straight Line",
+				"depreciation_start_date": "2025-06-01",
+				"total_number_of_depreciations": 12,
+				"total_number_of_booked_depreciations": 7,
+				"value_after_depreciation": 5000
+			}]
+		}).insert()
+		target_asset.submit()
+		frappe.db.commit()
+
+		# Create the Asset Movement record
+		if target_asset:
+			asset_movement = frappe.get_doc({
+				"doctype": "Asset Movement",
+				"company": company,
+				"purpose": "Issue",
+				"assets": [{
+					"asset": target_asset.name,
+					"source_location": "Test Location",
+					"to_employee": employe_doc.name,  # Use the name (primary key) of the Employee document
+					"source_cost_center": "_Test Cost Center - _TC"
+				}]
+			})
+			asset_movement.insert()
+			asset_movement.submit()
+			frappe.db.commit()
+
 	def setUp(self):
 		frappe.db.set_value(
 			"Company", "_Test Company", "capital_work_in_progress_account", "CWIP Account - _TC"
