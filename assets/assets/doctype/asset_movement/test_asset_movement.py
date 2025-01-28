@@ -14,6 +14,7 @@ from assets.assets.doctype.asset.test_asset import create_asset_data
 from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_depr_schedule,
 )
+from erpnext.setup.doctype.company.test_company import create_child_company
 from frappe.utils import cstr, flt
 from frappe.query_builder import DocType
 from assets.assets.doctype.asset_movement.asset_movement import (
@@ -22,6 +23,94 @@ from assets.assets.doctype.asset_movement.asset_movement import (
 
 
 class TestAssetMovement(unittest.TestCase):
+
+	#TC_FA_119
+	def test_asset_movement_transfer_location_change_TC_FA_119(self):
+		company = "_Test Company"
+		item_code = "Test_item_grouped_transfer"
+
+		# Ensure prerequisites exist
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_stock_item": 0,
+				"is_fixed_asset": 1,
+				"gst_hsn_code": "01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
+				"auto_create_assets": 1,
+				"asset_category": "Test_Category"
+			}).insert()
+
+		# Create and submit the asset
+		target_asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item_code,
+			"asset_name": item_code,
+			"asset_category": "Test_Category",
+			"location": "Test Location",
+			"is_existing_asset": 1,
+			"asset_owner": "Company",
+			"available_for_use_date": "02-04-2024",
+			"gross_purchase_amount": 8000,
+			"total_asset": 8000,
+			"asset_quantity": 1,
+			"purchase_date": "01-04-2024",
+			"finance_books": [{
+				"finance_book": "2024-2025",
+				"frequency_of_depreciation": 1,
+				"depreciation_method": "Straight Line",
+				"depreciation_start_date": "01-06-2025",
+				"total_number_of_depreciations": 12,
+				"total_number_of_booked_depreciations": 7,
+				"value_after_depreciation": 5000
+			}]
+		}).insert()
+		target_asset.submit()
+		frappe.db.commit()
+
+		# Create and submit the asset movement
+		if target_asset:
+			asset_movement = frappe.get_doc({
+				"doctype": "Asset Movement",
+				"company": company,
+				"purpose": "Transfer",
+				"assets": [{
+					"asset": target_asset.name,
+					"source_location": "Test Location",
+					"target_location": "Field 1",
+					"source_cost_center": "_Test Cost Center - _TC"
+				}]
+			})
+			asset_movement.insert()
+			asset_movement.submit()
+			frappe.db.commit()
+
+		# Cancel associated Asset Movements
+		asset_movements = frappe.get_all(
+			"Asset Movement",
+			filters={"asset": target_asset.name},
+			fields=["name"]
+		)
+		for movement in asset_movements:
+			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
+			if movement_doc.docstatus == 1:  # If submitted
+				movement_doc.cancel()
+				frappe.db.commit()
+
+		# Cancel the Asset
+		target_asset = frappe.get_doc("Asset", target_asset.name)
+		target_asset.cancel()
+		frappe.db.commit()
+
+		# Assertions
+		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
+
+
 	def setUp(self):
 		frappe.db.set_value(
 			"Company", "_Test Company", "capital_work_in_progress_account", "CWIP Account - _TC"
