@@ -29,6 +29,7 @@ from frappe.utils import (
 	is_last_day_of_the_month,
 	nowdate,
 )
+import frappe.utils
 from frappe.utils.data import add_to_date
 
 from assets.assets.doctype.asset.asset import (
@@ -3606,64 +3607,51 @@ class TestAsset(AssetSetup):
 			
 			print(f"Asset Created: {pi.name},{pi_asset.name}")
 		frappe.db.commit()
-	def test_cases_sell_asset_tc_58(self):
+	def test_cases_sell_profit_asset_tc_58(self):
 		asset = frappe.new_doc("Asset")
 		asset.company = "_Test Company"
-		asset.item_code = "Test Item"
+		asset.item_code = "Test_asset1"
 		asset.is_existing_asset = 1
 		asset.location  = "Test"
 		asset.available_for_use_date = "01-04-2024"#frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset.purchase_date = "01-04-2024" #frappe.utils.add_days(frappe.utils.nowdate(),-30)
-		asset.calculate_depreciation = 1
 		asset.gross_purchase_amount = 10000
-		asset.calculate_depreciation = 1
-		asset.opening_accumulated_depreciation = 2000
-
-
-		# asset.append("finance_books", {
-		# "finance_book": "Depreciation as per Companies Act",
-		# "depreciation_method": "Straight Line",
-		# "total_number_of_depreciations": 12,
-		# "frequency_of_depreciation": 1,
-		# # "daily_prorata_based":1,
-		# "depreciation_start_date":"31-12-2024"
-		# })
+		asset.opening_accumulated_depreciation = 8000
 		asset.insert()
 		asset.submit()
 		make_sales_invoice(asset.name, asset.item_code, asset.company, serial_no=None)
+		si=make_sales_invoice(asset.name, asset.item_code, asset.company, serial_no=None)
+		si.customer = "_Test Customer"
+		si.due_date = frappe.utils.nowdate()
+		si.get("items")[0].rate = 3000
+		si.insert()
+		si.submit()
 		frappe.db.commit()
 
 		print(f"Asset Created: {asset.name}")
 
-	def test_cases_sell_asset_tc_58(self):
+	def test_cases_sell_loss_asset_tc_59(self):
 		asset = frappe.new_doc("Asset")
 		asset.company = "_Test Company"
-		asset.item_code = "Test Item"
+		asset.item_code = "Test_asset1"
+		asset.asset_category = "Test_Category"
 		asset.is_existing_asset = 1
 		asset.location  = "Test"
-		asset.available_for_use_date = "01-04-2024"#frappe.utils.add_days(frappe.utils.nowdate(),-30)
-		asset.purchase_date = "01-04-2024" #frappe.utils.add_days(frappe.utils.nowdate(),-30)
-		asset.calculate_depreciation = 1
+		asset.available_for_use_date = frappe.utils.nowdate()
+		asset.purchase_date =frappe.utils.nowdate()
 		asset.gross_purchase_amount = 10000
-		asset.calculate_depreciation = 1
-		asset.opening_accumulated_depreciation = 2000
-
-
-		# asset.append("finance_books", {
-		# "finance_book": "Depreciation as per Companies Act",
-		# "depreciation_method": "Straight Line",
-		# "total_number_of_depreciations": 12,
-		# "frequency_of_depreciation": 1,
-		# # "daily_prorata_based":1,
-		# "depreciation_start_date":"31-12-2024"
-		# })
+		asset.opening_accumulated_depreciation = 8000
 		asset.insert()
 		asset.submit()
-		make_sales_invoice(asset.name, asset.item_code, asset.company, serial_no=None)
+		si=make_sales_invoice(asset.name, asset.item_code, asset.company, serial_no=None)
+		si.customer = "_Test Customer"
+		si.due_date = frappe.utils.nowdate()
+		si.get("items")[0].rate = 1000
+		si.insert()
+		si.submit()
 		frappe.db.commit()
 
 		print(f"Asset Created: {asset.name}")
-
 class TestDepreciationMethods(AssetSetup):
 	def test_schedule_for_straight_line_method(self):
 		asset = create_asset(
