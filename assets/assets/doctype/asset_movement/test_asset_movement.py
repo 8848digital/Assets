@@ -711,6 +711,82 @@ class TestAssetMovement(unittest.TestCase):
 		asset_movement.submit()
 		frappe.db.commit()
 
+	# TC_FA_033
+	def test_asset_movement_multiple_issue_type_TC_FA_033(self):
+		company = "_Test Company"
+
+		# Ensure the company exists
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+
+		# Ensure the employees `_T-Employee-00001` and `_T-Employee-00002` exist
+		employees = [
+			{"employee_id": "_T-Employee-00001", "first_name": "Test Employee 1"},
+			{"employee_id": "_T-Employee-00002", "first_name": "Test Employee 2"}
+		]
+
+		for emp in employees:
+			if not frappe.db.exists("Employee", emp["employee_id"]):
+				frappe.get_doc({
+					"doctype": "Employee",
+					"employee_name": emp["employee_id"],
+					"first_name": emp["first_name"],
+					"gender": "Male",
+					"date_of_birth": "1990-01-01",
+					"date_of_joining": "2023-01-01",
+					"status": "Active",
+					"company": company
+				}).insert()
+
+		# Create items and assets
+		assets = []
+		items = ["Test_item_issue_01", "Test_item_issue_02"]
+		for item_code, employee_id in zip(items, ["_T-Employee-00001", "_T-Employee-00002"]):
+			if not frappe.db.exists("Item", item_code):
+				frappe.get_doc({
+					"doctype": "Item",
+					"item_code": item_code,
+					"item_name": item_code,
+					"gst_hsn_code":"01011010",
+					"is_stock_item": 0,
+					"is_fixed_asset": 1,
+					"auto_create_assets": 1,
+					"asset_category": "Test_Category"
+				}).insert()
+
+			asset = frappe.get_doc({
+				"doctype": "Asset",
+				"company": company,
+				"item_code": item_code,
+				"asset_name": item_code,
+				"asset_category": "Test_Category",
+				"location": "Test Location",
+				"is_existing_asset": 1,
+				"asset_owner": "Company",
+				"custodian": employee_id,  # Use respective employee
+				"available_for_use_date": "2024-04-02",
+				"gross_purchase_amount": 8000,
+				"purchase_date": "2024-04-01"
+			}).insert()
+			asset.submit()
+			assets.append({"name": asset.name, "location": asset.location, "employee_id": employee_id})
+
+		# Create a single Asset Movement for the two assets
+		asset_movement = frappe.get_doc({
+			"doctype": "Asset Movement",
+			"company": company,
+			"purpose": "Issue",
+			"assets": [{
+				"asset": asset["name"],
+				"source_location": asset["location"],
+				"to_employee": asset["employee_id"],
+				"source_cost_center": "_Test Cost Center - _TC"
+			} for asset in assets]
+		})
+		asset_movement.insert()
+		asset_movement.submit()
+		frappe.db.commit()
+
 	def setUp(self):
 		frappe.db.set_value(
 			"Company", "_Test Company", "capital_work_in_progress_account", "CWIP Account - _TC"
