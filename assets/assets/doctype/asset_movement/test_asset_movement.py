@@ -627,6 +627,90 @@ class TestAssetMovement(unittest.TestCase):
 			asset_movement.submit()
 			frappe.db.commit()
 
+	# TC_FA_032
+	def test_asset_movement_transfer_location_TC_FA_032(self):
+		company = "_Test Company"
+		items = ["Test_item_transfer_01", "Test_item_transfer_02"]
+		employees = ["_T-Employee-00001", "_T-Employee-00001"]  # Related employees
+		assets = []
+
+		# Ensure prerequisites exist
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+
+		if not frappe.db.exists("Employee", "Test_employee_issue"):
+			employee_doc = frappe.get_doc({
+				"doctype": "Employee",
+				"employee_name": "Test_employee_issue",
+				"first_name": "Test_employee_issue",
+				"gender": "Male",
+				"date_of_birth": "1990-01-01",
+				"date_of_joining": "2023-01-01",
+				"status": "Active",
+				"company": company
+			}).insert()
+
+		for item_code, employee in zip(items, employees):
+			# Create item if it doesn't exist
+			if not frappe.db.exists("Item", item_code):
+				frappe.get_doc({
+					"doctype": "Item",
+					"item_code": item_code,
+					"item_name": item_code,
+					"gst_hsn_code":"01011010",
+					"is_stock_item": 0,
+					"is_fixed_asset": 1,
+					"auto_create_assets": 1,
+					"asset_category": "Test_Category"
+				}).insert()
+
+			# Create asset for the item
+			target_asset = frappe.get_doc({
+				"doctype": "Asset",
+				"company": company,
+				"item_code": item_code,
+				"asset_name": item_code,
+				"asset_category": "Test_Category",
+				"location": "Test Location",
+				"is_existing_asset": 1,
+				"custodian":employee_doc.name,
+				"owner":"Company",# Assign the custodian
+				"available_for_use_date": "02-04-2024",
+				"gross_purchase_amount": 8000,
+				"total_asset": 8000,
+				"asset_quantity": 1,
+				"purchase_date": "01-04-2024",
+				"finance_books": [{
+					"finance_book": "2024-2025",
+					"frequency_of_depreciation": 1,
+					"depreciation_method": "Straight Line",
+					"depreciation_start_date": "01-06-2025",
+					"total_number_of_depreciations": 12,
+					"total_number_of_booked_depreciations": 7,
+					"value_after_depreciation": 5000
+				}]
+			}).insert()
+			target_asset.submit()
+			frappe.db.commit()
+
+			assets.append({
+				"asset": target_asset.name,
+				"source_location": "Test Location",
+				"from_employee": employee_doc.name,  # Match custodian here
+				"target_location": "Field 1"
+			})
+
+		# Create Asset Movement with all assets
+		asset_movement = frappe.get_doc({
+			"doctype": "Asset Movement",
+			"company": company,
+			"purpose": "Transfer",
+			"assets": assets
+		})
+		asset_movement.insert()
+		asset_movement.submit()
+		frappe.db.commit()
+
 	def setUp(self):
 		frappe.db.set_value(
 			"Company", "_Test Company", "capital_work_in_progress_account", "CWIP Account - _TC"
