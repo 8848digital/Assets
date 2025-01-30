@@ -1248,6 +1248,74 @@ class TestAsset(AssetSetup):
 			target_asset.submit()
 			frappe.db.commit()
 
+	# TC_FA_050
+	def test_change_in_asset_value_smaller_than_current_TC_FA_050(self):
+		item_code = "Test_Asset_smaller_value"
+		company = "_Test Company"
+
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+
+		# Ensure the item exists or create it
+		if not frappe.db.exists("Item", item_code):
+			item_data = {
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"item_group": "Products",
+				"gst_hsn_code": "01011010",
+				"is_fixed_asset": 1,  # Marking as fixed asset
+				"is_stock_item": 0,  # Set to non-stock item to pass validation
+				"stock_uom": "Nos",
+				"auto_create_assets": 1,
+				"asset_category": "Test_Category",
+				"asset_naming_series": "ACC-ASS-.YYYY.-"
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+
+		target_asset = frappe.get_doc({
+		"doctype": "Asset",
+		"company": company,
+		"item_code": item_code,
+		"asset_name": item_code,
+		"asset_category": "Test_Category",
+		"location": "Test Location",
+		"is_composite_asset": 1,
+		"available_for_use_date": "02-04-2024",
+		"gross_purchase_amount": 15000,  # Ensure it matches total_asset_cost
+		"purchase_amount":15000,
+		"total_asset_cost": 15000,  # Match this with gross_purchase_amount
+		"asset_quantity": 1,
+		"purchase_date": "01-04-2024",
+		"calculate_depreciation": 1,
+		"finance_books": [{
+			"finance_book": "2024-2025",
+			"frequency_of_depreciation": 1,
+			"depreciation_method": "Straight Line",
+			"depreciation_start_date": "01-06-2025",
+			"total_number_of_depreciations": 12,
+			"total_number_of_booked_depreciations": 0,
+			"value_after_depreciation": 20000
+		}]
+		}).insert()
+		target_asset.submit()
+		frappe.db.commit()
+
+		asset_adjustment_value = frappe.get_doc({
+			"doctype":"Asset Value Adjustment",
+			"asset": target_asset,
+			"date":nowdate(),
+			"asset_category":"Test_Category",
+			"difference_account":"_Test Account Service Tax - _TC",
+			"current_asset_value":20000,
+			"new_asset_value":10000,
+			"location":"Test Location"
+			}).insert()
+		asset_adjustment_value.submit()
+		frappe.db.commit()
+
 	# TC_FA_067
 	def test_pi_cancelation_on_asset_TC_FA_067(self):
 		supplier = "_Test Supplier"
