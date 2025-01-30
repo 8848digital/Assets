@@ -914,7 +914,10 @@ class TestAsset(AssetSetup):
 				"item_code": item_code,
 				"item_name": item_code,
 				"item_group":"Products",
+				"is_stock_item": 0,
 				"is_fixed_asset": 1 , # Marking as fixed asset
+				"gst_hsn_code":"01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category":"Test_Category"
 			}).insert()
 
@@ -961,7 +964,10 @@ class TestAsset(AssetSetup):
 				"item_code": item_code,
 				"item_name": item_code,
 				"item_group":"Products",
+				"is_stock_item": 0,
 				"is_fixed_asset": 1 , # Marking as fixed asset
+				"gst_hsn_code":"01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category":"Test_Category"
 			}).insert()
 
@@ -1012,6 +1018,8 @@ class TestAsset(AssetSetup):
 					"item_name": item,
 					"item_group":"Products",
 					"is_stock_item":0,
+					"is_stock_item": 0,
+					"gst_hsn_code":"01011010",
 					"is_fixed_asset": 1 , # Marking as fixed asset
 					"asset_category":"Test_Category"
 				}).insert()
@@ -1094,7 +1102,7 @@ class TestAsset(AssetSetup):
 	# TC_FA_024
 	def test_finance_book_creation_on_asset_TC_FA_024(self):
 		items = [
-			{"item_name": "Test_Item (FB-companies act)", "asset_category": "Test_Asset Category-16"},
+			{"item_name": "Test_Item (FB-companies act)", "asset_category": "Test_Category"},
 		]
 		company = "_Test Company"
 
@@ -1111,6 +1119,7 @@ class TestAsset(AssetSetup):
 					"item_name": item["item_name"],
 					"item_group": "Products",
 					"is_stock_item": 0,
+					"gst_hsn_code":"01011010",
 					"is_fixed_asset": 1,  # Marking as fixed asset
 					"asset_category": item["asset_category"],
 				}).insert()
@@ -1167,7 +1176,7 @@ class TestAsset(AssetSetup):
 	# TC_FA_025
 	def test_finance_book_creation_on_asset_TC_FA_025(self):
 		items = [
-			{"item_name": "Test_Item (FB -Income tax act)", "asset_category": "Test_Asset Category-17"},
+			{"item_name": "Test_Item (FB -Income tax act)", "asset_category": "Test_Category"},
 		]
 		company = "_Test Company"
 
@@ -1185,6 +1194,7 @@ class TestAsset(AssetSetup):
 					"item_group": "Products",
 					"is_stock_item": 0,
 					"is_fixed_asset": 1,  # Marking as fixed asset
+					"gst_hsn_code":"01011010",
 					"asset_category": item["asset_category"],
 				}).insert()
 				frappe.db.commit()
@@ -1250,11 +1260,14 @@ class TestAsset(AssetSetup):
 				"item_code": item,
 				"item_name": item,
 				"item_group": "Products",
+				"gst_hsn_code": "01011010",
 				"stock_uom": "Nos",
 				"is_fixed_asset": 1,
 				"auto_create_assets": 1,
 				"is_stock_item": 0,  # Non-stock item
+				"asset_naming_series": "ACC-ASS-.YYYY.-",  # Add the missing naming series
 				"asset_category": "Test_Category"  # Link to Asset Category
+				
 			})
 			fa_item.insert()
 			frappe.db.commit()
@@ -1290,7 +1303,6 @@ class TestAsset(AssetSetup):
 
 		asset_name = asset[0]["name"]
 		asset_doc = frappe.get_doc("Asset", asset_name)
-
 		# Step 4: Set `available_for_use_date` and Submit the Asset
 		asset_doc.available_for_use_date = frappe.utils.nowdate()  # Set the current date
 		asset_doc.submit()
@@ -1337,6 +1349,7 @@ class TestAsset(AssetSetup):
 				"item_name": item,
 				"item_group": "Products",
 				"stock_uom": "Nos",
+				"gst_hsn_code": "01011010",
 				"is_fixed_asset": 1,
 				"auto_create_assets": 1,
 				"is_stock_item": 0,  # Non-stock item
@@ -1421,6 +1434,7 @@ class TestAsset(AssetSetup):
 				"item_group": "Products",
 				"stock_uom": "Nos",
 				"is_fixed_asset": 1,
+				"gst_hsn_code": "01011010",
 				"auto_create_assets": 1,
 				"is_stock_item": 0,  # Non-stock item
 				"asset_category": "Test_Category"  # Link to Asset Category
@@ -1506,6 +1520,7 @@ class TestAsset(AssetSetup):
 				"item_group": "Products",
 				"stock_uom": "Nos",
 				"is_fixed_asset": 1,
+				"gst_hsn_code": "01011010",
 				"auto_create_assets": 1,
 				"is_stock_item": 0,  # Non-stock item
 				"naming_series": "ACC-ASS-.YYYY.-",
