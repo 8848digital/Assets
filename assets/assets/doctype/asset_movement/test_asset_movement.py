@@ -1170,7 +1170,6 @@ class TestAssetMovement(unittest.TestCase):
 				"item_name": item_code,
 				"is_stock_item": 0,
 				"is_fixed_asset": 1,
-				"gst_hsn_code": "01011010",
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
@@ -1259,7 +1258,6 @@ class TestAssetMovement(unittest.TestCase):
 				"item_name": item_code,
 				"is_stock_item": 0,
 				"is_fixed_asset": 1,
-				"gst_hsn_code":"01011010",
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
@@ -1358,7 +1356,6 @@ class TestAssetMovement(unittest.TestCase):
 				"item_name": item_code,
 				"is_stock_item": 0,
 				"is_fixed_asset": 1,
-				"gst_hsn_code":"01011010",
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
@@ -1424,6 +1421,107 @@ class TestAssetMovement(unittest.TestCase):
 			frappe.db.commit()
 
 			# Cancel associated Asset Movements
+		asset_movements = frappe.get_all(
+			"Asset Movement",
+			filters={"asset": target_asset.name},
+			fields=["name"]
+		)
+		for movement in asset_movements:
+			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
+			if movement_doc.docstatus == 1:  # If submitted
+				movement_doc.cancel()
+				frappe.db.commit()
+
+		# Cancel the Asset
+		target_asset = frappe.get_doc("Asset", target_asset.name)
+		target_asset.cancel()
+		frappe.db.commit()
+
+		# Assertions
+		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
+
+	#TC_FA_130
+	def test_cancel_single_asset_movement_issue_from_employee_to_target_location_TC_FA_130(self):
+		company = "_Test Company"
+		item_code = "Test_item_grouped_target_location"
+
+		# Ensure prerequisites exist
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+		if not frappe.db.exists("Item", item_code):
+			item_data = {
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_stock_item": 0,
+				"is_fixed_asset": 1,
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
+				"auto_create_assets": 1,
+				"asset_category": "Test_Category"
+			}
+			
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+
+		if not frappe.db.exists("Employee", "Test_employee_issue"):
+			employee_doc = frappe.get_doc({
+				"doctype": "Employee",
+				"employee_name": "Test_employee_issue",
+				"first_name": "Test_employee_issue",
+				"gender": "Male",
+				"date_of_birth": "1990-01-01",
+				"date_of_joining": "2023-01-01",
+				"status": "Active",
+				"company": company
+			}).insert()
+
+		target_asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item_code,
+			"asset_name": item_code,
+			"asset_category": "Test_Category",
+			"custodian": employee_doc.name,
+			"location": "Test Location",
+			"is_existing_asset": 1,
+			"asset_owner": "Company",
+			"available_for_use_date": "02-04-2024",
+			"gross_purchase_amount": 8000,
+			"total_asset": 8000,
+			"asset_quantity": 5,
+			"purchase_date": "01-04-2024",
+			"finance_books": [{
+				"finance_book": "2024-2025",
+				"frequency_of_depreciation": 1,
+				"depreciation_method": "Straight Line",
+				"depreciation_start_date": "01-06-2025",
+				"total_number_of_depreciations": 12,
+				"total_number_of_booked_depreciations": 7,
+				"value_after_depreciation": 5000
+			}]
+		}).insert()
+		target_asset.submit()
+		frappe.db.commit()
+
+		if target_asset:
+			asset_movement = frappe.get_doc({
+				"doctype": "Asset Movement",
+				"company": company,
+				"purpose": "Receipt",
+				"assets": [{
+					"asset": target_asset.name,
+					"source_location": "Test Location",
+					"from_employee": employee_doc.name,
+					"target_location": "Field 1",
+					"source_cost_center": "_Test Cost Center - _TC"
+				}]
+			})
+			asset_movement.insert()
+			asset_movement.submit()
+			frappe.db.commit()
+
+		# Cancel associated Asset Movements
 		asset_movements = frappe.get_all(
 			"Asset Movement",
 			filters={"asset": target_asset.name},
