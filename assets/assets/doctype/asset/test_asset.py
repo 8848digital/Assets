@@ -1263,7 +1263,6 @@ class TestAsset(AssetSetup):
 				"item_code": item_code,
 				"item_name": item_code,
 				"item_group": "Products",
-				"gst_hsn_code": "01011010",
 				"is_fixed_asset": 1,  # Marking as fixed asset
 				"is_stock_item": 0,  # Set to non-stock item to pass validation
 				"stock_uom": "Nos",
