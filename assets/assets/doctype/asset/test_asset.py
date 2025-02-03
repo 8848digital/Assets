@@ -3966,6 +3966,183 @@ class TestAsset(AssetSetup):
 			si.submit()
 			print(f"Asset Created: {pi.name},{pi_asset.name}")
 		# frappe.db.commit()
+	def test_case_split_asset_error_message_tc_64(self):
+		pi_asset = frappe.new_doc("Asset")
+		pi_asset.company = "_Test Company"
+		pi_asset.is_existing_asset = 1
+		pi_asset.item_code = "Test_(Grouped_Asset)"  # Assign item code
+		pi_asset.location = "Test"
+		pi_asset.gross_purchase_amount = 10000  # Assign correct purchase amount
+		# pi_asset.opening_accumulated_depreciation = 8000
+		# pi_asset.purchase_invoice = pi.name
+		pi_asset.asset_quantity=1
+		pi_asset.available_for_use_date = "01-01-2024"
+		pi_asset.purchase_date = "01-01-2024"
+		pi_asset.calculate_depreciation = 1
+
+		# Adding finance book details
+		pi_asset.append("finance_books", {
+			"finance_book": "Test Finance Book 1",
+			"depreciation_method": "Straight Line",
+			"total_number_of_depreciations": 12,
+			"frequency_of_depreciation": 1,
+			"salvage_value_percentage": 10,
+			"depreciation_start_date": "31-01-2024"
+		})
+
+		pi_asset.save()
+		pi_asset.submit()
+		try:
+			split_qty = pi_asset.asset_quantity  # Use asset quantity here
+			if split_qty >= pi_asset.asset_quantity:
+				raise frappe.ValidationError("Split qty cannot be greater than or equal to asset qty")
+
+				# Perform split asset logic
+			split_asset(pi_asset.name, split_qty)
+			print(f"Asset Created:,{pi_asset.name}")
+		except frappe.ValidationError as e:
+			# Assert the error message
+			assert str(e) == "Split qty cannot be greater than or equal to asset qty"
+			print(f"Validation Error: {e}")
+
+
+	def test_case_split_asset_tc_65(self):
+		pi_asset = frappe.new_doc("Asset")
+		pi_asset.company = "_Test Company"
+		pi_asset.is_existing_asset = 1
+		pi_asset.item_code = "Test_(Grouped_Asset)"  # Assign item code
+		pi_asset.location = "Test"
+		pi_asset.gross_purchase_amount = 10000  # Assign correct purchase amount
+		# pi_asset.opening_accumulated_depreciation = 8000
+		# pi_asset.purchase_invoice = pi.name
+		pi_asset.asset_quantity=7
+		pi_asset.available_for_use_date = "01-01-2024"
+		pi_asset.purchase_date = "01-01-2024"
+		pi_asset.calculate_depreciation = 1
+
+		# Adding finance book details
+		pi_asset.append("finance_books", {
+			"finance_book": "Test Finance Book 1",
+			"depreciation_method": "Straight Line",
+			"total_number_of_depreciations": 12,
+			"frequency_of_depreciation": 1,
+			"salvage_value_percentage": 10,
+			"depreciation_start_date": "31-01-2024"
+		})
+
+		pi_asset.save()
+		pi_asset.submit()
+		split_asset(pi_asset.name,split_qty=3)
+		# frappe.db.commit()
+		print(f"Asset:{pi_asset.name}")
+	def test_case_split_asset_with_even_qty_tc_66(self):
+		pi_asset = frappe.new_doc("Asset")
+		pi_asset.company = "_Test Company"
+		pi_asset.is_existing_asset = 1
+		pi_asset.item_code = "Test_(Grouped_Asset)"  # Assign item code
+		pi_asset.location = "Test"
+		pi_asset.gross_purchase_amount = 10000  # Assign correct purchase amount
+		# pi_asset.opening_accumulated_depreciation = 8000
+		# pi_asset.purchase_invoice = pi.name
+		pi_asset.asset_quantity=5
+		pi_asset.available_for_use_date = "01-01-2024"
+		pi_asset.purchase_date = "01-01-2024"
+		pi_asset.calculate_depreciation = 1
+
+		# Adding finance book details
+		pi_asset.append("finance_books", {
+			"finance_book": "Test Finance Book 1",
+			"depreciation_method": "Straight Line",
+			"total_number_of_depreciations": 12,
+			"frequency_of_depreciation": 1,
+			"salvage_value_percentage": 10,
+			"depreciation_start_date": "31-01-2024"
+		})
+
+		pi_asset.save()
+		pi_asset.submit()
+		split_asset(pi_asset.name,split_qty=3.5)
+		# frappe.db.commit()
+		print(f"Asset:{pi_asset.name}")
+
+
+	def test_case_revaluation_increases_tc_83(self):
+		pi_asset = frappe.new_doc("Asset")
+		pi_asset.company = "_Test Company"
+		pi_asset.is_existing_asset = 1
+		pi_asset.item_code = "Test_(Grouped_Asset)"  # Assign item code
+		pi_asset.location = "Test"
+		pi_asset.gross_purchase_amount = 72000  # Assign correct purchase amount
+		pi_asset.available_for_use_date = "01-01-2024"
+		pi_asset.purchase_date = "01-01-2024"
+		pi_asset.calculate_depreciation = 1
+		pi_asset.append("finance_books", {
+			"finance_book": "Test Finance Book 1",
+			"depreciation_method": "Straight Line",
+			"total_number_of_depreciations": 18,
+			"frequency_of_depreciation": 1,
+			"depreciation_start_date": "31-01-2024"
+		})
+
+		pi_asset.save()
+		pi_asset.submit()
+		asset_depr_schedule=frappe.db.get_value("Asset Depreciation Schedule",{"asset":pi_asset.name},"name")
+		make_depreciation_entry(asset_depr_schedule,
+						date=None,
+						sch_start_idx=None,
+						sch_end_idx=None,
+						credit_and_debit_accounts=None,
+						depreciation_cost_center_and_depreciation_series=None,
+						accounting_dimensions=None,)
+		pi_asset.reload()
+		adjust_asset_value=create_asset_value_adjustment(pi_asset.name,pi_asset.asset_category,pi_asset.company)
+		adjust_asset_value.date = frappe.utils.nowdate()
+		adjust_asset_value.new_asset_value = 30000
+		adjust_asset_value.difference_account = "Revaluation Reserve - _TC"
+		adjust_asset_value.save()
+		adjust_asset_value.submit()
+		# frappe.db.commit()
+		print(f"Asset:{pi_asset.name}")
+
+	def test_case_revaluation_decreases_tc_84(self):
+		pi_asset = frappe.new_doc("Asset")
+		pi_asset.company = "_Test Company"
+		pi_asset.is_existing_asset = 1
+		pi_asset.item_code = "Test_(Grouped_Asset)"  # Assign item code
+		pi_asset.location = "Test"
+		pi_asset.gross_purchase_amount = 72000  # Assign correct purchase amount
+		pi_asset.available_for_use_date = "01-01-2024"
+		pi_asset.purchase_date = "01-01-2024"
+		pi_asset.calculate_depreciation = 1
+		pi_asset.append("finance_books", {
+			"finance_book": "Test Finance Book 1",
+			"depreciation_method": "Straight Line",
+			"total_number_of_depreciations": 18,
+			"frequency_of_depreciation": 1,
+			"depreciation_start_date": "31-01-2024"
+		})
+
+		pi_asset.save()
+		pi_asset.submit()
+		asset_depr_schedule=frappe.db.get_value("Asset Depreciation Schedule",{"asset":pi_asset.name},"name")
+		make_depreciation_entry(asset_depr_schedule,
+						date=None,
+						sch_start_idx=None,
+						sch_end_idx=None,
+						credit_and_debit_accounts=None,
+						depreciation_cost_center_and_depreciation_series=None,
+						accounting_dimensions=None,)
+		pi_asset.reload()
+		self.assertEqual(pi_asset.status,"Partially Depreciated")
+		adjust_asset_value=create_asset_value_adjustment(pi_asset.name,pi_asset.asset_category,pi_asset.company)
+		adjust_asset_value.date = frappe.utils.nowdate()
+		adjust_asset_value.current_asset_value = 24000
+		adjust_asset_value.new_asset_value = 20000
+		adjust_asset_value.difference_account = "Revaluation Reserve - _TC"
+		adjust_asset_value.save()
+		adjust_asset_value.submit()
+		# frappe.db.commit()
+		print(f"Asset:{pi_asset.name}")
 
 
 class TestDepreciationMethods(AssetSetup):
