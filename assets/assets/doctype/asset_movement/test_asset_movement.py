@@ -1932,6 +1932,366 @@ class TestAssetMovement(unittest.TestCase):
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
 
+
+	# TC_FA_149 - Merge Transfer and Issue Asset Movements with Conditional Cancellation
+	def test_multiple_asset_movement_with_purposetype_transfer_issue_149(self):
+		company = "_Test Company"
+		employees = ["_T-Employee-00001", "_T-Employee-00002"]
+		items = ["Test_item_01", "Test_item_02"]
+		assets = []
+
+		# Ensure prerequisites exist
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+
+		for emp_id in employees:
+			if not frappe.db.exists("Employee", emp_id):
+				frappe.get_doc({
+					"doctype": "Employee",
+					"employee_name": emp_id,
+					"first_name": emp_id,
+					"gender": "Male",
+					"date_of_birth": "1990-01-01",
+					"date_of_joining": "2023-01-01",
+					"status": "Active",
+					"company": company
+				}).insert()
+
+		for item_code, employee_id in zip(items, employees):
+			# Create item if it doesn't exist
+			if not frappe.db.exists("Item", item_code):
+				frappe.get_doc({
+					"doctype": "Item",
+					"item_code": item_code,
+					"item_name": item_code,
+					"gst_hsn_code": "01011010",
+					"is_stock_item": 0,
+					"is_fixed_asset": 1,
+					"auto_create_assets": 1,
+					"asset_category": "Test_Category"
+				}).insert()
+
+			# Create asset
+			asset = frappe.get_doc({
+				"doctype": "Asset",
+				"company": company,
+				"item_code": item_code,
+				"asset_name": item_code,
+				"asset_category": "Test_Category",
+				"location": "Test Location",
+				"is_existing_asset": 1,
+				"custodian": employee_id,
+				"owner": "Company",
+				"available_for_use_date": "2024-04-02",
+				"gross_purchase_amount": 8000,
+				"total_asset": 8000,
+				"asset_quantity": 1,
+				"purchase_date": "2024-04-01"
+			}).insert()
+			asset.submit()
+			assets.append(asset.name)
+
+		frappe.db.commit()
+
+		# Create Issue Type Asset Movement
+		issue_movement = frappe.get_doc({
+			"doctype": "Asset Movement",
+			"company": company,
+			"purpose": "Issue",
+			"assets": [{
+				"asset": asset,
+				"source_location": "Test Location",
+				"to_employee": employee_id,
+				"source_cost_center": "_Test Cost Center - _TC"
+			} for asset, employee_id in zip(assets, employees)]
+		})
+		issue_movement.insert()
+		issue_movement.submit()
+		frappe.db.commit()
+
+		# Cancel the Issue Movement
+		issue_movement.cancel()
+		frappe.db.commit()
+
+		# Create Transfer Type Asset Movement using the same assets
+		transfer_movement = frappe.get_doc({
+			"doctype": "Asset Movement",
+			"company": company,
+			"purpose": "Transfer",
+			"assets": [{
+				"asset": asset,
+				"source_location": "Test Location",
+				"from_employee": employee_id,
+				"target_location": "Field 1"
+			} for asset, employee_id in zip(assets, employees)]
+		})
+		transfer_movement.insert()
+		transfer_movement.submit()
+		frappe.db.commit()
+
+	# TC_FA_150
+	def test_single_asset_movement_with_purposetype_transfer_issue_150(self):
+		company = "_Test Company"
+		employee = "_T-Employee-00001"
+		item = "Test_item_01"
+		
+		# Ensure prerequisites exist
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+
+		if not frappe.db.exists("Employee", employee):
+			frappe.get_doc({
+				"doctype": "Employee",
+				"employee_name": employee,
+				"first_name": employee,
+				"gender": "Male",
+				"date_of_birth": "1990-01-01",
+				"date_of_joining": "2023-01-01",
+				"status": "Active",
+				"company": company
+			}).insert()
+
+		if not frappe.db.exists("Item", item):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item,
+				"item_name": item,
+				"gst_hsn_code": "01011010",
+				"is_stock_item": 0,
+				"is_fixed_asset": 1,
+				"auto_create_assets": 1,
+				"asset_category": "Test_Category"
+			}).insert()
+
+		# Create a single asset
+		asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item,
+			"asset_name": item,
+			"asset_category": "Test_Category",
+			"location": "Test Location",
+			"is_existing_asset": 1,
+			"custodian": employee,
+			"owner": "Company",
+			"available_for_use_date": "2024-04-02",
+			"gross_purchase_amount": 8000,
+			"total_asset": 8000,
+			"asset_quantity": 1,
+			"purchase_date": "2024-04-01"
+		}).insert()
+		asset.submit()
+
+		frappe.db.commit()
+
+		# Create Issue Type Asset Movement (Single Asset Tagged)
+		issue_movement = frappe.get_doc({
+			"doctype": "Asset Movement",
+			"company": company,
+			"purpose": "Issue",
+			"assets": [{
+				"asset": asset.name,
+				"source_location": "Test Location",
+				"to_employee": employee,
+				"source_cost_center": "_Test Cost Center - _TC"
+			}]
+		})
+		issue_movement.insert()
+		issue_movement.submit()
+		frappe.db.commit()
+
+		# Cancel the Issue Movement
+		issue_movement.cancel()
+		frappe.db.commit()
+
+		# Create Transfer Type Asset Movement (Same Single Asset)
+		transfer_movement = frappe.get_doc({
+			"doctype": "Asset Movement",
+			"company": company,
+			"purpose": "Transfer",
+			"assets": [{
+				"asset": asset.name,
+				"source_location": "Test Location",
+				"from_employee": employee,
+				"target_location": "Field 1"
+			}]
+		})
+		transfer_movement.insert()
+		transfer_movement.submit()
+		frappe.db.commit()
+
+	# TC_FA_151
+	def test_multiple_asset_movement_with_purposetype_transfer_issue_151(self):
+		company = "_Test Company"
+		employee = "_T-Employee-00001"
+		item = "Test_item_01"
+		
+		# Ensure prerequisites exist
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+
+		if not frappe.db.exists("Employee", employee):
+			frappe.get_doc({
+				"doctype": "Employee",
+				"employee_name": employee,
+				"first_name": employee,
+				"gender": "Male",
+				"date_of_birth": "1990-01-01",
+				"date_of_joining": "2023-01-01",
+				"status": "Active",
+				"company": company
+			}).insert()
+
+		if not frappe.db.exists("Item", item):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item,
+				"item_name": item,
+				"gst_hsn_code": "01011010",
+				"is_stock_item": 0,
+				"is_fixed_asset": 1,
+				"auto_create_assets": 1,
+				"asset_category": "Test_Category"
+			}).insert()
+
+		# Create a single asset
+		asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item,
+			"asset_name": item,
+			"asset_category": "Test_Category",
+			"location": "Test Location",
+			"is_existing_asset": 1,
+			"custodian": employee,
+			"owner": "Company",
+			"available_for_use_date": "2024-04-02",
+			"gross_purchase_amount": 8000,
+			"total_asset": 8000,
+			"asset_quantity": 1,
+			"purchase_date": "2024-04-01"
+		}).insert()
+		asset.submit()
+
+		frappe.db.commit()
+
+		# Create Issue Type Asset Movement (Single Asset Tagged)
+		issue_movement = frappe.get_doc({
+			"doctype": "Asset Movement",
+			"company": company,
+			"purpose": "Issue",
+			"assets": [{
+				"asset": asset.name,
+				"source_location": "Test Location",
+				"to_employee": employee,
+				"source_cost_center": "_Test Cost Center - _TC"
+			}]
+		})
+		issue_movement.insert()
+		issue_movement.submit()
+		frappe.db.commit()
+
+		# Cancel the Issue Movement
+		issue_movement.cancel()
+		frappe.db.commit()
+
+		# Create Transfer Type Asset Movement (Same Single Asset)
+		transfer_movement = frappe.get_doc({
+			"doctype": "Asset Movement",
+			"company": company,
+			"purpose": "Transfer",
+			"assets": [{
+				"asset": asset.name,
+				"source_location": "Test Location",
+				"from_employee": employee,
+				"target_location": "Field 1"
+			}]
+		})
+		transfer_movement.insert()
+		transfer_movement.submit()
+		frappe.db.commit()
+
+		# Cancel the Issue Movement
+		transfer_movement.cancel()
+		frappe.db.commit()
+
+	# TC_FA_152
+	def test_single_asset_movement_with_purposetype_transfer_issue_152(self):
+		company = "_Test Company"
+		employee = "_T-Employee-00001"
+		item = "Test_item_01"
+
+		# Ensure prerequisites exist
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+
+		if not frappe.db.exists("Employee", employee):
+			frappe.get_doc({
+				"doctype": "Employee",
+				"employee_name": employee,
+				"first_name": employee,
+				"gender": "Male",
+				"date_of_birth": "1990-01-01",
+				"date_of_joining": "2023-01-01",
+				"status": "Active",
+				"company": company
+			}).insert()
+
+		if not frappe.db.exists("Item", item):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item,
+				"item_name": item,
+				"gst_hsn_code": "01011010",
+				"is_stock_item": 0,
+				"is_fixed_asset": 1,
+				"auto_create_assets": 1,
+				"asset_category": "Test_Category"
+			}).insert()
+
+		# Create a single asset
+		asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item,
+			"asset_name": item,
+			"asset_category": "Test_Category",
+			"location": "Test Location",
+			"is_existing_asset": 1,
+			"custodian": employee,
+			"owner": "Company",
+			"available_for_use_date": "2024-04-02",
+			"gross_purchase_amount": 8000,
+			"total_asset": 8000,
+			"asset_quantity": 1,
+			"purchase_date": "2024-04-01"
+		}).insert()
+		asset.submit()
+		frappe.db.commit()
+
+		# Create a single asset movement (either Issue or Transfer)
+		asset_movement = frappe.get_doc({
+			"doctype": "Asset Movement",
+			"company": company,
+			"purpose": "Transfer",  # Keeping Transfer, since Issue is being canceled
+			"assets": [{
+				"asset": asset.name,
+				"source_location": "Test Location",
+				"from_employee": employee,
+				"target_location": "Field 1"
+			}]
+		})
+		asset_movement.insert()
+		asset_movement.submit()
+		frappe.db.commit()
+
+		# Cancel the movement
+		asset_movement.cancel()
+		frappe.db.commit()
+
+
+
+
 	# TC_FA_030
 	def test_asset_movement_issue_type_TC_FA_030(self):
 		company = "_Test Company"
@@ -2548,7 +2908,7 @@ class TestAssetMovement(unittest.TestCase):
 				"purpose": "Issue",
 				"assets": [{
 					"asset": target_asset.name,
-					"source_location": "Test Location",
+					"source_location": "Field 1",
 					"to_employee": employe_doc.name,  # Use the name (primary key) of the Employee document
 					"source_cost_center": "_Test Cost Center - _TC"
 				}]
