@@ -3398,8 +3398,8 @@ class TestAsset(AssetSetup):
 		asset_new_value_adjust.item_code = "Test_asset1"
 		asset_new_value_adjust.is_existing_asset = 1
 		asset_new_value_adjust.location  = "Test"
-		asset_new_value_adjust.available_for_use_date = "01-09-2024"#frappe.utils.add_days(frappe.utils.nowdate(),-30)
-		asset_new_value_adjust.purchase_date = "01-08-2024"#frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset_new_value_adjust.available_for_use_date = getdate("01-09-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset_new_value_adjust.purchase_date = getdate("01-08-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset_new_value_adjust.calculate_depreciation = 1
 		asset_new_value_adjust.gross_purchase_amount = 12000
 		asset_new_value_adjust.calculate_depreciation = 1
@@ -3408,7 +3408,7 @@ class TestAsset(AssetSetup):
 		"depreciation_method": "Straight Line",
 		"total_number_of_depreciations": 12,
 		"frequency_of_depreciation": 1,
-		"depreciation_start_date":"30-04-2025"
+		"depreciation_start_date":getdate("30-04-2025")
 		})
 		asset_new_value_adjust.insert()
 		asset_new_value_adjust.submit()
@@ -3428,8 +3428,8 @@ class TestAsset(AssetSetup):
 		asset_scrapped.item_code = "Test_asset1"
 		asset_scrapped.is_existing_asset = 1
 		asset_scrapped.location  = "Test"
-		asset_scrapped.available_for_use_date = "01-09-2024"#frappe.utils.add_days(frappe.utils.nowdate(),-30)
-		asset_scrapped.purchase_date = "01-08-2024" #frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset_scrapped.available_for_use_date = getdate("01-09-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset_scrapped.purchase_date = getdate("01-08-2024") #frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset_scrapped.calculate_depreciation = 1
 		asset_scrapped.gross_purchase_amount = 50000
 		asset_scrapped.opening_accumulated_depreciation = 4000
@@ -3440,7 +3440,7 @@ class TestAsset(AssetSetup):
 		"total_number_of_depreciations": 12,
 		"total_number_of_booked_depreciations":2,
 		"frequency_of_depreciation": 1,
-		"depreciation_start_date":"23-01-2025"
+		"depreciation_start_date":getdate("23-01-2025")
 		})
 		asset_scrapped.insert()
 		asset_scrapped.submit()
@@ -3456,8 +3456,8 @@ class TestAsset(AssetSetup):
 		asset_scrapped.item_code = "Test_asset1"
 		asset_scrapped.is_existing_asset = 1
 		asset_scrapped.location  = "Test"
-		asset_scrapped.available_for_use_date = "01-09-2024"#frappe.utils.add_days(frappe.utils.nowdate(),-30)
-		asset_scrapped.purchase_date = "01-08-2024" #frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset_scrapped.available_for_use_date = getdate("01-09-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset_scrapped.purchase_date = getdate("01-08-2024") #frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset_scrapped.is_fully_depreciated = 1
 		asset_scrapped.gross_purchase_amount = 80000
 		asset_scrapped.opening_accumulated_depreciation = 8000
@@ -3476,8 +3476,8 @@ class TestAsset(AssetSetup):
 		asset_scrapped.item_code = "Test_asset1"
 		asset_scrapped.is_existing_asset = 1
 		asset_scrapped.location  = "Test"
-		asset_scrapped.available_for_use_date = "01-09-2024"#frappe.utils.add_days(frappe.utils.nowdate(),-30)
-		asset_scrapped.purchase_date = "01-08-2024" #frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset_scrapped.available_for_use_date = getdate("01-09-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset_scrapped.purchase_date = getdate("01-08-2024") #frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset_scrapped.calculate_depreciation = 1
 		asset_scrapped.gross_purchase_amount = 50000
 		asset_scrapped.opening_accumulated_depreciation = 4000
@@ -3488,7 +3488,7 @@ class TestAsset(AssetSetup):
 		"total_number_of_depreciations": 12,
 		"total_number_of_booked_depreciations":2,
 		"frequency_of_depreciation": 1,
-		"depreciation_start_date":"23-01-2025"
+		"depreciation_start_date":getdate("23-01-2025")
 		})
 		asset_scrapped.insert()
 		asset_scrapped.submit()
