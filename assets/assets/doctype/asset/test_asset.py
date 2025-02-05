@@ -3758,6 +3758,170 @@ class TestAsset(AssetSetup):
 
 		print(f"Asset Created: {asset.name}")
 
+	# TC_FA_146
+	def test_asset_and_asset_depreciation_schedule_TC_FA_146(self):
+		item_code = "Test_Asset (Existing Asset)"
+		company = "_Test Company"
+
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+
+		# Ensure the item exists or create it
+		if not frappe.db.exists("Item", item_code):
+			item_data = {
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_stock_item": 0,
+				"is_fixed_asset": 1,
+				"gst_hsn_code": "01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
+				"auto_create_assets": 1,
+				"asset_category": "Test_Category"
+			}
+
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+
+		target_asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item_code,
+			"asset_name": item_code,
+			"asset_category": "Test_Category",
+			"location": "Test Location",
+			"is_existing_asset": 1,
+			"available_for_use_date": "2024-04-02",
+			"gross_purchase_amount": "12000",
+			"asset_quantity": 1,
+			"purchase_date": "2024-04-01",
+			"calculate_depreciation": 1,
+			"opening_accumulated_depreciation": "7000",
+			"opening_number_of_booked_depreciations": 7,
+			"finance_books": [{
+				"finance_book": "2024-2025",
+				"frequency_of_depreciation": 1,
+				"depreciation_method": "Double Declining Balance",
+				"depreciation_start_date": "2025-06-01",
+				"total_number_of_depreciations": 12,
+				"total_number_of_booked_depreciations": 7,
+				"value_after_depreciation": 5000,
+				"daily_prorata_based":1
+			}]
+		}).insert()
+		target_asset.submit()
+		frappe.db.commit()
+
+	# TC_FA_147
+	def test_cancel_asset_and_asset_depreciation_wdv_schedule_TC_FA_147(self):
+		item_code = "Test_Asset (Existing Asset)"
+		company = "_Test Company"
+
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+
+		# Ensure the item exists or create it
+		if not frappe.db.exists("Item", item_code):
+			item_data = {
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_stock_item": 0,
+				"is_fixed_asset": 1,
+				"gst_hsn_code": "01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
+				"auto_create_assets": 1,
+				"asset_category": "Test_Category"
+			}
+
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+
+		target_asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item_code,
+			"asset_name": item_code,
+			"asset_category": "Test_Category",
+			"location": "Test Location",
+			"is_existing_asset": 1,
+			"available_for_use_date": "2024-04-02",
+			"gross_purchase_amount": "12000",
+			"asset_quantity": 1,
+			"purchase_date": "2024-04-01",
+			"calculate_depreciation": 1,
+			"opening_accumulated_depreciation": "7000",
+			"opening_number_of_booked_depreciations": 7,
+			"finance_books": [{
+				"finance_book": "2024-2025",
+				"frequency_of_depreciation": 1,
+				"depreciation_method": "Written Down Value",
+				"depreciation_start_date": "2025-06-01",
+				"total_number_of_depreciations": 12,
+				"total_number_of_booked_depreciations": 7,
+				"daily_prorata_based":1,
+				"value_after_depreciation": 5000
+			}]
+		}).insert()
+		target_asset.submit()
+		frappe.db.commit()
+
+	# TC_FA_148
+	def test_cancel_asset_and_asset_depreciation_manual_schedule_TC_FA_148(self):
+		item_code = "Test_Asset (Existing Asset)"
+		company = "_Test Company"
+
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+
+		# Ensure the item exists or create it
+		if not frappe.db.exists("Item", item_code):
+			item_data = {
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_stock_item": 0,
+				"is_fixed_asset": 1,
+				"gst_hsn_code": "01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
+				"auto_create_assets": 1,
+				"asset_category": "Test_Category"
+			}
+
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+
+		target_asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item_code,
+			"asset_name": item_code,
+			"asset_category": "Test_Category",
+			"location": "Test Location",
+			"is_existing_asset": 1,
+			"available_for_use_date": "2024-04-02",
+			"gross_purchase_amount": "12000",
+			"asset_quantity": 1,
+			"purchase_date": "2024-04-01",
+			"calculate_depreciation": 1,
+			"opening_accumulated_depreciation": "7000",
+			"opening_number_of_booked_depreciations": 7,
+			"finance_books": [{
+				"finance_book": "2024-2025",
+				"frequency_of_depreciation": 1,
+				"depreciation_method": "Manual",
+				"depreciation_start_date": "2025-06-01",
+				"total_number_of_depreciations": 12,
+				"total_number_of_booked_depreciations": 7,
+				"value_after_depreciation": 5000,
+				"daily_prorata_based":1,
+			}]
+		}).insert()
+		target_asset.submit()
+		frappe.db.commit()
 
 	def test_cases_shell_pr_asset_tc_61(self):
 		pi=frappe.new_doc("Purchase Invoice")
