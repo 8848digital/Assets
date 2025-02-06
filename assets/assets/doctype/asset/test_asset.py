@@ -3142,8 +3142,8 @@ class TestAsset(AssetSetup):
 		asset.item_code = "Test Item"
 		asset.is_existing_asset = 1
 		asset.location  = "Test"
-		asset.available_for_use_date = "01-04-2024"#frappe.utils.add_days(frappe.utils.nowdate(),-30)
-		asset.purchase_date = "01-04-2024" #frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset.available_for_use_date = getdate("01-04-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset.purchase_date = getdate("01-04-2024") #frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset.calculate_depreciation = 1
 		asset.gross_purchase_amount = 1200
 		asset.calculate_depreciation = 1
@@ -3156,7 +3156,7 @@ class TestAsset(AssetSetup):
 		"total_number_of_depreciations": 12,
 		"frequency_of_depreciation": 1,
 		# "daily_prorata_based":1,
-		"depreciation_start_date":"31-12-2024"
+		"depreciation_start_date":getdate("31-12-2024")
 		})
 		try:
 			asset.insert()
@@ -3175,8 +3175,8 @@ class TestAsset(AssetSetup):
 		asset.item_code = "Test Item"
 		asset.is_existing_asset = 1
 		asset.location  = "Test"
-		asset.available_for_use_date = "01-04-2024"#frappe.utils.add_days(frappe.utils.nowdate(),-30)
-		asset.purchase_date = "01-04-2024" #frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset.available_for_use_date = getdate("01-04-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset.purchase_date = getdate("01-04-2024") #frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset.calculate_depreciation = 1
 		asset.gross_purchase_amount = 1200
 		asset.calculate_depreciation = 1
@@ -3189,7 +3189,7 @@ class TestAsset(AssetSetup):
 		"total_number_of_depreciations": 12,
 		"frequency_of_depreciation": 1,
 		# "daily_prorata_based":1,
-		"depreciation_start_date":"31-12-2024"
+		"depreciation_start_date":getdate("31-12-2024")
 		})
 		try:
 			asset.insert()
@@ -3233,7 +3233,7 @@ class TestAsset(AssetSetup):
 				"depreciation_method":"Straight Line",
 				"total_number_of_depreciations":12,
 				"frequency_of_depreciation":1,
-				"depreciation_start_date":"30-04-2025"
+				"depreciation_start_date":getdate("30-04-2025")
 			})
 			pi_asset.save()
 			pi_asset.submit()
@@ -3247,8 +3247,8 @@ class TestAsset(AssetSetup):
 			asset_pi.item_code = "Test_asset1"
 			asset_pi.gross_purchase_amount = 25000
 			asset_pi.location  = "Test"
-			asset_pi.available_for_use_date = "01-09-2024"#frappe.utils.add_days(frappe.utils.nowdate(),-30)
-			asset_pi.purchase_date = "01-08-2024"
+			asset_pi.available_for_use_date = getdate("01-09-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
+			asset_pi.purchase_date = getdate("01-08-2024")
 			asset_pi.purchase_amount = asset_pi.gross_purchase_amount
 			asset_pi.available_for_use_date = frappe.utils.nowdate()
 			asset_pi.calculate_depreciation=1
@@ -3257,7 +3257,7 @@ class TestAsset(AssetSetup):
 				"depreciation_method":"Straight Line",
 				"total_number_of_depreciations":12,
 				"frequency_of_depreciation":1,
-				"depreciation_start_date":"30-04-2025"
+				"depreciation_start_date":getdate("30-04-2025")
 			})
 			asset_pi.save()
 			asset_pi.submit()
@@ -3288,7 +3288,7 @@ class TestAsset(AssetSetup):
 				"depreciation_method":"Straight Line",
 				"total_number_of_depreciations":12,
 				"frequency_of_depreciation":1,
-				"depreciation_start_date":"30-04-2025"
+				"depreciation_start_date":getdate("30-04-2025")
 			})
 			pi_asset.save()
 			pi_asset.submit()
@@ -3302,8 +3302,8 @@ class TestAsset(AssetSetup):
 			asset_pi.item_code = "Test_asset1"
 			asset_pi.gross_purchase_amount = 25000
 			asset_pi.location  = "Test"
-			asset_pi.available_for_use_date = "01-09-2024"#frappe.utils.add_days(frappe.utils.nowdate(),-30)
-			asset_pi.purchase_date = "01-08-2024"
+			asset_pi.available_for_use_date = getdate("01-09-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
+			asset_pi.purchase_date = getdate("01-08-2024")
 			asset_pi.purchase_amount = asset_pi.gross_purchase_amount
 			asset_pi.available_for_use_date = frappe.utils.nowdate()
 			asset_pi.calculate_depreciation=1
@@ -3312,7 +3312,7 @@ class TestAsset(AssetSetup):
 				"depreciation_method":"Straight Line",
 				"total_number_of_depreciations":12,
 				"frequency_of_depreciation":1,
-				"depreciation_start_date":"30-04-2025"
+				"depreciation_start_date":getdate("30-04-2025")
 			})
 			asset_pi.save()
 			asset_pi.submit()
@@ -3345,7 +3345,7 @@ class TestAsset(AssetSetup):
 				"depreciation_method":"Straight Line",
 				"total_number_of_depreciations":12,
 				"frequency_of_depreciation":1,
-				"depreciation_start_date":"30-04-2025"
+				"depreciation_start_date":getdate("30-04-2025")
 			})
 			pi_asset.save()
 			pi_asset.submit()
@@ -3364,8 +3364,8 @@ class TestAsset(AssetSetup):
 			asset_pi.item_code = "Test_asset1"
 			asset_pi.gross_purchase_amount = 25000
 			asset_pi.location  = "Test"
-			asset_pi.available_for_use_date = "01-09-2024"#frappe.utils.add_days(frappe.utils.nowdate(),-30)
-			asset_pi.purchase_date = "01-08-2024"
+			asset_pi.available_for_use_date = getdate("01-09-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
+			asset_pi.purchase_date = getdate("01-08-2024")
 			asset_pi.purchase_amount = asset_pi.gross_purchase_amount
 			asset_pi.available_for_use_date = frappe.utils.nowdate()
 			asset_pi.calculate_depreciation=1
@@ -3374,7 +3374,7 @@ class TestAsset(AssetSetup):
 				"depreciation_method":"Straight Line",
 				"total_number_of_depreciations":12,
 				"frequency_of_depreciation":1,
-				"depreciation_start_date":"30-04-2025"
+				"depreciation_start_date":getdate("30-04-2025")
 			})
 			asset_pi.save()
 			asset_pi.submit()
@@ -3505,8 +3505,8 @@ class TestAsset(AssetSetup):
 		asset_scrapped.item_code = "Test_asset1"
 		asset_scrapped.is_existing_asset = 1
 		asset_scrapped.location  = "Test"
-		asset_scrapped.available_for_use_date = "01-01-2025"#frappe.utils.add_days(frappe.utils.nowdate(),-30)
-		asset_scrapped.purchase_date = "01-01-2025" #frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset_scrapped.available_for_use_date = getdate("01-01-2025")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset_scrapped.purchase_date = getdate("01-01-2025") #frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset_scrapped.is_fully_depreciated = 1
 		asset_scrapped.gross_purchase_amount = 80000
 		asset_scrapped.opening_accumulated_depreciation = 8000
@@ -3524,7 +3524,7 @@ class TestAsset(AssetSetup):
 		pi=frappe.new_doc("Purchase Invoice")
 		pi.company="_Test Company"
 		pi.supplier="_Test Supplier"
-		pi.posting_date="01-01-2024"#frappe.utils.nowdate()
+		pi.posting_date=getdate("01-01-2024")#frappe.utils.nowdate()
 		pi.update_stock = 1
 		pi.append("items",{
 			"item_code":"Test_asset1",
@@ -3537,8 +3537,8 @@ class TestAsset(AssetSetup):
 		pi.submit()
 		if frappe.db.exists("Asset",{"purchase_invoice":pi.name}):
 			pi_asset=frappe.get_doc("Asset",{"purchase_invoice":pi.name})
-			pi_asset.available_for_use_date = "01-01-2024" #frappe.utils.nowdate()
-			pi_asset.purchase_date = "01-01-2024"
+			pi_asset.available_for_use_date = getdate("01-01-2024") #frappe.utils.nowdate()
+			pi_asset.purchase_date = getdate("01-01-2024")
 			pi_asset.calculate_depreciation=1
 			pi_asset.append("finance_books",{
 				"finance_book":"Depreciation as per Companies Act",
@@ -3546,7 +3546,7 @@ class TestAsset(AssetSetup):
 				"total_number_of_depreciations":12,
 				"frequency_of_depreciation":1,
 				"salvage_value_percentage":10,
-				"depreciation_start_date":"31-01-2024"
+				"depreciation_start_date":getdate("31-01-2024")
 			})
 			pi_asset.save()
 			pi_asset.submit()
@@ -3573,8 +3573,8 @@ class TestAsset(AssetSetup):
 			pi_asset.gross_purchase_amount = 25000  # Assign correct purchase amount
 			pi_asset.purchase_amount = pi_asset.gross_purchase_amount
 			pi_asset.purchase_invoice = pi.name
-			pi_asset.available_for_use_date = "01-01-2024"
-			pi_asset.purchase_date = "01-01-2024"
+			pi_asset.available_for_use_date = getdate("01-01-2024")
+			pi_asset.purchase_date = getdate("01-01-2024")
 			pi_asset.calculate_depreciation = 1
 
 			# Adding finance book details
@@ -3584,7 +3584,7 @@ class TestAsset(AssetSetup):
 				"total_number_of_depreciations": 12,
 				"frequency_of_depreciation": 1,
 				"salvage_value_percentage": 10,
-				"depreciation_start_date": "31-01-2024"
+				"depreciation_start_date": getdate("31-01-2024")
 			})
 
 			pi_asset.save()
@@ -3609,7 +3609,7 @@ class TestAsset(AssetSetup):
 		pi=frappe.new_doc("Purchase Invoice")
 		pi.company="_Test Company"
 		pi.supplier="_Test Supplier"
-		pi.posting_date="01-01-2024"#frappe.utils.nowdate()
+		pi.posting_date=getdate("01-01-2024")#frappe.utils.nowdate()
 		pi.update_stock = 1
 		pi.append("items",{
 			"item_code":"Test_(Grouped_Asset)",
@@ -3622,8 +3622,8 @@ class TestAsset(AssetSetup):
 		pi.submit()
 		if frappe.db.exists("Asset",{"purchase_invoice":pi.name}):
 			pi_asset=frappe.get_doc("Asset",{"purchase_invoice":pi.name})
-			pi_asset.available_for_use_date = "01-01-2024" #frappe.utils.nowdate()
-			pi_asset.purchase_date = "01-01-2024"
+			pi_asset.available_for_use_date = getdate("01-01-2024") #frappe.utils.nowdate()
+			pi_asset.purchase_date = getdate("01-01-2024")
 			pi_asset.calculate_depreciation=1
 			pi_asset.append("finance_books",{
 				"finance_book":"Depreciation as per Companies Act",
@@ -3631,7 +3631,7 @@ class TestAsset(AssetSetup):
 				"total_number_of_depreciations":12,
 				"frequency_of_depreciation":1,
 				"salvage_value_percentage":10,
-				"depreciation_start_date":"31-01-2024"
+				"depreciation_start_date":getdate("31-01-2024")
 			})
 			pi_asset.save()
 			pi_asset.submit()
@@ -3658,8 +3658,8 @@ class TestAsset(AssetSetup):
 			pi_asset.gross_purchase_amount = 25000  # Assign correct purchase amount
 			pi_asset.purchase_amount = pi_asset.gross_purchase_amount
 			pi_asset.purchase_invoice = pi.name
-			pi_asset.available_for_use_date = "01-01-2024"
-			pi_asset.purchase_date = "01-01-2024"
+			pi_asset.available_for_use_date = getdate("01-01-2024")
+			pi_asset.purchase_date = getdate("01-01-2024")
 			pi_asset.calculate_depreciation = 1
 
 			# Adding finance book details
@@ -3669,7 +3669,7 @@ class TestAsset(AssetSetup):
 				"total_number_of_depreciations": 12,
 				"frequency_of_depreciation": 1,
 				"salvage_value_percentage": 10,
-				"depreciation_start_date": "31-01-2024"
+				"depreciation_start_date": getdate("31-01-2024")
 			})
 
 			pi_asset.save()
@@ -3695,8 +3695,8 @@ class TestAsset(AssetSetup):
 		asset.item_code = "Test_asset1"
 		asset.is_existing_asset = 1
 		asset.location  = "Test"
-		asset.available_for_use_date = "01-04-2024"#frappe.utils.add_days(frappe.utils.nowdate(),-30)
-		asset.purchase_date = "01-04-2024" #frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset.available_for_use_date = getdate("01-04-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset.purchase_date = getdate("01-04-2024") #frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset.gross_purchase_amount = 10000
 		asset.opening_accumulated_depreciation = 8000
 		asset.insert()
@@ -3776,8 +3776,8 @@ class TestAsset(AssetSetup):
 		pi.submit()
 		if frappe.db.exists("Asset",{"purchase_invoice":pi.name}):
 			pi_asset=frappe.get_doc("Asset",{"purchase_invoice":pi.name})
-			pi_asset.available_for_use_date = "01-01-2024" #frappe.utils.nowdate()
-			pi_asset.purchase_date = "01-01-2024"
+			pi_asset.available_for_use_date = getdate("01-01-2024") #frappe.utils.nowdate()
+			pi_asset.purchase_date = getdate("01-01-2024")
 			pi_asset.opening_accumulated_depreciation = 8000
 			pi_asset.save()
 			pi_asset.submit()
@@ -3799,8 +3799,8 @@ class TestAsset(AssetSetup):
 			pi_asset.gross_purchase_amount = 10000  # Assign correct purchase amount
 			# pi_asset.purchase_amount = pi_asset.gross_purchase_amount
 			pi_asset.purchase_invoice = pi.name
-			pi_asset.available_for_use_date = "01-01-2024"
-			pi_asset.purchase_date = "01-01-2024"
+			pi_asset.available_for_use_date = getdate("01-01-2024")
+			pi_asset.purchase_date = getdate("01-01-2024")
 			pi_asset.opening_accumulated_depreciation = 8000
 			pi_asset.save()
 			pi_asset.submit()
@@ -3817,7 +3817,7 @@ class TestAsset(AssetSetup):
 		pi=frappe.new_doc("Purchase Invoice")
 		pi.company="_Test Company"
 		pi.supplier="_Test Supplier"
-		pi.posting_date="01-01-2024"#frappe.utils.nowdate()
+		pi.posting_date=getdate("01-01-2024")#frappe.utils.nowdate()
 		pi.update_stock = 1
 		pi.append("items",{
 			"item_code":"Test_(Grouped_Asset)",
@@ -3830,8 +3830,8 @@ class TestAsset(AssetSetup):
 		pi.submit()
 		if frappe.db.exists("Asset",{"purchase_invoice":pi.name}):
 			pi_asset=frappe.get_doc("Asset",{"purchase_invoice":pi.name})
-			pi_asset.available_for_use_date = "01-01-2024" #frappe.utils.nowdate()
-			pi_asset.purchase_date = "01-01-2024"
+			pi_asset.available_for_use_date = getdate("01-01-2024") #frappe.utils.nowdate()
+			pi_asset.purchase_date = getdate("01-01-2024")
 			pi_asset.opening_accumulated_depreciation = 8000
 			pi_asset.save()
 			pi_asset.submit()
@@ -3853,8 +3853,8 @@ class TestAsset(AssetSetup):
 			pi_asset.gross_purchase_amount = 10000  # Assign correct purchase amount
 			# pi_asset.purchase_amount = pi_asset.gross_purchase_amount
 			pi_asset.purchase_invoice = pi.name
-			pi_asset.available_for_use_date = "01-01-2024"
-			pi_asset.purchase_date = "01-01-2024"
+			pi_asset.available_for_use_date = getdate("01-01-2024")
+			pi_asset.purchase_date = getdate("01-01-2024")
 			pi_asset.opening_accumulated_depreciation = 8000
 			pi_asset.save()
 			pi_asset.submit()
@@ -3871,7 +3871,7 @@ class TestAsset(AssetSetup):
 		pi=frappe.new_doc("Purchase Invoice")
 		pi.company="_Test Company"
 		pi.supplier="_Test Supplier"
-		pi.posting_date="01-01-2024"#frappe.utils.nowdate()
+		pi.posting_date=("01-01-2024")#frappe.utils.nowdate()
 		pi.update_stock = 1
 		pi.append("items",{
 			"item_code":"Test_(Grouped_Asset)",
@@ -3884,8 +3884,8 @@ class TestAsset(AssetSetup):
 		pi.submit()
 		if frappe.db.exists("Asset",{"purchase_invoice":pi.name}):
 			pi_asset=frappe.get_doc("Asset",{"purchase_invoice":pi.name})
-			pi_asset.available_for_use_date = "01-01-2024" #frappe.utils.nowdate()
-			pi_asset.purchase_date = "01-01-2024"
+			pi_asset.available_for_use_date = getdate("01-01-2024") #frappe.utils.nowdate()
+			pi_asset.purchase_date = getdate("01-01-2024")
 			pi_asset.opening_accumulated_depreciation = 8000
 			pi_asset.calculate_depreciation=1
 			pi_asset.append("finance_books",{
@@ -3894,7 +3894,7 @@ class TestAsset(AssetSetup):
 				"total_number_of_depreciations":12,
 				"frequency_of_depreciation":1,
 				"salvage_value_percentage":10,
-				"depreciation_start_date":"31-01-2024"
+				"depreciation_start_date":getdate("31-01-2024")
 			})
 			pi_asset.save()
 			pi_asset.submit()
@@ -3929,8 +3929,8 @@ class TestAsset(AssetSetup):
 			pi_asset.gross_purchase_amount = 10000  # Assign correct purchase amount
 			pi_asset.opening_accumulated_depreciation = 8000
 			pi_asset.purchase_invoice = pi.name
-			pi_asset.available_for_use_date = "01-01-2024"
-			pi_asset.purchase_date = "01-01-2024"
+			pi_asset.available_for_use_date = getdate("01-01-2024")
+			pi_asset.purchase_date = getdate("01-01-2024")
 			pi_asset.calculate_depreciation = 1
 
 			# Adding finance book details
@@ -3940,7 +3940,7 @@ class TestAsset(AssetSetup):
 				"total_number_of_depreciations": 12,
 				"frequency_of_depreciation": 1,
 				"salvage_value_percentage": 10,
-				"depreciation_start_date": "31-01-2024"
+				"depreciation_start_date": getdate("31-01-2024")
 			})
 
 			pi_asset.save()
@@ -3976,8 +3976,8 @@ class TestAsset(AssetSetup):
 		# pi_asset.opening_accumulated_depreciation = 8000
 		# pi_asset.purchase_invoice = pi.name
 		pi_asset.asset_quantity=1
-		pi_asset.available_for_use_date = "01-01-2024"
-		pi_asset.purchase_date = "01-01-2024"
+		pi_asset.available_for_use_date = getdate("01-01-2024")
+		pi_asset.purchase_date = getdate("01-01-2024")
 		pi_asset.calculate_depreciation = 1
 
 		# Adding finance book details
@@ -3987,7 +3987,7 @@ class TestAsset(AssetSetup):
 			"total_number_of_depreciations": 12,
 			"frequency_of_depreciation": 1,
 			"salvage_value_percentage": 10,
-			"depreciation_start_date": "31-01-2024"
+			"depreciation_start_date": getdate("31-01-2024")
 		})
 
 		pi_asset.save()
@@ -4016,8 +4016,8 @@ class TestAsset(AssetSetup):
 		# pi_asset.opening_accumulated_depreciation = 8000
 		# pi_asset.purchase_invoice = pi.name
 		pi_asset.asset_quantity=7
-		pi_asset.available_for_use_date = "01-01-2024"
-		pi_asset.purchase_date = "01-01-2024"
+		pi_asset.available_for_use_date = getdate("01-01-2024")
+		pi_asset.purchase_date = getdate("01-01-2024")
 		pi_asset.calculate_depreciation = 1
 
 		# Adding finance book details
@@ -4027,7 +4027,7 @@ class TestAsset(AssetSetup):
 			"total_number_of_depreciations": 12,
 			"frequency_of_depreciation": 1,
 			"salvage_value_percentage": 10,
-			"depreciation_start_date": "31-01-2024"
+			"depreciation_start_date": getdate("31-01-2024")
 		})
 
 		pi_asset.save()
@@ -4045,8 +4045,8 @@ class TestAsset(AssetSetup):
 		# pi_asset.opening_accumulated_depreciation = 8000
 		# pi_asset.purchase_invoice = pi.name
 		pi_asset.asset_quantity=5
-		pi_asset.available_for_use_date = "01-01-2024"
-		pi_asset.purchase_date = "01-01-2024"
+		pi_asset.available_for_use_date = getdate("01-01-2024")
+		pi_asset.purchase_date = getdate("01-01-2024")
 		pi_asset.calculate_depreciation = 1
 
 		# Adding finance book details
@@ -4056,7 +4056,7 @@ class TestAsset(AssetSetup):
 			"total_number_of_depreciations": 12,
 			"frequency_of_depreciation": 1,
 			"salvage_value_percentage": 10,
-			"depreciation_start_date": "31-01-2024"
+			"depreciation_start_date": getdate("31-01-2024")
 		})
 
 		pi_asset.save()
@@ -4073,15 +4073,15 @@ class TestAsset(AssetSetup):
 		pi_asset.item_code = "Test_(Grouped_Asset)"  # Assign item code
 		pi_asset.location = "Test"
 		pi_asset.gross_purchase_amount = 72000  # Assign correct purchase amount
-		pi_asset.available_for_use_date = "01-01-2024"
-		pi_asset.purchase_date = "01-01-2024"
+		pi_asset.available_for_use_date = getdate("01-01-2024")
+		pi_asset.purchase_date = getdate("01-01-2024")
 		pi_asset.calculate_depreciation = 1
 		pi_asset.append("finance_books", {
 			"finance_book": "Test Finance Book 1",
 			"depreciation_method": "Straight Line",
 			"total_number_of_depreciations": 18,
 			"frequency_of_depreciation": 1,
-			"depreciation_start_date": "31-01-2024"
+			"depreciation_start_date": getdate("31-01-2024")
 		})
 
 		pi_asset.save()
@@ -4111,15 +4111,15 @@ class TestAsset(AssetSetup):
 		pi_asset.item_code = "Test_(Grouped_Asset)"  # Assign item code
 		pi_asset.location = "Test"
 		pi_asset.gross_purchase_amount = 72000  # Assign correct purchase amount
-		pi_asset.available_for_use_date = "01-01-2024"
-		pi_asset.purchase_date = "01-01-2024"
+		pi_asset.available_for_use_date = getdate("01-01-2024")
+		pi_asset.purchase_date = getdate("01-01-2024")
 		pi_asset.calculate_depreciation = 1
 		pi_asset.append("finance_books", {
 			"finance_book": "Test Finance Book 1",
 			"depreciation_method": "Straight Line",
 			"total_number_of_depreciations": 18,
 			"frequency_of_depreciation": 1,
-			"depreciation_start_date": "31-01-2024"
+			"depreciation_start_date": getdate("31-01-2024")
 		})
 
 		pi_asset.save()
