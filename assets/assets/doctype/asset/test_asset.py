@@ -5159,7 +5159,229 @@ class TestDepreciationBasics(AssetSetup):
 		self.assertTrue(get_gl_entries("Purchase Receipt", pr.name))
 
 	
-
+	def test_multiple_asset_purchasing_single_invoice_TC_FA_102(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item,
+			create_records,
+			create_company
+		)
+		create_records('_Test Supplier')
+		create_company()
+		if not frappe.db.exists("Location", "Test Location"):
+			frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert()
+	
+		item_list =["_Test Item Asset 1", "_Test Item Asset 2"]
+		
+			
+		for item in item_list:
+			if not frappe.db.exists("Item", item):
+				item = make_test_item(item)
+				item.is_stock_item = 0
+				item.is_fixed_asset = 1
+				item.asset_naming_series="ACC-ASS-.YYYY.-"
+				item.asset_category = "Computers"
+				item.is_grouped_asset = 1
+				item.auto_create_assets = 1
+				item.save()
+		
+		pi = make_purchase_invoice(
+			supplier="_Test Supplier",
+			company="_Test Company",
+			item_code="_Test Item Asset 1",
+			qty=1,
+			rate=100.0,
+			location="Test Location",
+			do_not_submit=True,
+			update_stock=True
+   		)
+		pi.append("items",{
+			"item_code":"_Test Item Asset 2",
+			"qty":1,
+			"uom":"Nos",
+			"rate":1000,
+			"asset_location":"Test Location"
+		})
+		pi.save()
+		pi.submit()
+	    
+		assets_name = frappe.get_list("Asset",filters={"purchase_invoice":pi.name},fields=["name"])
+		
+		for asset in assets_name:
+			asset_doc = frappe.get_doc("Asset",asset.name)
+			self.assertEqual(pi.name,asset_doc.purchase_invoice)
+   
+	def test_multiple_asset_purchasing_single_invoice_with_gst_TC_FA_103(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item,
+			create_records,
+			create_company
+		)
+		create_records('_Test Supplier')
+		create_company()
+		if frappe.db.exists("Purchase Taxes and Charges Template", "Input GST Out-state - _TC"):
+			doc = frappe.get_doc("Purchase Taxes and Charges Template", "Input GST Out-state - _TC")
+			doc.taxes[0].rate = 12
+			doc.save()
+		if not frappe.db.exists("Location", "Test Location"):
+			frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert()
+	
+		item_list =["_Test Item Asset 1", "_Test Item Asset 2"]
+		
+			
+		for item in item_list:
+			if not frappe.db.exists("Item", item):
+				item = make_test_item(item)
+				item.is_stock_item = 0
+				item.is_fixed_asset = 1
+				item.asset_naming_series="ACC-ASS-.YYYY.-"
+				item.asset_category = "Computers"
+				item.is_grouped_asset = 1
+				item.auto_create_assets = 1
+				item.save()
+		
+		pi = make_purchase_invoice(
+			supplier="_Test Supplier",
+			company="_Test Company",
+			item_code="_Test Item Asset 1",
+			qty=1,
+			rate=1000.0,
+			location="Test Location",
+			do_not_submit=True,
+			update_stock=True
+   		)
+		pi.append("items",{
+			"item_code":"_Test Item Asset 2",
+			"qty":1,
+			"uom":"Nos",
+			"rate":1000,
+			"asset_location":"Test Location"
+		})
+		pi.taxes_and_charges = "Input GST Out-state - _TC"
+		pi.save()
+		pi.submit()
+	
+		self.assertTrue(get_gl_entries(pi.doctype, pi.name))
+		
+		assets_name = frappe.get_list("Asset",filters={"purchase_invoice":pi.name},fields=["name"])
+		gross_purchase_amount =0.0 
+		for asset in assets_name:
+			asset_doc = frappe.get_doc("Asset",asset.name)
+			self.assertEqual(pi.name,asset_doc.purchase_invoice)
+			gross_purchase_amount += asset_doc.gross_purchase_amount
+		
+		self.assertEqual(gross_purchase_amount,pi.total)
+	
+	def test_multiple_group_asset_purchasing_single_invoice_104(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item,
+			create_records,
+			create_company
+		)
+		create_records('_Test Supplier')
+		create_company()
+		if not frappe.db.exists("Location", "Test Location"):
+			frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert()
+		
+		item_list =["_Test Item Group Asset 1", "_Test Item Group Asset 2"]
+		
+		for item in item_list:
+			if not frappe.db.exists("Item", item):
+				item = make_test_item(item)
+				item.is_stock_item = 0
+				item.is_fixed_asset = 1
+				item.asset_naming_series="ACC-ASS-.YYYY.-"
+				item.asset_category = "Computers"
+				item.is_grouped_asset = 1
+				item.auto_create_assets = 1
+				item.save()
+			
+		pi = make_purchase_invoice(
+			supplier="_Test Supplier",
+			company="_Test Company",
+			item_code="_Test Item Group Asset 1",
+			qty=10,
+			rate=1000.0,
+			location="Test Location",
+			do_not_submit=True,
+			update_stock=True
+   		)
+		pi.append("items",{
+			"item_code":"_Test Item Group Asset 2",
+			"qty":10,
+			"uom":"Nos",
+			"rate":1000,
+			"asset_location":"Test Location"
+		})
+		pi.save()
+		pi.submit()
+	    
+		assets_name = frappe.get_list("Asset",filters={"purchase_invoice":pi.name},fields=["name"])
+		self.assertEqual(len(assets_name),2)
+		for asset in assets_name:
+			asset_doc = frappe.get_doc("Asset",asset.name)
+			self.assertEqual(pi.name,asset_doc.purchase_invoice)
+   
+   
+	def test_multiple_group_asset_purchasing_single_invoice_with_gst_105(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item,
+			create_records,
+			create_company
+		)
+		create_records('_Test Supplier')
+		create_company()
+		if frappe.db.exists("Purchase Taxes and Charges Template", "Input GST Out-state - _TC"):
+			doc = frappe.get_doc("Purchase Taxes and Charges Template", "Input GST Out-state - _TC")
+			doc.taxes[0].rate = 12
+			doc.save()
+		if not frappe.db.exists("Location", "Test Location"):
+			frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert()
+		
+		item_list =["_Test Item Group Asset 1", "_Test Item Group Asset 2"]
+		
+		for item in item_list:
+			if not frappe.db.exists("Item", item):
+				item = make_test_item(item)
+				item.is_stock_item = 0
+				item.is_fixed_asset = 1
+				item.asset_naming_series="ACC-ASS-.YYYY.-"
+				item.asset_category = "Computers"
+				item.is_grouped_asset = 1
+				item.auto_create_assets = 1
+				item.save()
+			
+		pi = make_purchase_invoice(
+			supplier="_Test Supplier",
+			company="_Test Company",
+			item_code="_Test Item Group Asset 1",
+			qty=10,
+			rate=1000.0,
+			location="Test Location",
+			do_not_submit=True,
+			update_stock=True
+   		)
+		pi.append("items",{
+			"item_code":"_Test Item Group Asset 2",
+			"qty":10,
+			"uom":"Nos",
+			"rate":1000,
+			"asset_location":"Test Location"
+		})
+		pi.taxes_and_charges = "Input GST Out-state - _TC"
+		pi.save()
+		pi.submit()
+	
+		self.assertTrue(get_gl_entries(pi.doctype, pi.name))
+	    
+		assets_name = frappe.get_list("Asset",filters={"purchase_invoice":pi.name},fields=["name"])
+		self.assertEqual(len(assets_name),2)
+		gross_purchase_amount =0.0 
+		for asset in assets_name:
+			asset_doc = frappe.get_doc("Asset",asset.name)
+			self.assertEqual(pi.name,asset_doc.purchase_invoice)
+			gross_purchase_amount += asset_doc.gross_purchase_amount
+		
+		self.assertEqual(gross_purchase_amount,pi.total)
 def get_gl_entries(doctype, docname):
 	gl_entry = frappe.qb.DocType("GL Entry")
 	return (
