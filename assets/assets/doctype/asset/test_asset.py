@@ -8,6 +8,8 @@ from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journ
 from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import (
 	make_purchase_invoice,
 )
+from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier
+from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
 	make_purchase_invoice as make_invoice,
 )
@@ -15,6 +17,7 @@ from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
 	make_purchase_receipt,
 )
 from erpnext.stock.doctype.material_request.material_request import make_purchase_order
+from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
 from erpnext.setup.doctype.company.test_company import create_child_company
 from erpnext.buying.doctype.purchase_order.test_purchase_order import create_purchase_order
 from erpnext.buying.doctype.supplier.test_supplier import create_supplier
@@ -28,6 +31,8 @@ from frappe.utils import (
 	getdate,
 	is_last_day_of_the_month,
 	nowdate,
+	today,
+	now
 )
 import frappe.utils
 from frappe.utils.data import add_to_date
@@ -51,7 +56,6 @@ from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedu
 	get_depr_schedule,
 	get_depreciation_amount,
 )
-
 
 class AssetSetup(unittest.TestCase):
 	@classmethod
@@ -78,7 +82,7 @@ class TestAsset(AssetSetup):
 
 		self.assertEqual(asset.asset_category, "Computers")
 
-    # TC_FA_001
+	# TC_FA_001
 	def test_create_asset_automatic_on_po_pr_TC_FA_001(self):
 		"""
 		Function to create and submit a Purchase Order and Purchase Receipt.
@@ -5228,10 +5232,6 @@ class TestDepreciationBasics(AssetSetup):
 			self.assertEqual(entry["credit"], expected_si_entries.get(entry["account"], {}).get("credit", 0))
 
 	def test_multiple_asset_selling_single_invoice_TC_FA_106(self):
-		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
-		if frappe.db.exists("DocType", "GST Settings"):
-			frappe.db.set_value("GST Settings", None, "validate_hsn_code", 0)
 		get_details = create_company_and_supplier()
 		company = get_details.get("parent_company")
 		frappe.db.set_value("Company", company, "depreciation_cost_center", "Main - TC-1")
@@ -5239,24 +5239,24 @@ class TestDepreciationBasics(AssetSetup):
 		supplier = get_details.get("supplier")
 		asset_category = get_asset_category()
 		location = get_location()
+
 		item_1 = make_test_item("test_asset_item_1")
 		item_1.is_stock_item = 0
 		item_1.is_fixed_asset = 1
 		item_1.asset_category = asset_category
-		if frappe.db.has_column("Item", "gst_hsn_code"):
-			item_1.gst_hsn_code = "01012990"
 		item_1.save()
 
 		item_2 = make_test_item("test_asset_item_2")
 		item_2.is_stock_item = 0
 		item_2.is_fixed_asset = 1
 		item_2.asset_category = asset_category
-		if frappe.db.has_column("Item", "gst_hsn_code"):
-			item_2.gst_hsn_code = "01012990"
 		item_2.save()
+
 		pr = create_purchase_receipt(item_1, item_2)
+
 		asset_1 = create_assets(company, location, pr, item_1.item_code)
 		asset_2 = create_assets(company, location, pr, item_2.item_code)
+
 		si = frappe.get_doc(
 			{
 				"doctype": "Sales Invoice",
@@ -5283,18 +5283,14 @@ class TestDepreciationBasics(AssetSetup):
 		si.insert()
 		si.submit()
 		self.assertEqual(si.docstatus, 1)
+
 		asset_1_status = frappe.get_doc("Asset", asset_1)
 		asset_2_status = frappe.get_doc("Asset", asset_2)
+
 		self.assertEqual(asset_1_status.status, "Sold")
 		self.assertEqual(asset_2_status.status, "Sold")
-		if frappe.db.exists("DocType", "GST Settings"):
-			frappe.db.set_value("GST Settings", None, "validate_hsn_code", 1)
 
 	def test_multiple_asset_selling_single_invoice_with_GST_TC_FA_107(self):
-		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
-		if frappe.db.exists("DocType", "GST Settings"):
-			frappe.db.set_value("GST Settings", None, "validate_hsn_code", 0)
 		get_details = create_company_and_supplier()
 		company = get_details.get("parent_company")
 		frappe.db.set_value("Company", company, "depreciation_cost_center", "Main - TC-1")
@@ -5302,25 +5298,24 @@ class TestDepreciationBasics(AssetSetup):
 		supplier = get_details.get("supplier")
 		asset_category = get_asset_category()
 		location = get_location()
+
 		item_1 = make_test_item("test_asset_item_1")
 		item_1.is_stock_item = 0
 		item_1.is_fixed_asset = 1
 		item_1.asset_category = asset_category
-		if frappe.db.has_column("Item", "gst_hsn_code"):
-			item_1.gst_hsn_code = "01012990"
 		item_1.save()
 
 		item_2 = make_test_item("test_asset_item_2")
 		item_2.is_stock_item = 0
 		item_2.is_fixed_asset = 1
 		item_2.asset_category = asset_category
-		if frappe.db.has_column("Item", "gst_hsn_code"):
-			item_2.gst_hsn_code = "01012990"
 		item_2.save()
+
 		pr = create_purchase_receipt(item_1, item_2)
+
 		asset_1 = create_assets(company, location, pr, item_1.item_code)
 		asset_2 = create_assets(company, location, pr, item_2.item_code)
-		print(asset_1, asset_2)
+
 		si = frappe.get_doc(
 			{
 				"doctype": "Sales Invoice",
@@ -5347,18 +5342,14 @@ class TestDepreciationBasics(AssetSetup):
 		si.insert()
 		si.submit()
 		self.assertEqual(si.docstatus, 1)
+
 		asset_1_status = frappe.get_doc("Asset", asset_1)
 		asset_2_status = frappe.get_doc("Asset", asset_2)
+
 		self.assertEqual(asset_1_status.status, "Sold")
 		self.assertEqual(asset_2_status.status, "Sold")
-		if frappe.db.exists("DocType", "GST Settings"):
-			frappe.db.set_value("GST Settings", None, "validate_hsn_code", 1)
 
 	def test_multiple_group_asset_selling_single_invoice_TC_FA_108(self):
-		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
-		if frappe.db.exists("DocType", "GST Settings"):
-			frappe.db.set_value("GST Settings", None, "validate_hsn_code", 0)
 		get_details = create_company_and_supplier()
 		company = get_details.get("parent_company")
 		frappe.db.set_value("Company", company, "depreciation_cost_center", "Main - TC-1")
@@ -5366,13 +5357,12 @@ class TestDepreciationBasics(AssetSetup):
 		supplier = get_details.get("supplier")
 		asset_category = get_asset_category()
 		location = get_location()
+
 		item_1 = make_test_item("test_asset_item_1")
 		item_1.is_stock_item = 0
 		item_1.is_fixed_asset = 1
 		item_1.is_grouped_asset = 1
 		item_1.asset_category = asset_category
-		if frappe.db.has_column("Item", "gst_hsn_code"):
-			item_1.gst_hsn_code = "01012990"
 		item_1.save()
 
 		item_2 = make_test_item("test_asset_item_2")
@@ -5380,12 +5370,13 @@ class TestDepreciationBasics(AssetSetup):
 		item_2.is_fixed_asset = 1
 		item_2.is_grouped_asset = 1
 		item_2.asset_category = asset_category
-		if frappe.db.has_column("Item", "gst_hsn_code"):
-			item_2.gst_hsn_code = "01012990"
 		item_2.save()
+
 		pr = create_purchase_receipt(item_1, item_2)
+
 		asset_1 = create_assets(company, location, pr, item_1.item_code)
 		asset_2 = create_assets(company, location, pr, item_2.item_code)
+
 		si = frappe.get_doc(
 			{
 				"doctype": "Sales Invoice",
@@ -5412,12 +5403,73 @@ class TestDepreciationBasics(AssetSetup):
 		si.insert()
 		si.submit()
 		self.assertEqual(si.docstatus, 1)
+
 		asset_1_status = frappe.get_doc("Asset", asset_1)
 		asset_2_status = frappe.get_doc("Asset", asset_2)
+
 		self.assertEqual(asset_1_status.status, "Sold")
 		self.assertEqual(asset_2_status.status, "Sold")
-		if frappe.db.exists("DocType", "GST Settings"):
-			frappe.db.set_value("GST Settings", None, "validate_hsn_code", 1)
+
+	def test_multiple_group_asset_selling_single_invoice_with_GST_TC_FA_109(self):
+		get_details = create_company_and_supplier()
+		company = get_details.get("parent_company")
+		frappe.db.set_value("Company", company, "depreciation_cost_center", "Main - TC-1")
+		customer = get_details.get("customer")
+		supplier = get_details.get("supplier")
+		asset_category = get_asset_category()
+		location = get_location()
+
+		item_1 = make_test_item("test_asset_item_1")
+		item_1.is_stock_item = 0
+		item_1.is_fixed_asset = 1
+		item_1.is_grouped_asset = 1
+		item_1.asset_category = asset_category
+		item_1.save()
+
+		item_2 = make_test_item("test_asset_item_2")
+		item_2.is_stock_item = 0
+		item_2.is_fixed_asset = 1
+		item_2.is_grouped_asset = 1
+		item_2.asset_category = asset_category
+		item_2.save()
+
+		pr = create_purchase_receipt(item_1, item_2)
+
+		asset_1 = create_assets(company, location, pr, item_1.item_code)
+		asset_2 = create_assets(company, location, pr, item_2.item_code)
+
+		si = frappe.get_doc(
+			{
+				"doctype": "Sales Invoice",
+				"company": company,
+				"posting_date": frappe.utils.today(),
+				"customer": customer,
+				"items": [
+					{
+						"item_code": item_1.item_code,
+						"qty": 1,
+						"rate": 1000,
+						"asset": asset_1
+					},
+					{
+						"item_code": item_2.item_code,
+						"qty": 1,
+						"rate": 1000,
+						"asset": asset_2
+					}
+				],
+				"taxes_and_charges": "Output GST In-state - TC-1"
+			}
+		)
+		si.insert()
+		si.submit()
+		self.assertEqual(si.docstatus, 1)
+
+		asset_1_status = frappe.get_doc("Asset", asset_1)
+		asset_2_status = frappe.get_doc("Asset", asset_2)
+
+		self.assertEqual(asset_1_status.status, "Sold")
+		self.assertEqual(asset_2_status.status, "Sold")
 
 def get_gl_entries(doctype, docname):
 	gl_entry = frappe.qb.DocType("GL Entry")
@@ -5660,25 +5712,30 @@ def get_location():
 
 	return location
 
-def create_purchase_receipt(item_1, item_2):
+def create_purchase_receipt(item_1, item_2 = None):
+	items = [
+		{
+			"item_code": item_1.item_code,
+			"qty": 1,
+			"rate": 1000
+		}
+	]
+	if item_2:
+		items.append(
+			{
+				"item_code": item_2.item_code,
+				"qty": 1,
+				"rate": 1000
+			}
+		)
+
 	pr = frappe.get_doc(
 		{
 			"doctype": "Purchase Receipt",
 			"company": "Test Company-1122",
 			"supplier": "_Test Supplier",
 			"posting_date": frappe.utils.today(),
-			"items": [
-				{
-					"item_code": item_1.item_code,
-					"qty": 1,
-					"rate": 1000
-				},
-				{
-					"item_code": item_2.item_code,
-					"qty": 1,
-					"rate": 1000
-				}
-			]
+			"items": items
 		}
 	)
 	pr.insert()
