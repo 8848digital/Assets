@@ -245,17 +245,37 @@ class TestAssetMovement(unittest.TestCase):
 		if not frappe.db.exists("Company", company):
 			create_child_company()
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
 				"is_stock_item": 0,
 				"is_fixed_asset": 1,
-				"gst_hsn_code":"01011010",
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+			
+			frappe.get_doc(item_data).insert()
+
+		if not frappe.db.exists("Employee", "Test_employee_issue"):
+			employee_doc = frappe.get_doc({
+					"doctype": "Employee",
+					"employee_name": "Test_employee_issue",
+					"first_name": "Test_employee_issue",
+					"gender": "Male",
+					"date_of_birth": "1990-01-01",
+					"date_of_joining": "2023-01-01",
+					"status": "Active",
+					"company": company
+				}).insert()
+		else:
+			# Fetch existing employee document
+			employee_doc = frappe.get_doc("Employee", "Test_employee_issue")
 
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -266,6 +286,7 @@ class TestAssetMovement(unittest.TestCase):
 			"location": "Test Location",
 			"is_existing_asset":1,
 			"asset_owner":"Company",
+			"custodian" : employee_doc.name,
 			"available_for_use_date":"02-04-2024",
 			"gross_purchase_amount":8000,
 			"total_asset":8000,
@@ -284,17 +305,7 @@ class TestAssetMovement(unittest.TestCase):
 		target_asset.submit()
 		frappe.db.commit()
 
-		if not frappe.db.exists("Employee", "Test_employee_issue"):
-			employee_doc = frappe.get_doc({
-					"doctype": "Employee",
-					"employee_name": "Test_employee_issue",
-					"first_name": "Test_employee_issue",
-					"gender": "Male",
-					"date_of_birth": "1990-01-01",
-					"date_of_joining": "2023-01-01",
-					"status": "Active",
-					"company": company
-				}).insert()
+		
 
 		if target_asset:
 			asset_movement = frappe.get_doc({
