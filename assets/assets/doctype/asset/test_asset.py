@@ -5354,6 +5354,71 @@ class TestDepreciationBasics(AssetSetup):
 		if frappe.db.exists("DocType", "GST Settings"):
 			frappe.db.set_value("GST Settings", None, "validate_hsn_code", 1)
 
+	def test_multiple_group_asset_selling_single_invoice_TC_FA_108(self):
+		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		if frappe.db.exists("DocType", "GST Settings"):
+			frappe.db.set_value("GST Settings", None, "validate_hsn_code", 0)
+		get_details = create_company_and_supplier()
+		company = get_details.get("parent_company")
+		frappe.db.set_value("Company", company, "depreciation_cost_center", "Main - TC-1")
+		customer = get_details.get("customer")
+		supplier = get_details.get("supplier")
+		asset_category = get_asset_category()
+		location = get_location()
+		item_1 = make_test_item("test_asset_item_1")
+		item_1.is_stock_item = 0
+		item_1.is_fixed_asset = 1
+		item_1.is_grouped_asset = 1
+		item_1.asset_category = asset_category
+		if frappe.db.has_column("Item", "gst_hsn_code"):
+			item_1.gst_hsn_code = "01012990"
+		item_1.save()
+
+		item_2 = make_test_item("test_asset_item_2")
+		item_2.is_stock_item = 0
+		item_2.is_fixed_asset = 1
+		item_2.is_grouped_asset = 1
+		item_2.asset_category = asset_category
+		if frappe.db.has_column("Item", "gst_hsn_code"):
+			item_2.gst_hsn_code = "01012990"
+		item_2.save()
+		pr = create_purchase_receipt(item_1, item_2)
+		asset_1 = create_assets(company, location, pr, item_1.item_code)
+		asset_2 = create_assets(company, location, pr, item_2.item_code)
+		si = frappe.get_doc(
+			{
+				"doctype": "Sales Invoice",
+				"company": company,
+				"posting_date": frappe.utils.today(),
+				"customer": customer,
+				"items": [
+					{
+						"item_code": item_1.item_code,
+						"qty": 1,
+						"rate": 1000,
+						"asset": asset_1
+					},
+					{
+						"item_code": item_2.item_code,
+						"qty": 1,
+						"rate": 1000,
+						"asset": asset_2
+					}
+				],
+				"taxes_and_charges": ""
+			}
+		)
+		si.insert()
+		si.submit()
+		self.assertEqual(si.docstatus, 1)
+		asset_1_status = frappe.get_doc("Asset", asset_1)
+		asset_2_status = frappe.get_doc("Asset", asset_2)
+		self.assertEqual(asset_1_status.status, "Sold")
+		self.assertEqual(asset_2_status.status, "Sold")
+		if frappe.db.exists("DocType", "GST Settings"):
+			frappe.db.set_value("GST Settings", None, "validate_hsn_code", 1)
+
 def get_gl_entries(doctype, docname):
 	gl_entry = frappe.qb.DocType("GL Entry")
 	return (
