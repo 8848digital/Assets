@@ -18,6 +18,7 @@ from erpnext.stock.doctype.material_request.material_request import make_purchas
 from erpnext.setup.doctype.company.test_company import create_child_company
 from erpnext.buying.doctype.purchase_order.test_purchase_order import create_purchase_order
 from erpnext.buying.doctype.supplier.test_supplier import create_supplier
+from erpnext.accounts.doctype.pricing_rule.test_pricing_rule import make_pricing_rule
 from frappe.utils import (
 	add_days,
 	add_months,
@@ -4186,7 +4187,7 @@ class TestAsset(AssetSetup):
 		pi_asset.gross_purchase_amount = 10000  # Assign correct purchase amount
 		# pi_asset.opening_accumulated_depreciation = 8000
 		# pi_asset.purchase_invoice = pi.name
-		pi_asset.asset_quantity=7
+		pi_asset.asset_quantity=5
 		pi_asset.available_for_use_date = getdate("01-01-2024")
 		pi_asset.purchase_date = getdate("01-01-2024")
 		pi_asset.calculate_depreciation = 1
@@ -4236,7 +4237,146 @@ class TestAsset(AssetSetup):
 		# frappe.db.commit()
 		print(f"Asset:{pi_asset.name}")
 
+	def test_case_sale_080(self):
+		pi_asset = frappe.new_doc("Asset")
+		pi_asset.company = "_Test Company"
+		pi_asset.is_existing_asset = 1
+		pi_asset.item_code = "Test_asset1"  # Assign item code
+		pi_asset.location = "Test"
+		pi_asset.gross_purchase_amount = 10000  # Assign correct purchase amount
+		# pi_asset.opening_accumulated_depreciation = 8000
+		# pi_asset.purchase_invoice = pi.name
+		pi_asset.asset_quantity=5
+		pi_asset.available_for_use_date = getdate("01-01-2024")
+		pi_asset.purchase_date = getdate("01-01-2024")
+		pi_asset.calculate_depreciation = 1
+		print(f"Asset:{pi_asset.name}")
+		# Adding finance book details
+		pi_asset.append("finance_books", {
+			"finance_book": "Test Finance Book 1",
+			"depreciation_method": "Straight Line",
+			"total_number_of_depreciations": 12,
+			"frequency_of_depreciation": 1,
+			"salvage_value_percentage": 10,
+			"depreciation_start_date": getdate("31-01-2024")
+		})
 
+		pi_asset.save()
+		pi_asset.submit()
+		if frappe.db.exists("Pricing Rule",'PRLE-0027') and frappe.db.exists("Item Price",'jjfehqn5b3'):
+			si=make_sales_invoice(pi_asset.name, pi_asset.item_code, pi_asset.company, serial_no=None)
+			si.supplier='Test'
+			si.company='_Test Company'
+			si.save()
+			si.submit()
+			# frappe.db.commit()
+			print(f"Asset:{pi_asset.name}")
+		else:
+			pricing_rule=frappe.new_doc("Pricing Rule")
+			pricing_rule.title = '_Test Pricing Rule'
+			pricing_rule.selling=1
+			pricing_rule.min_qty=0
+			pricing_rule.price_or_product_discount="Product"
+			pricing_rule.apply_on= "Item Code"
+			pricing_rule.append("items",{
+				"item_code":"Test_asset1"
+			})
+			pricing_rule.free_item="Test_asset1"
+			pricing_rule.free_qty=1
+			pricing_rule.rate_or_discount='Discount Amount'
+			pricing_rule.margin_type='Amount'
+			pricing_rule.margin_rate_or_amount=100
+			# pricing_rule.free_item_rate=10,
+			# pricing_rule.condition="customer=='_Test Customer'",
+			pricing_rule.company = "_Test Company"
+			pricing_rule.save()
+			item_pr=frappe.new_doc("Item Price")
+			item_pr.item_code = pi_asset.item_code
+			item_pr.nos='Nos'
+			item_pr.item_code = "Test_asset1"
+			item_pr.price_list = 'Standard Selling'
+			item_pr.price_list_rate = 2000
+			item_pr.valid_from = frappe.utils.nowdate()
+			item_pr.save()
+			si=make_sales_invoice(pi_asset.name, pi_asset.item_code, pi_asset.company, serial_no=None)
+			si.customer='Test'
+			si.company='_Test Company'
+			si.due_date = frappe.utils.nowdate()
+			si.save()
+			si.submit()
+			# frappe.db.commit()
+			print(f"Asset:{pi_asset.name}")
+
+	def test_case_sale_081(self):
+		pi_asset = frappe.new_doc("Asset")
+		pi_asset.company = "_Test Company"
+		pi_asset.is_existing_asset = 1
+		pi_asset.item_code = "Test_asset"  # Assign item code
+		pi_asset.location = "Test"
+		pi_asset.gross_purchase_amount = 10000  # Assign correct purchase amount
+		# pi_asset.opening_accumulated_depreciation = 8000
+		# pi_asset.purchase_invoice = pi.name
+		pi_asset.asset_quantity=5
+		pi_asset.available_for_use_date = getdate("01-01-2024")
+		pi_asset.purchase_date = getdate("01-01-2024")
+		pi_asset.calculate_depreciation = 1
+		print(f"Asset:{pi_asset.name}")
+		# Adding finance book details
+		pi_asset.append("finance_books", {
+			"finance_book": "Test Finance Book 1",
+			"depreciation_method": "Straight Line",
+			"total_number_of_depreciations": 12,
+			"frequency_of_depreciation": 1,
+			"salvage_value_percentage": 10,
+			"depreciation_start_date": getdate("31-01-2024")
+		})
+
+		pi_asset.save()
+		pi_asset.submit()
+		if frappe.db.exists("Pricing Rule",'PRLE-0027') and frappe.db.exists("Item Price",'jjfehqn5b3'):
+			si=make_sales_invoice(pi_asset.name, pi_asset.item_code, pi_asset.company, serial_no=None)
+			si.supplier='Test'
+			si.company='_Test Company'
+			si.save()
+			si.submit()
+			# frappe.db.commit()
+			print(f"Asset:{pi_asset.name}")
+		else:
+			pricing_rule=frappe.new_doc("Pricing Rule")
+			pricing_rule.title = '_Test Pricing Rule'
+			pricing_rule.selling=1
+			pricing_rule.min_qty=0
+			pricing_rule.price_or_product_discount="Product"
+			pricing_rule.apply_on= "Item Code"
+			pricing_rule.append("items",{
+				"item_code":"Test_asset"
+			})
+			pricing_rule.free_item="Test_asset"
+			pricing_rule.free_qty=1
+			pricing_rule.rate_or_discount='Discount Amount'
+			pricing_rule.margin_type='Amount'
+			pricing_rule.margin_rate_or_amount=100
+			# pricing_rule.free_item_rate=10,
+			# pricing_rule.condition="customer=='_Test Customer'",
+			pricing_rule.company = "_Test Company"
+			pricing_rule.save()
+			item_pr=frappe.new_doc("Item Price")
+			item_pr.item_code = pi_asset.item_code
+			item_pr.nos='Nos'
+			item_pr.item_code = "Test_asset"
+			item_pr.price_list = 'Standard Selling'
+			item_pr.price_list_rate = 2000
+			item_pr.valid_from = frappe.utils.nowdate()
+			item_pr.save()
+			si=make_sales_invoice(pi_asset.name, pi_asset.item_code, pi_asset.company, serial_no=None)
+			si.customer='Testing'
+			si.company='_Test Company'
+			si.due_date = frappe.utils.nowdate()
+			si.save()
+			si.submit()
+			# frappe.db.commit()
+			print(f"Asset:{pi_asset.name}")
+		# pass
 	def test_case_revaluation_increases_tc_83(self):
 		pi_asset = frappe.new_doc("Asset")
 		pi_asset.company = "_Test Company"
