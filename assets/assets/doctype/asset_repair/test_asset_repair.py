@@ -197,27 +197,6 @@ class TestAssetRepair(unittest.TestCase):
 		supplier = "_Test Supplier"
 		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
 		required_by_date = nowdate()
-
-		# pi = frappe.get_doc({
-		# 	"doctype": "Purchase Invoice",
-		# 	"company": company,
-		# 	"supplier": supplier,
-		# 	"update_stock": 1,  # Update stock
-		# 	"posting_date": nowdate(),
-		# 	"items": [
-		# 		{
-		# 			"item_code": item_code,
-		# 			"qty": qty,
-		# 			"rate": rate,
-		# 			"location": "Test Location",  # Linking the correct warehouse
-		# 			"asset_location": "Test Location",  # Specifying asset location
-		# 			"expense_account":"_Test Comapny - _TC"
-		# 		}
-		# 	]
-		# })
-		# pi.insert()
-		# pi.submit()
-		# frappe.db.commit()
 	
 		asset_repair = frappe.get_doc({
 			"doctype": "Asset Repair",
@@ -297,27 +276,6 @@ class TestAssetRepair(unittest.TestCase):
 		supplier = "_Test Supplier"
 		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
 		required_by_date = nowdate()
-
-		# pi = frappe.get_doc({
-		# 	"doctype": "Purchase Invoice",
-		# 	"company": company,
-		# 	"supplier": supplier,
-		# 	"update_stock": 1,  # Update stock
-		# 	"posting_date": nowdate(),
-		# 	"items": [
-		# 		{
-		# 			"item_code": item_code,
-		# 			"qty": qty,
-		# 			"rate": rate,
-		# 			"location": "Test Location",  # Linking the correct warehouse
-		# 			"asset_location": "Test Location",  # Specifying asset location
-		# 			"expense_account":"_Test Comapny - _TC"
-		# 		}
-		# 	]
-		# })
-		# pi.insert()
-		# pi.submit()
-		# frappe.db.commit()
 	
 		asset_repair = frappe.get_doc({
 			"doctype": "Asset Repair",
