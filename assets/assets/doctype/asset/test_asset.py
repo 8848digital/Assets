@@ -8,6 +8,7 @@ from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journ
 from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import (
 	make_purchase_invoice,
 )
+from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_sales_return
 from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
 	make_purchase_invoice as make_invoice,
 )
@@ -5159,10 +5160,6 @@ class TestDepreciationBasics(AssetSetup):
 		self.assertTrue(get_gl_entries("Purchase Receipt", pr.name))
 
 	def test_multiple_asset_sales_return_TC_FA_110(self):
-		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
-		if frappe.db.exists("DocType", "GST Settings"):
-			frappe.db.set_single_value("GST Settings", "validate_hsn_code", 0)
 		get_details = create_company_and_supplier()
 		company = get_details.get("parent_company")
 		frappe.db.set_value("Company", company, "depreciation_cost_center", "Main - TC-1")
@@ -5175,16 +5172,12 @@ class TestDepreciationBasics(AssetSetup):
 		item_1.is_stock_item = 0
 		item_1.is_fixed_asset = 1
 		item_1.asset_category = asset_category
-		if frappe.db.has_column("Item", "gst_hsn_code"):
-			item_1.gst_hsn_code = "01012990"
 		item_1.save()
 
 		item_2 = make_test_item("test_asset_item_2")
 		item_2.is_stock_item = 0
 		item_2.is_fixed_asset = 1
 		item_2.asset_category = asset_category
-		if frappe.db.has_column("Item", "gst_hsn_code"):
-			item_2.gst_hsn_code = "01012990"
 		item_2.save()
 
 		pr = create_purchase_receipt(item_1, item_2)
@@ -5243,14 +5236,7 @@ class TestDepreciationBasics(AssetSetup):
 		self.assertNotEqual(return_asset_status_1.status, "Sold")
 		self.assertNotEqual(return_asset_status_2.status, "Sold")
 
-		if frappe.db.exists("DocType", "GST Settings"):
-			frappe.db.set_single_value("GST Settings", "validate_hsn_code", 1)
-
 	def test_multiple_asset_sales_return_with_GST_TC_FA_111(self):
-		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
-		if frappe.db.exists("DocType", "GST Settings"):
-			frappe.db.set_single_value("GST Settings", "validate_hsn_code", 0)
 		get_details = create_company_and_supplier()
 		company = get_details.get("parent_company")
 		frappe.db.set_value("Company", company, "depreciation_cost_center", "Main - TC-1")
@@ -5263,16 +5249,12 @@ class TestDepreciationBasics(AssetSetup):
 		item_1.is_stock_item = 0
 		item_1.is_fixed_asset = 1
 		item_1.asset_category = asset_category
-		if frappe.db.has_column("Item", "gst_hsn_code"):
-			item_1.gst_hsn_code = "01012990"
 		item_1.save()
 
 		item_2 = make_test_item("test_asset_item_2")
 		item_2.is_stock_item = 0
 		item_2.is_fixed_asset = 1
 		item_2.asset_category = asset_category
-		if frappe.db.has_column("Item", "gst_hsn_code"):
-			item_2.gst_hsn_code = "01012990"
 		item_2.save()
 
 		pr = create_purchase_receipt(item_1, item_2)
@@ -5331,14 +5313,7 @@ class TestDepreciationBasics(AssetSetup):
 		self.assertNotEqual(return_asset_status_1.status, "Sold")
 		self.assertNotEqual(return_asset_status_2.status, "Sold")
 
-		if frappe.db.exists("DocType", "GST Settings"):
-			frappe.db.set_single_value("GST Settings", "validate_hsn_code", 1)
-
 	def test_multiple_group_asset_sales_return_single_invoice_TC_FA_112(self):
-		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
-		if frappe.db.exists("DocType", "GST Settings"):
-			frappe.db.set_single_value("GST Settings", "validate_hsn_code", 0)
 		get_details = create_company_and_supplier()
 		company = get_details.get("parent_company")
 		frappe.db.set_value("Company", company, "depreciation_cost_center", "Main - TC-1")
@@ -5346,13 +5321,12 @@ class TestDepreciationBasics(AssetSetup):
 		supplier = get_details.get("supplier")
 		asset_category = get_asset_category()
 		location = get_location()
+
 		item_1 = make_test_item("test_asset_item_1")
 		item_1.is_stock_item = 0
 		item_1.is_fixed_asset = 1
 		item_1.is_grouped_asset = 1
 		item_1.asset_category = asset_category
-		if frappe.db.has_column("Item", "gst_hsn_code"):
-			item_1.gst_hsn_code = "01012990"
 		item_1.save()
 
 		item_2 = make_test_item("test_asset_item_2")
@@ -5360,12 +5334,13 @@ class TestDepreciationBasics(AssetSetup):
 		item_2.is_fixed_asset = 1
 		item_2.is_grouped_asset = 1
 		item_2.asset_category = asset_category
-		if frappe.db.has_column("Item", "gst_hsn_code"):
-			item_2.gst_hsn_code = "01012990"
 		item_2.save()
+
 		pr = create_purchase_receipt(item_1, item_2)
+
 		asset_1 = create_assets(company, location, pr, item_1.item_code)
 		asset_2 = create_assets(company, location, pr, item_2.item_code)
+
 		si = frappe.get_doc(
 			{
 				"doctype": "Sales Invoice",
@@ -5392,8 +5367,10 @@ class TestDepreciationBasics(AssetSetup):
 		si.insert()
 		si.submit()
 		self.assertEqual(si.docstatus, 1)
+
 		asset_1_status = frappe.get_doc("Asset", asset_1)
 		asset_2_status = frappe.get_doc("Asset", asset_2)
+
 		self.assertEqual(asset_1_status.status, "Sold")
 		self.assertEqual(asset_2_status.status, "Sold")
 
@@ -5417,8 +5394,80 @@ class TestDepreciationBasics(AssetSetup):
 		self.assertNotEqual(return_asset_status_1.status, "Sold")
 		self.assertNotEqual(return_asset_status_2.status, "Sold")
 
-		if frappe.db.exists("DocType", "GST Settings"):
-			frappe.db.set_single_value("GST Settings", "validate_hsn_code", 1)
+	def test_multiple_group_asset_sales_return_single_invoice_with_GST_TC_FA_113(self):
+		get_details = create_company_and_supplier()
+		company = get_details.get("parent_company")
+		frappe.db.set_value("Company", company, "depreciation_cost_center", "Main - TC-1")
+		customer = get_details.get("customer")
+		supplier = get_details.get("supplier")
+		asset_category = get_asset_category()
+		location = get_location()
+		item_1 = make_test_item("test_asset_item_1")
+		item_1.is_stock_item = 0
+		item_1.is_fixed_asset = 1
+		item_1.is_grouped_asset = 1
+		item_1.asset_category = asset_category
+		item_1.save()
+
+		item_2 = make_test_item("test_asset_item_2")
+		item_2.is_stock_item = 0
+		item_2.is_fixed_asset = 1
+		item_2.is_grouped_asset = 1
+		item_2.asset_category = asset_category
+		item_2.save()
+		pr = create_purchase_receipt(item_1, item_2)
+		asset_1 = create_assets(company, location, pr, item_1.item_code)
+		asset_2 = create_assets(company, location, pr, item_2.item_code)
+		si = frappe.get_doc(
+			{
+				"doctype": "Sales Invoice",
+				"company": company,
+				"posting_date": frappe.utils.today(),
+				"customer": customer,
+				"items": [
+					{
+						"item_code": item_1.item_code,
+						"qty": 1,
+						"rate": 1000,
+						"asset": asset_1
+					},
+					{
+						"item_code": item_2.item_code,
+						"qty": 1,
+						"rate": 1000,
+						"asset": asset_2
+					}
+				],
+				"taxes_and_charges": "Output GST In-state - TC-1"
+			}
+		)
+		si.insert()
+		si.submit()
+		self.assertEqual(si.docstatus, 1)
+		asset_1_status = frappe.get_doc("Asset", asset_1)
+		asset_2_status = frappe.get_doc("Asset", asset_2)
+		self.assertEqual(asset_1_status.status, "Sold")
+		self.assertEqual(asset_2_status.status, "Sold")
+
+		gl_entries_si = get_gl_entries("Sales Invoice", si.name)
+		self.assertGreater(len(gl_entries_si), 1)
+
+		sr = make_sales_return(si.name)
+		sr.taxes_and_charges = "Output GST In-state - TC-1"
+		sr.insert()
+		sr.submit()
+
+		self.assertEqual(sr.docstatus, 1)
+		self.assertEqual(sr.status, "Return")
+
+		gl_entries_sr = get_gl_entries("Sales Invoice", sr.name)
+		self.assertGreater(len(gl_entries_sr), 1)
+
+		return_asset_status_1 = frappe.get_doc("Asset", asset_1)
+		return_asset_status_2 = frappe.get_doc("Asset", asset_2)
+	
+		self.assertNotEqual(return_asset_status_1.status, "Sold")
+		self.assertNotEqual(return_asset_status_2.status, "Sold")
 
 
 def get_gl_entries(doctype, docname):
