@@ -5158,7 +5158,52 @@ class TestDepreciationBasics(AssetSetup):
 		pr.submit()
 		self.assertTrue(get_gl_entries("Purchase Receipt", pr.name))
 
-	
+	def test_asset_repair_with_stock_consume_TC_FA_049(self):
+		get_details = create_company_and_supplier()
+		company = get_details.get("parent_company")
+		frappe.db.set_value("Company", company, "depreciation_cost_center", "Main - TC-1")
+		asset_category = get_asset_category()
+		location = get_location()
+
+		item_1 = make_test_item("test_asset_item_for_repair_1")
+		item_1.is_stock_item = 0
+		item_1.is_fixed_asset = 1
+		item_1.asset_category = asset_category
+		item_1.save()
+
+		pr = create_purchase_receipt(item_1)
+
+		asset = create_assets(company, location, pr, item_1.item_code)
+
+		pi = create_pi(company)
+		pi.total_taxes_and_charges = ""
+		pi.insert()
+		pi.submit()
+		self.assertEqual(pi.docstatus, 1)
+
+		pi_gle_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
+		expected_pi_entries = {
+			"Cost of Goods Sold - TC-1": {"debit": 1000, "credit": 0},
+			"Creditors - TC-1": {"debit": 0, "credit": 1000},
+		}
+		for entry in pi_gle_entries:
+			self.assertEqual(entry["debit"], expected_pi_entries.get(entry["account"], {}).get("debit", 0))
+			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
+
+		asset_repair = create_asset_repair(company, asset, pi.name)
+		asset_repair.insert()
+		asset_repair.submit()
+		self.assertEqual(asset_repair.docstatus, 1)
+
+		asset_repair_gle_entries = frappe.get_all("GL Entry", filters={"voucher_no": asset_repair.name}, fields=["account", "debit", "credit"])
+		expected_si_entries = {
+			"Buildings - TC-1": {"debit": 1400, "credit": 0},
+			"Cost of Goods Sold - TC-1": {"debit": 0, "credit": 900},
+			"Stock Adjustment - TC-1": {"debit": 0, "credit": 500},
+		}
+		for entry in asset_repair_gle_entries:
+			self.assertEqual(entry["debit"], expected_si_entries.get(entry["account"], {}).get("debit", 0))
+			self.assertEqual(entry["credit"], expected_si_entries.get(entry["account"], {}).get("credit", 0))
 
 def get_gl_entries(doctype, docname):
 	gl_entry = frappe.qb.DocType("GL Entry")
@@ -5335,3 +5380,73 @@ def set_depreciation_settings_in_company(company=None):
 
 def enable_cwip_accounting(asset_category, enable=1):
 	frappe.db.set_value("Asset Category", asset_category, "enable_cwip_accounting", enable)
+
+def create_pi(company):
+	item_2 = make_test_item("test_asset_item_for_repair_2")
+	item_2.is_stock_item = 0
+	item_2.is_fixed_asset = 0
+	item_2.asset_category = get_asset_category()
+	item_2.save()
+
+	pi = frappe.get_doc(
+		{
+			"doctype": "Purchase Invoice",
+			"company": company,
+			"supplier": "_Test Supplier",
+			"posting_date": today(),
+			"update_stock": 1,
+			"items": [
+				{
+					"item_code": item_2.item_code,
+					"qty": 1,
+					"rate": 1000,
+					"expense_account": "Cost of Goods Sold - TC-1",
+				}
+			]
+
+		}
+	)
+
+	return pi
+
+def create_asset_repair(company, asset, pi_1, pi_2 = None):
+	item = make_test_item("service_item_for_asset_review")
+	make_stock_entry(company = company, target = "Stores - TC-1", item_code = item.item_code, qty = 10, rate = 1000)
+	invoices = [
+		{
+			"purchase_invoice": pi_1,
+			"expense_account": "Cost of Goods Sold - TC-1",
+			"repair_cost": 1000
+		}
+	]
+	if pi_2:
+		invoices.append(
+			{
+				"purchase_invoice": pi_2,
+				"expense_account": "Cost of Goods Sold - TC-1",
+				"repair_cost": 1000
+			}
+		)
+	asset_repair = frappe.get_doc(
+		{
+			"doctype": "Asset Repair",
+			"company": company,
+			"asset": asset,
+			"failure_date": now(),
+			"cost_center": "Main - TC-1",
+			"repair_status": "Completed",
+			"invoices": invoices,
+			"capitalize_repair_cose": 1,
+			"stock_consumption": 1,
+			"stock_items": [
+				{
+					"item_code": item.item_code,
+					"warehouse": "Stores - TC-1",
+					"valuation_rate": 500,
+					"consumed_quantity": 3
+				}
+			]
+		}
+	)
+
+	return asset_repair
