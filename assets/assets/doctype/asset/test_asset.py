@@ -5205,6 +5205,58 @@ class TestDepreciationBasics(AssetSetup):
 			self.assertEqual(entry["debit"], expected_si_entries.get(entry["account"], {}).get("debit", 0))
 			self.assertEqual(entry["credit"], expected_si_entries.get(entry["account"], {}).get("credit", 0))
 
+	def test_asset_repair_with_multiple_pi_TC_FA_114(self):
+		get_details = create_company_and_supplier()
+		company = get_details.get("parent_company")
+		frappe.db.set_value("Company", company, "depreciation_cost_center", "Main - TC-1")
+		asset_category = get_asset_category()
+		location = get_location()
+
+		item_1 = make_test_item("test_asset_item_for_repair_1")
+		item_1.is_stock_item = 0
+		item_1.is_fixed_asset = 1
+		item_1.asset_category = asset_category
+		item_1.save()
+
+		pr = create_purchase_receipt(item_1)
+
+		asset = create_assets(company, location, pr, item_1.item_code)
+
+		pi_1 = create_pi(company)
+		pi_1.total_taxes_and_charges = ""
+		pi_1.insert()
+		pi_1.submit()
+		self.assertEqual(pi_1.docstatus, 1)
+
+		pi_gle_entries_1 = frappe.get_all("GL Entry", filters={"voucher_no": pi_1.name}, fields=["account", "debit", "credit"])
+		expected_pi_entries = {
+			"Cost of Goods Sold - TC-1": {"debit": 1000, "credit": 0},
+			"Creditors - TC-1": {"debit": 0, "credit": 1000},
+		}
+		for entry in pi_gle_entries_1:
+			self.assertEqual(entry["debit"], expected_pi_entries.get(entry["account"], {}).get("debit", 0))
+			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
+
+		pi_2 = create_pi(company)
+		pi_2.total_taxes_and_charges = ""
+		pi_2.insert()
+		pi_2.submit()
+		self.assertEqual(pi_2.docstatus, 1)
+
+		pi_gle_entries_2 = frappe.get_all("GL Entry", filters={"voucher_no": pi_1.name}, fields=["account", "debit", "credit"])
+		expected_pi_entries = {
+			"Cost of Goods Sold - TC-1": {"debit": 1000, "credit": 0},
+			"Creditors - TC-1": {"debit": 0, "credit": 1000},
+		}
+		for entry in pi_gle_entries_2:
+			self.assertEqual(entry["debit"], expected_pi_entries.get(entry["account"], {}).get("debit", 0))
+			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
+
+		asset_repair = create_asset_repair(company, asset, pi_1.name, pi_2.name)
+		asset_repair.insert()
+		asset_repair.submit()
+		self.assertEqual(asset_repair.docstatus, 1)
+
 def get_gl_entries(doctype, docname):
 	gl_entry = frappe.qb.DocType("GL Entry")
 	return (
