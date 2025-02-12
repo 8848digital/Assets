@@ -37,7 +37,8 @@ from assets.assets.doctype.asset.asset import (
 	make_sales_invoice,
 	split_asset,
 	update_maintenance_status,
-	create_asset_value_adjustment
+	create_asset_value_adjustment,
+	create_asset_repair
 )
 from assets.assets.doctype.asset.depreciation import (
 	post_depreciation_entries,
@@ -3399,7 +3400,186 @@ class TestAsset(AssetSetup):
 		# frappe.db.commit()
 		print(f"Asset Created: {pi.name},{asset_pi.name}")
 
+	def test_case_repair_asset_47(self):
+		item_code = "Test_asset1"
+		company = "_Test Company"
+		location='Test'
+		supplier = '_Test Supplier'
+		warehouse = 'Cost of Goods Sold - _TC'
+		if not frappe.db.exists("Warehouse", {"warehouse_name": "Cost of Goods Sold - _TIRC", "company": "_Test Indian Registered Company"}):
+			frappe.get_doc({
+				"doctype": "Warehouse",
+				"warehouse_name": "Cost of Goods Sold - _TIRC",
+				"company": "_Test Indian Registered Company"
+			}).insert()
 
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+		if not frappe.db.exists("Location", "Test Location"):
+			frappe.get_doc({"doctype": "Location", "location_name": location}).insert()
+
+		# Ensure the item exists or create it
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"item_group": "Products",
+				"is_fixed_asset": 1,  # Marking as fixed asset
+				"is_stock_item": 0,
+				"gst_hsn_code": "01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
+				"asset_category": "Test_Category"
+			}).insert()
+		purchase_invoice=frappe.new_doc("Purchase Invoice")
+		purchase_invoice.company='_Test Company'
+		purchase_invoice.supplier=supplier
+		purchase_invoice.posting_date=nowdate()
+		purchase_invoice.append("items",{
+			"item_code":'Test Service Item',
+			"qty":1,
+			"rate":5000
+		})
+		purchase_invoice.submit()
+		pi_asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item_code,
+			"asset_name": item_code,
+			"asset_category": "Test_Category",
+			"location": location,
+			"is_existing_asset": 1,
+			"available_for_use_date": getdate("2024-01-01"),
+			"gross_purchase_amount": "12000",
+			"asset_quantity": 5,
+			"purchase_date": getdate("2024-01-01"),
+			"calculate_depreciation": 1,
+			"finance_books": [{
+				"finance_book": "Test Finance Book 1",
+				"depreciation_method": "Straight Line",
+				"total_number_of_depreciations": 12,
+				"frequency_of_depreciation": 1,
+				"salvage_value_percentage": 10,
+				"depreciation_start_date": getdate("31-01-2024")
+			}]
+		}).insert()
+		pi_asset.submit()
+		repair_asset=create_asset_repair(pi_asset.name,pi_asset.asset_name)
+		repair_asset.company = '_Test Company'
+		repair_asset.cost_center = 'Main - _TC'
+		repair_asset.failure_date = nowdate()
+		repair_asset.repair_status = 'Completed'
+		repair_asset.append("invoices",{
+			"purchase_invoice":purchase_invoice.name,
+			"expense_account":'Cost of Goods Sold - _TC',
+			"repair_cost":5000
+		})
+		repair_asset.capitalize_repair_cost = 1
+		repair_asset.increase_in_asset_life = 12
+		repair_asset.insert()
+		repair_asset.submit()
+		# frappe.db.commit()
+		# pass
+	def test_case_repair_asset_48(self):
+		item_code = "Test_asset1"
+		company = "_Test Company"
+		location='Test'
+		supplier = '_Test Supplier'
+		warehouse = 'Cost of Goods Sold - _TC'
+		if not frappe.db.exists("Warehouse", {"warehouse_name": "Cost of Goods Sold - _TIRC", "company": "_Test Indian Registered Company"}):
+			frappe.get_doc({
+				"doctype": "Warehouse",
+				"warehouse_name": "Cost of Goods Sold - _TIRC",
+				"company": "_Test Indian Registered Company"
+			}).insert()
+
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+		if not frappe.db.exists("Location", "Test Location"):
+			frappe.get_doc({"doctype": "Location", "location_name": location}).insert()
+
+		# Ensure the item exists or create it
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"item_group": "Products",
+				"is_fixed_asset": 1,  # Marking as fixed asset
+				"is_stock_item": 0,
+				"gst_hsn_code": "01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
+				"asset_category": "Test_Category"
+			}).insert()
+		purchase_invoice=frappe.new_doc("Purchase Invoice")
+		purchase_invoice.company='_Test Company'
+		purchase_invoice.supplier=supplier
+		purchase_invoice.posting_date=nowdate()
+		purchase_invoice.append("items",{
+			"item_code":'Test Service Item',
+			"qty":1,
+			"rate":5000
+		})
+		purchase_invoice.submit()
+		pi_asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item_code,
+			"asset_name": item_code,
+			"asset_category": "Test_Category",
+			"location": location,
+			"is_existing_asset": 1,
+			"available_for_use_date": getdate("2024-01-01"),
+			"gross_purchase_amount": "12000",
+			"asset_quantity": 5,
+			"purchase_date": getdate("2024-01-01"),
+			"calculate_depreciation": 1,
+			"finance_books": [{
+				"finance_book": "Test Finance Book 1",
+				"depreciation_method": "Straight Line",
+				"total_number_of_depreciations": 12,
+				"frequency_of_depreciation": 1,
+				"salvage_value_percentage": 10,
+				"depreciation_start_date": getdate("31-01-2024")
+			}]
+		}).insert()
+		pi_asset.submit()
+		purchase_invoice_stock=frappe.new_doc("Purchase Invoice")
+		purchase_invoice_stock.company='_Test Company'
+		purchase_invoice_stock.supplier=supplier
+		purchase_invoice_stock.posting_date=nowdate()
+		purchase_invoice_stock.update_stock = 1
+		purchase_invoice_stock.set_warehouse = 'Stores - _TC'
+		purchase_invoice_stock.append("items",{
+			"item_code":'_Test Stock Reco Item',
+			"qty":1,
+			"rate":5000
+		})
+		purchase_invoice_stock.insert()
+		purchase_invoice_stock.submit()
+		repair_asset=create_asset_repair(pi_asset.name,pi_asset.asset_name)
+		repair_asset.company = '_Test Company'
+		repair_asset.cost_center = 'Main - _TC'
+		repair_asset.failure_date = nowdate()
+		repair_asset.repair_status = 'Completed'
+		repair_asset.append("invoices",{
+			"purchase_invoice":purchase_invoice.name,
+			"expense_account":'Cost of Goods Sold - _TC',
+			"repair_cost":5000
+		})
+		# repair_asset.capitalize_repair_cost = 1
+		repair_asset.stock_consumption = 1
+		repair_asset.append('stock_items',{
+			'item_code':'_Test Stock Reco Item',
+			'warehouse':'Stores - _TC',
+			'valuation_rate':1000,
+			'consumed_quantity':1,
+			'total_value':1000
+		})
+		# repair_asset.increase_in_asset_life = 12
+		repair_asset.insert()
+		repair_asset.submit()
+		# frappe.db.commit()
 	def test_cases_fix_asset_tc_fa_051(self):
 		asset_new_value_adjust = frappe.new_doc("Asset")
 		asset_new_value_adjust.company = "_Test Company"
@@ -4254,6 +4434,123 @@ class TestAsset(AssetSetup):
 			# frappe.db.commit()
 			print(f"Asset:{pi_asset.name}")
 		# pass
+	def test_case_sale_082(self):
+		item_code = "Test_asset1"
+		company = "_Test Company"
+		location='Test'
+		customer_group_name = "_Test Customer Group_1"
+		# Check if Customer Group already exists
+		if not frappe.db.exists("Customer Group", customer_group_name):
+			# Create new Customer Group if it doesn't exist
+			customer_group = frappe.get_doc({
+				"doctype": "Customer Group",
+				"customer_group_name": customer_group_name,
+				"is_group": 0
+			})
+			customer_group.insert()
+		else:
+			# Fetch the existing Customer Group if it exists
+			customer_group = frappe.get_doc("Customer Group", customer_group_name)
+		customer= '_Test Registered Customer'
+		if not frappe.db.exists('Customer','_Test Registered Customer'):
+			customer=frappe.get_doc({
+				'doctype':'Customer',
+				'customer_name':'_Test Registered Customer',
+				'customer_type':'Company',
+				'customer_group':'_Test Customer Group',
+				'territory':'All Territories'
+			})
+			customer.insert()
+			customer.submit()
+		else:
+			customer = frappe.get_doc("Customer",customer)
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+		if not frappe.db.exists("Location", "Test Location"):
+			frappe.get_doc({"doctype": "Location", "location_name": location}).insert()
+
+		# Ensure the item exists or create it
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"item_group": "Products",
+				"is_fixed_asset": 1,  # Marking as fixed asset
+				"is_stock_item": 0,
+				"gst_hsn_code": "01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
+				"asset_category": "Test_Category"
+			}).insert()
+
+		pi_asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item_code,
+			"asset_name": item_code,
+			"asset_category": "Test_Category",
+			"location": location,
+			"is_existing_asset": 1,
+			"available_for_use_date": getdate("2024-01-01"),
+			"gross_purchase_amount": "12000",
+			"asset_quantity": 5,
+			"purchase_date": getdate("2024-01-01"),
+			"calculate_depreciation": 1,
+			"finance_books": [{
+				"finance_book": "Test Finance Book 1",
+				"depreciation_method": "Straight Line",
+				"total_number_of_depreciations": 12,
+				"frequency_of_depreciation": 1,
+				"salvage_value_percentage": 10,
+				"depreciation_start_date": getdate("31-01-2024")
+			}]
+		}).insert()
+		pi_asset.submit()
+		if frappe.db.exists("Pricing Rule",'PRLE-0027') and frappe.db.exists("Item Price",'jjfehqn5b3'):
+			si=make_sales_invoice(pi_asset.name, pi_asset.item_code, pi_asset.company, serial_no=None)
+			si.supplier=customer
+			si.company='_Test Company'
+			si.save()
+			si.submit()
+			# frappe.db.commit()
+			print(f"Asset:{pi_asset.name}")
+		else:
+			pricing_rule=frappe.new_doc("Pricing Rule")
+			pricing_rule.title = '_Test Pricing Rule'
+			pricing_rule.selling=1
+			pricing_rule.min_qty=0
+			pricing_rule.price_or_product_discount="Product"
+			pricing_rule.apply_on= "Item Code"
+			pricing_rule.append("items",{
+				"item_code":"Test_asset"
+			})
+			pricing_rule.applicable_for = 'Customer Group'
+			pricing_rule.customer_group = customer_group_name
+			pricing_rule.free_item="Test_asset"
+			pricing_rule.free_qty=1
+			pricing_rule.rate_or_discount='Discount Amount'
+			pricing_rule.margin_type='Amount'
+			pricing_rule.margin_rate_or_amount=100
+			# pricing_rule.free_item_rate=10,
+			# pricing_rule.condition="customer=='_Test Customer'",
+			pricing_rule.company = "_Test Company"
+			pricing_rule.save()
+			item_pr=frappe.new_doc("Item Price")
+			item_pr.item_code = pi_asset.item_code
+			item_pr.nos='Nos'
+			item_pr.item_code = "Test_asset"
+			item_pr.price_list = 'Standard Selling'
+			item_pr.price_list_rate = 2000
+			item_pr.valid_from = frappe.utils.nowdate()
+			item_pr.save()
+			si=make_sales_invoice(pi_asset.name, pi_asset.item_code, pi_asset.company, serial_no=None)
+			si.customer=customer
+			si.company='_Test Company'
+			si.due_date = frappe.utils.nowdate()
+			si.save()
+			si.submit()
+			# frappe.db.commit()
+			print(f"Asset:{pi_asset.name}")
 	def test_case_revaluation_increases_tc_83(self):
 		pi_asset = frappe.new_doc("Asset")
 		pi_asset.company = "_Test Company"
