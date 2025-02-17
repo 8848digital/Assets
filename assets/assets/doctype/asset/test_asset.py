@@ -5158,7 +5158,75 @@ class TestDepreciationBasics(AssetSetup):
 		pr.submit()
 		self.assertTrue(get_gl_entries("Purchase Receipt", pr.name))
 
-	
+	def test_journal_entry_against_asset_TC_FA_095(self):
+		frappe.set_user("Administrator")
+		get_details = create_company_and_supplier()
+		company = get_details.get("parent_company")
+		frappe.db.set_value("Company", company, "depreciation_cost_center", "Main - TC-1")
+		asset_category = get_asset_category()
+		location = get_location()
+
+		item = make_test_item("test_asset_item_1")
+		item.is_stock_item = 0
+		item.is_fixed_asset = 1
+		item.is_grouped_asset = 1
+		item.asset_category = asset_category
+		item.save()
+
+		pr = create_purchase_receipt(item)
+
+		asset = create_assets(company, location, pr, item.item_code)
+
+		je = frappe.get_doc(
+			{
+				"doctype": "Journal Entry",
+				"voucher_type": "Journal Entry",
+				"company": company,
+				"posting_date": today(),
+				"accounts": [
+					{
+						"account": get_or_create_account(company, "Deferred Revenue Grant Account"),
+						"debit_in_account_currency": 500000,
+						"credit_in_account_currency":0,
+						"cost_center": "Main - TC-1",
+						"reference_type": "Asset",
+						"reference_name": asset
+					},
+					{
+						"account": get_or_create_account(company, "Profit & Loss"),
+						"debit_in_account_currency": 300000,
+						"credit_in_account_currency":0,
+						"cost_center": "Main - TC-1",
+						"reference_type": "Asset",
+						"reference_name": asset
+					},
+					{
+						"account": get_or_create_account(company, "To Bank"),
+						"debit_in_account_currency": 0,
+						"credit_in_account_currency":800000,
+						"cost_center": "Main - TC-1",
+						"reference_type": "Asset",
+						"reference_name": asset
+					},
+				],
+			}
+		)
+		je.insert()
+		je.submit()
+		self.assertEqual(je.docstatus, 1)
+
+		je_gle_entries = frappe.get_all("GL Entry", filters={"voucher_no": je.name}, fields=["account", "debit", "credit"])
+
+		expected_si_entries = {
+			"To Bank - TC-1": {"debit": 0, "credit": 800000},
+			"Profit & Loss - TC-1": {"debit": 300000, "credit": 0},
+			"Deferred Revenue Grant Account - TC-1": {"debit": 500000, "credit": 0},
+		}
+
+		for entry in je_gle_entries:
+			self.assertEqual(entry["debit"], expected_si_entries.get(entry["account"], {}).get("debit", 0))
+			self.assertEqual(entry["credit"], expected_si_entries.get(entry["account"], {}).get("credit", 0))
+
 
 def get_gl_entries(doctype, docname):
 	gl_entry = frappe.qb.DocType("GL Entry")
@@ -5335,3 +5403,18 @@ def set_depreciation_settings_in_company(company=None):
 
 def enable_cwip_accounting(asset_category, enable=1):
 	frappe.db.set_value("Asset Category", asset_category, "enable_cwip_accounting", enable)
+
+def get_or_create_account(company, account_name):
+	account = frappe.db.get_value("Account", {"company": company, "account_name": account_name})
+	if not account:
+		account = frappe.get_doc(
+			{
+				"doctype": "Account",
+				"company": company,
+				"account_name": account_name,
+				"parent_account": "Accounts Receivable - TC-1",
+				"account_type": "Cash"
+			}
+		).insert(ignore_permissions=True).name
+
+	return account
