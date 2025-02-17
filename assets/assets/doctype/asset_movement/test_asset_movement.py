@@ -32,17 +32,20 @@ class TestAssetMovement(unittest.TestCase):
 		if not frappe.db.exists("Company", company):
 			create_child_company()
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
 				"is_stock_item": 0,
 				"is_fixed_asset": 1,
-				"gst_hsn_code":"01011010",
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+			frappe.get_doc(item_data).insert()
 
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -95,17 +98,20 @@ class TestAssetMovement(unittest.TestCase):
 		if not frappe.db.exists("Company", company):
 			create_child_company()
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data= {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
 				"is_stock_item": 0,
 				"is_fixed_asset": 1,
-				"gst_hsn_code":"01011010",
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+			frappe.get_doc(item_data).insert()
 
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -170,17 +176,20 @@ class TestAssetMovement(unittest.TestCase):
 		if not frappe.db.exists("Company", company):
 			create_child_company()
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data= {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
 				"is_stock_item": 0,
 				"is_fixed_asset": 1,
-				"gst_hsn_code":"01011010",
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+			frappe.get_doc(item_data).insert()
 
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -245,17 +254,20 @@ class TestAssetMovement(unittest.TestCase):
 		if not frappe.db.exists("Company", company):
 			create_child_company()
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data= {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
 				"is_stock_item": 0,
 				"is_fixed_asset": 1,
-				"gst_hsn_code":"01011010",
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+			frappe.get_doc(item_data).insert()
 
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -322,7 +334,7 @@ class TestAssetMovement(unittest.TestCase):
 		if not frappe.db.exists("Company", company):
 			create_child_company()
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data= {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
@@ -332,7 +344,11 @@ class TestAssetMovement(unittest.TestCase):
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+			frappe.get_doc(item_data).insert()
 
 		# Create and submit the asset
 		target_asset = frappe.get_doc({
@@ -407,17 +423,20 @@ class TestAssetMovement(unittest.TestCase):
 		if not frappe.db.exists("Company", company):
 			create_child_company()
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data= {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
 				"is_stock_item": 0,
 				"is_fixed_asset": 1,
-				"gst_hsn_code":"01011010",
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+			frappe.get_doc(item_data).insert()
 
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -502,17 +521,20 @@ class TestAssetMovement(unittest.TestCase):
 		if not frappe.db.exists("Company", company):
 			create_child_company()
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data= {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
 				"is_stock_item": 0,
 				"is_fixed_asset": 1,
-				"gst_hsn_code":"01011010",
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+			frappe.get_doc(item_data).insert()
 
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -598,17 +620,20 @@ class TestAssetMovement(unittest.TestCase):
 		if not frappe.db.exists("Company", company):
 			create_child_company()
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data= {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
 				"is_stock_item": 0,
 				"is_fixed_asset": 1,
-				"gst_hsn_code": "01011010",
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+			frappe.get_doc(item_data).insert()
 		
 		if not frappe.db.exists("Employee", "Test_employee_issue"):
 			employee_doc = frappe.get_doc({
@@ -697,17 +722,20 @@ class TestAssetMovement(unittest.TestCase):
 			create_child_company()
 
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
-				"gst_hsn_code":"01011010",
 				"is_stock_item": 0,
 				"is_fixed_asset": 1,
 				"auto_create_assets": 1,
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+			frappe.get_doc(item_data).insert()
 
 		if not frappe.db.exists("Employee", "Test_employee_issue"):
 			employee_doc = frappe.get_doc({
@@ -1116,7 +1144,6 @@ class TestAssetMovement(unittest.TestCase):
 			}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if target_asset:
 			asset_movement = frappe.get_doc({
@@ -1133,7 +1160,6 @@ class TestAssetMovement(unittest.TestCase):
 			})
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 		# Cancel associated Asset Movements
 		asset_movements = frappe.get_all(
@@ -1145,12 +1171,10 @@ class TestAssetMovement(unittest.TestCase):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # If submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
