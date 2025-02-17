@@ -4715,6 +4715,61 @@ class TestAsset(AssetSetup):
 			si.submit()
 			# frappe.db.commit()
 			print(f"Asset:{pi_asset.name}")
+	def test_case_impairment_loss_revaluation_surplus_85(self):
+		parent_account='Other expenses - _TC'
+		parent_account_tc='Equity - _TC'
+		account='Impairment Loss - _TC'
+		revaluation_account = 'Revaluation Surplus - _TC'
+		company = '_Test Company'
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+		if not frappe.db.exists('Account',parent_account):
+			parent_account=frappe.get_doc({
+				"doctype":'Account',
+				'is_group':1,
+				'account_name':'Other expenses',
+				'company':'_Test Company'
+			})
+		if not frappe.db.exists('Account',parent_account_tc):
+			parent_account=frappe.get_doc({
+				"doctype":'Account',
+				'is_group':1,
+				'account_name':'Equity',
+				'company':'_Test Company'
+			})
+		if not frappe.db.exists('Account',account):
+			account=frappe.get_doc({
+				"doctype":'Account',
+				'account_name':'Impairment Loss',
+				'parent_account':parent_account,
+				'company':'_Test Company'
+			})
+		if not frappe.db.exists('Account',revaluation_account):
+			revaluation_account=frappe.get_doc({
+				"doctype":'Account',
+				'account_name':'Revaluation Surplus',
+				'company':'_Test Company'
+				''
+			})
+		jv=frappe.get_doc({
+			'doctype':'Journal Entry',
+			'company':company,
+			'posting_date':nowdate(),
+			'accounts':({
+				'account':revaluation_account,
+				'debit_in_account_currency':1000,
+			},
+			{
+				'account':account,
+				'credit_in_account_currency':1000
+
+			}
+			)
+		})
+		jv.insert()
+		jv.submit()
+		print(jv.name)
+		# pass
 	def test_case_revaluation_increases_tc_83(self):
 		pi_asset = frappe.new_doc("Asset")
 		pi_asset.company = "_Test Company"
