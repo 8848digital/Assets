@@ -1171,7 +1171,6 @@ class TestAsset(AssetSetup):
 				}],
 			}).insert()
 			target_asset.submit()
-			frappe.db.commit()
 	
 	#TC_FA_012
 	def test_create_decapitlization_new_composite_asset_TC_FA_012(self):
