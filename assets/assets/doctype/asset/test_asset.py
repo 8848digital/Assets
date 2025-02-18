@@ -1999,12 +1999,10 @@ class TestAsset(AssetSetup):
 			}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		# Cancel the asset
 		target_asset.reload()
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Verify that asset depreciation schedule is also cancelled
 		depreciation_schedules = frappe.get_all("Asset Depreciation Schedule", 
@@ -2013,7 +2011,6 @@ class TestAsset(AssetSetup):
 		for schedule in depreciation_schedules:
 			dep_doc = frappe.get_doc("Asset Depreciation Schedule", schedule.name)
 			dep_doc.cancel()
-			frappe.db.commit()
 
 		# Ensure asset and schedules are in cancelled state
 		target_asset.reload()

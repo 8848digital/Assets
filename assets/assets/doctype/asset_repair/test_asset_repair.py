@@ -191,7 +191,6 @@ class TestAssetRepair(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		company = "_Test Company"
 		supplier = "_Test Supplier"
@@ -208,7 +207,6 @@ class TestAssetRepair(unittest.TestCase):
 			
 
 		}).insert()
-		frappe.db.commit()
 	
 
 	# TC_FA_138
@@ -270,7 +268,6 @@ class TestAssetRepair(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		company = "_Test Company"
 		supplier = "_Test Supplier"
@@ -288,7 +285,6 @@ class TestAssetRepair(unittest.TestCase):
 
 		}).insert()
 		asset_repair.submit()
-		frappe.db.commit()
 	
 	# TC_FA_139
 	def test_service_item_asset_repair_submit_on_complete_status_TC_FA_139(self):
@@ -352,7 +348,6 @@ class TestAssetRepair(unittest.TestCase):
 			]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		# Create Purchase Invoice (for Non-Stock Asset)
 		supplier = "_Test Supplier"
@@ -377,7 +372,6 @@ class TestAssetRepair(unittest.TestCase):
 		})
 		pi.insert()
 		pi.submit()
-		frappe.db.commit()
 
 		# Create Asset Repair
 		asset_repair = frappe.get_doc({
@@ -396,7 +390,6 @@ class TestAssetRepair(unittest.TestCase):
 			]
 		}).insert()
 		asset_repair.submit()
-		frappe.db.commit()
 
 	def test_update_status(self):
 		asset = create_asset(submit=1)
