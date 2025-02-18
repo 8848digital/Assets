@@ -121,7 +121,6 @@ class TestAssetCapitalization(unittest.TestCase):
 
 		# Insert and save the document
 		asset_capitalize.insert()
-		frappe.db.commit()
 
 		return asset_capitalize
 
@@ -264,7 +263,6 @@ class TestAssetCapitalization(unittest.TestCase):
 		# Insert and save the document
 		asset_capitalize.insert()
 		asset_capitalize.submit()
-		frappe.db.commit()
 	
 	#TC_FA_145
 	def test_create_decapitalize_asset_TC_FA_145(self):
@@ -409,7 +407,6 @@ class TestAssetCapitalization(unittest.TestCase):
 		# Insert and save the document
 		asset_capitalize.insert()
 		asset_capitalize.submit()
-		frappe.db.commit()
 
 	def test_capitalization_with_perpetual_inventory(self):
 		company = "_Test Company with perpetual inventory"
