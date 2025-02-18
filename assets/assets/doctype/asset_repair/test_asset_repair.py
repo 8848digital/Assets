@@ -194,7 +194,6 @@ class TestAssetRepair(unittest.TestCase):
 			]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		# Create Purchase Invoice (for Non-Stock Asset)
 		supplier = "_Test Supplier"
@@ -219,7 +218,6 @@ class TestAssetRepair(unittest.TestCase):
 		})
 		pi.insert()
 		pi.submit()
-		frappe.db.commit()
 
 		# Create Asset Repair
 		asset_repair = frappe.get_doc({
@@ -239,7 +237,6 @@ class TestAssetRepair(unittest.TestCase):
 		}).insert()
 		frappe.db.set_value("Asset Repair", asset_repair.name, "stock_consumption", 1)
 		asset_repair.submit()
-		frappe.db.commit()
 		
 	def test_update_status(self):
 		asset = create_asset(submit=1)
