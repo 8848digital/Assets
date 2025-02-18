@@ -92,7 +92,6 @@ class TestAssetRepair(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		company = "_Test Company"
 		supplier = "_Test Supplier"
@@ -111,7 +110,6 @@ class TestAssetRepair(unittest.TestCase):
 
 		}).insert()
 		asset_repair.submit()
-		frappe.db.commit()
 		
 	# TC_FA_046
 	def test_pending_asset_repair_submit_on_complete_status_TC_FA_046(self):
