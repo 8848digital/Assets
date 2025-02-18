@@ -3137,8 +3137,8 @@ class TestAsset(AssetSetup):
 			print(f"Asset Created: {asset_doc.name}")
 		except Exception as e:
 			print(f"Error: {str(e)}")
-
-	def test_asset_existing_tc_fa_071(self):
+	#TC_FA_071
+	def test_asset_existing_TC_FA_071(self):
 		asset = frappe.new_doc("Asset")
 		asset.company = "_Test Company"
 		asset.item_code = "Test Item"
@@ -3170,8 +3170,8 @@ class TestAsset(AssetSetup):
 		except Exception as e:
 			print(f"Error: {str(e)}")
 
-
-	def test_asset_amended_tc_fa_072(self):
+	#TC_FA_072
+	def test_asset_amended_TC_FA_072(self):
 		asset = frappe.new_doc("Asset")
 		asset.company = "_Test Company"
 		asset.item_code = "Test Item"
@@ -3210,8 +3210,8 @@ class TestAsset(AssetSetup):
 		except Exception as e:
 			print(f"Error: {str(e)}")
 
-
-	def test_cases_fix_asset_tc_fa_073(self):
+	#TC_FA_073
+	def test_cases_fix_asset_TC_FA_073(self):
 		pi=frappe.new_doc("Purchase Invoice")
 		pi.company="_Test Company"
 		pi.supplier="_Test Supplier"
@@ -3266,8 +3266,8 @@ class TestAsset(AssetSetup):
 			# frappe.db.commit()
 			print(f"Asset Created: {pi.name},{asset_pi.name}")
 			
-
-	def test_cases_fix_asset_tc_fa_074(self):
+	#TC_FA_074
+	def test_cases_fix_asset_TC_FA_074(self):
 		pi=frappe.new_doc("Purchase Receipt")
 		pi.company="_Test Company"
 		pi.supplier="_Test Supplier"
@@ -3322,8 +3322,8 @@ class TestAsset(AssetSetup):
 			print(f"Asset Created: {pi.name},{asset_pi.name}")
 
 
-
-	def test_cases_fix_asset_tc_fa_075(self):
+	#TC_FA_075
+	def test_cases_fix_asset_TC_FA_075(self):
 		pi=frappe.new_doc("Purchase Invoice")
 		pi.company="_Test Company"
 		pi.supplier="_Test Supplier"
@@ -3392,8 +3392,8 @@ class TestAsset(AssetSetup):
 
 		# frappe.db.commit()
 		print(f"Asset Created: {pi.name},{asset_pi.name}")
-
-	def test_case_repair_asset_47(self):
+	#TC_FA_047
+	def test_case_repair_asset_TC_FA_047(self):
 		item_code = "Test_asset1"
 		company = "_Test Company"
 		location='Test'
@@ -3473,7 +3473,9 @@ class TestAsset(AssetSetup):
 		repair_asset.submit()
 		# frappe.db.commit()
 		# pass
-	def test_case_repair_asset_48(self):
+
+	#TC_FA_048
+	def test_case_repair_asset_TC_FA_048(self):
 		item_code = "Test_asset1"
 		company = "_Test Company"
 		location='Test'
@@ -3573,7 +3575,9 @@ class TestAsset(AssetSetup):
 		repair_asset.insert()
 		repair_asset.submit()
 		# frappe.db.commit()
-	def test_cases_fix_asset_tc_fa_051(self):
+
+	#TC_FA_051
+	def test_cases_fix_asset_TC_FA_051(self):
 		asset_new_value_adjust = frappe.new_doc("Asset")
 		asset_new_value_adjust.company = "_Test Company"
 		asset_new_value_adjust.item_code = "Test_asset1"
@@ -3603,7 +3607,8 @@ class TestAsset(AssetSetup):
 		# frappe.db.commit()
 		print(f"Asset Created: {asset_value_adjustment.name},{asset_new_value_adjust.name}")
 
-	def test_partialy_depretiated_scrapped_asset_tc_52(self):
+	#TC_FA_052
+	def test_partialy_depretiated_scrapped_asset_TC_FA_052(self):
 		asset_scrapped = frappe.new_doc("Asset")
 		asset_scrapped.company = "_Test Company"
 		asset_scrapped.item_code = "Test_asset1"
@@ -3631,7 +3636,8 @@ class TestAsset(AssetSetup):
 		# frappe.db.commit()
 		print(f"Asset Created:{asset_scrapped.name}")
 
-	def test_fully_depretiated_scrapped_asset_tc_53(self):
+	#TC_FA_053
+	def test_fully_depretiated_scrapped_asset_TC_FA_053(self):
 		asset_scrapped = frappe.new_doc("Asset")
 		asset_scrapped.company = "_Test Company"
 		asset_scrapped.item_code = "Test_asset1"
@@ -3651,7 +3657,8 @@ class TestAsset(AssetSetup):
 		# frappe.db.commit()
 		print(f"Asset Created:{asset_scrapped.name}")
 
-	def test_partialy_depretiated_scrapped_asset_rs_tc_54(self):
+	#TC_FA_054
+	def test_partialy_depretiated_scrapped_asset_rs_TC_FA_54(self):
 		asset_scrapped = frappe.new_doc("Asset")
 		asset_scrapped.company = "_Test Company"
 		asset_scrapped.item_code = "Test_asset1"
@@ -3680,7 +3687,8 @@ class TestAsset(AssetSetup):
 		# frappe.db.commit()
 		print(f"Asset Created:{asset_scrapped.name}")
 
-	def test_fully_depretiated_scrapped_asset_rs_tc_55(self):
+	#TC_FA_055
+	def test_fully_depretiated_scrapped_asset_rs_TC_FA_055(self):
 		asset_scrapped = frappe.new_doc("Asset")
 		asset_scrapped.company = "_Test Company"
 		asset_scrapped.item_code = "Test_asset1"
@@ -3701,7 +3709,8 @@ class TestAsset(AssetSetup):
 		# frappe.db.commit()
 		print(f"Asset Created:{asset_scrapped.name}")
 
-	def test_cases_residual_scrapped_tc_56(self):
+	#TC_FA_056
+	def test_cases_residual_scrapped_TC_FA_056(self):
 		pi=frappe.new_doc("Purchase Invoice")
 		pi.company="_Test Company"
 		pi.supplier="_Test Supplier"
@@ -3786,7 +3795,8 @@ class TestAsset(AssetSetup):
 			# frappe.db.commit()
 			print(f"Asset Created: {pi.name},{pi_asset.name}")
 
-	def test_cases_residual_scrapped_tc_57(self):
+	#TC_FA_057
+	def test_cases_residual_scrapped_TC_FA_057(self):
 		pi=frappe.new_doc("Purchase Invoice")
 		pi.company="_Test Company"
 		pi.supplier="_Test Supplier"
@@ -3870,7 +3880,9 @@ class TestAsset(AssetSetup):
 			
 			print(f"Asset Created: {pi.name},{pi_asset.name}")
 		frappe.db.commit()
-	def test_cases_sell_profit_asset_tc_58(self):
+
+	#TC_FA_058
+	def test_cases_sell_profit_asset_TC_FA_058(self):
 		asset = frappe.new_doc("Asset")
 		asset.company = "_Test Company"
 		asset.item_code = "Test_asset1"
@@ -3893,7 +3905,8 @@ class TestAsset(AssetSetup):
 
 		print(f"Asset Created: {asset.name}")
 
-	def test_cases_sell_loss_asset_tc_59(self):
+	#TC_FA_059
+	def test_cases_sell_loss_asset_TC_FA_059(self):
 		asset = frappe.new_doc("Asset")
 		asset.company = "_Test Company"
 		asset.item_code = "Test_asset1"
@@ -3915,8 +3928,9 @@ class TestAsset(AssetSetup):
 		frappe.db.commit()
 
 		print(f"Asset Created: {asset.name}")
-	
-	def test_cases_sell_loss_asset_tc_60(self):
+
+	#TC_FA_060	
+	def test_cases_sell_loss_asset_TC_FA_060(self):
 		asset = frappe.new_doc("Asset")
 		asset.company = "_Test Company"
 		asset.item_code = "Test_asset1"
@@ -3939,8 +3953,8 @@ class TestAsset(AssetSetup):
 
 		print(f"Asset Created: {asset.name}")
 
-
-	def test_cases_shell_pr_asset_tc_61(self):
+	#TC_FA_061
+	def test_cases_shell_pr_asset_TC_FA_061(self):
 		pi=frappe.new_doc("Purchase Invoice")
 		pi.company="_Test Company"
 		pi.supplier="_Test Supplier"
@@ -3994,7 +4008,8 @@ class TestAsset(AssetSetup):
 			print(f"Asset Created: {pi.name},{pi_asset.name}")
 		# frappe.db.commit()
 
-	def test_cases_shell_pr_asset_tc_62(self):
+	#TC_FA_062
+	def test_cases_shell_pr_asset_TCFA_062(self):
 		pi=frappe.new_doc("Purchase Invoice")
 		pi.company="_Test Company"
 		pi.supplier="_Test Supplier"
@@ -4048,7 +4063,8 @@ class TestAsset(AssetSetup):
 			print(f"Asset Created: {pi.name},{pi_asset.name}")
 		# frappe.db.commit()
 
-	def test_cases_sold_fully_depreciated_tc_63(self):
+	#TC_FA_063
+	def test_cases_sold_fully_depreciated_TC_FA_063(self):
 		pi=frappe.new_doc("Purchase Invoice")
 		pi.company="_Test Company"
 		pi.supplier="_Test Supplier"
@@ -4147,7 +4163,9 @@ class TestAsset(AssetSetup):
 			si.submit()
 			print(f"Asset Created: {pi.name},{pi_asset.name}")
 		# frappe.db.commit()
-	def test_case_split_asset_error_message_tc_64(self):
+	
+	#TC_FA_064
+	def test_case_split_asset_error_message_TC_FA_064(self):
 		pi_asset = frappe.new_doc("Asset")
 		pi_asset.company = "_Test Company"
 		pi_asset.is_existing_asset = 1
@@ -4186,8 +4204,8 @@ class TestAsset(AssetSetup):
 			assert str(e) == "Split qty cannot be greater than or equal to asset qty"
 			print(f"Validation Error: {e}")
 
-
-	def test_case_split_asset_tc_65(self):
+	#TC_FA_065
+	def test_case_split_asset_TC_FA_065(self):
 		pi_asset = frappe.new_doc("Asset")
 		pi_asset.company = "_Test Company"
 		pi_asset.is_existing_asset = 1
@@ -4216,7 +4234,9 @@ class TestAsset(AssetSetup):
 		split_asset(pi_asset.name,split_qty=3)
 		# frappe.db.commit()
 		print(f"Asset:{pi_asset.name}")
-	def test_case_split_asset_with_even_qty_tc_66(self):
+	
+	#TC_FA_066
+	def test_case_split_asset_with_even_qty_TC_FA_066(self):
 		pi_asset = frappe.new_doc("Asset")
 		pi_asset.company = "_Test Company"
 		pi_asset.is_existing_asset = 1
@@ -4246,7 +4266,8 @@ class TestAsset(AssetSetup):
 		# frappe.db.commit()
 		print(f"Asset:{pi_asset.name}")
 
-	def test_case_sale_080(self):
+	#TC_FA_080
+	def test_case_sale_TC_FA_080(self):
 		item_code = "Test_asset1"
 		company = "_Test Company"
 		location='Test'
@@ -4337,7 +4358,8 @@ class TestAsset(AssetSetup):
 			# frappe.db.commit()
 			print(f"Asset:{pi_asset.name}")
 
-	def test_case_sale_081(self):
+	#TC_FA_081
+	def test_case_sale_TC_FA_081(self):
 		item_code = "Test_asset1"
 		company = "_Test Company"
 		location='Test'
@@ -4427,7 +4449,9 @@ class TestAsset(AssetSetup):
 			# frappe.db.commit()
 			print(f"Asset:{pi_asset.name}")
 		# pass
-	def test_case_sale_082(self):
+
+	#TC_FA_082
+	def test_case_sale_TC_FA_082(self):
 		item_code = "Test_asset1"
 		company = "_Test Company"
 		location='Test'
@@ -4544,7 +4568,9 @@ class TestAsset(AssetSetup):
 			si.submit()
 			# frappe.db.commit()
 			print(f"Asset:{pi_asset.name}")
-	def test_case_impairment_loss_revaluation_surplus_85(self):
+
+	#TC_FA_085
+	def test_case_impairment_loss_revaluation_surplus_TC_FA_085(self):
 		parent_account='Other expenses - _TC'
 		parent_account_tc='Equity - _TC'
 		account='Impairment Loss - _TC'
@@ -4599,7 +4625,9 @@ class TestAsset(AssetSetup):
 		jv.submit()
 		print(jv.name)
 		# pass
-	def test_case_revaluation_increases_tc_83(self):
+
+	#TC_FA_083
+	def test_case_revaluation_increases_TC_FA_083(self):
 		pi_asset = frappe.new_doc("Asset")
 		pi_asset.company = "_Test Company"
 		pi_asset.is_existing_asset = 1
@@ -4637,7 +4665,8 @@ class TestAsset(AssetSetup):
 		# frappe.db.commit()
 		print(f"Asset:{pi_asset.name}")
 
-	def test_case_revaluation_decreases_tc_84(self):
+	#TC_FA_084
+	def test_case_revaluation_decreases_TC_FA_084(self):
 		pi_asset = frappe.new_doc("Asset")
 		pi_asset.company = "_Test Company"
 		pi_asset.is_existing_asset = 1
