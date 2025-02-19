@@ -1300,7 +1300,6 @@ class TestAsset(AssetSetup):
 		}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		asset_adjustment_value = frappe.get_doc({
 			"doctype":"Asset Value Adjustment",
@@ -1313,7 +1312,6 @@ class TestAsset(AssetSetup):
 			"location":"Test Location"
 			}).insert()
 		asset_adjustment_value.submit()
-		frappe.db.commit()
 
 	# TC_FA_067
 	def test_pi_cancelation_on_asset_TC_FA_067(self):
@@ -1337,7 +1335,6 @@ class TestAsset(AssetSetup):
 				
 			})
 			fa_item.insert()
-			frappe.db.commit()
 
 		# Step 2: Create and Submit the Purchase Invoice
 		pi = frappe.get_doc({
@@ -1355,7 +1352,6 @@ class TestAsset(AssetSetup):
 			}]
 		}).insert()
 		pi.submit()
-		frappe.db.commit()
 
 		# Step 3: Retrieve the Auto-Created Asset
 		asset = frappe.get_all(
@@ -1373,7 +1369,6 @@ class TestAsset(AssetSetup):
 		# Step 4: Set `available_for_use_date` and Submit the Asset
 		asset_doc.available_for_use_date = frappe.utils.nowdate()  # Set the current date
 		asset_doc.submit()
-		frappe.db.commit()
 
 		# Step 5: Handle Asset Movement
 		asset_movements = frappe.get_all(
@@ -1387,16 +1382,13 @@ class TestAsset(AssetSetup):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # Check if submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Step 6: Cancel the Asset
 		asset_doc.cancel()
-		frappe.db.commit()
 
 		# Step 7: Cancel the Purchase Invoice
 		pi = frappe.get_doc("Purchase Invoice", pi.name)
 		pi.cancel()
-		frappe.db.commit()
 
 		# Assertions or Verifications
 		self.assertEqual(asset_doc.docstatus, 2)  # Ensure Asset is canceled
@@ -1424,7 +1416,6 @@ class TestAsset(AssetSetup):
 				"asset_category": "Test_Category"  # Link to Asset Category
 			})
 			fa_item.insert()
-			frappe.db.commit()
 
 		# Step 2: Create and Submit the Purchase Invoice
 		pr = frappe.get_doc({
@@ -1442,7 +1433,6 @@ class TestAsset(AssetSetup):
 			}]
 		}).insert()
 		pr.submit()
-		frappe.db.commit()
 
 		# Step 3: Retrieve the Auto-Created Asset
 		asset = frappe.get_all(
@@ -1458,7 +1448,6 @@ class TestAsset(AssetSetup):
 		# Step 4: Set `available_for_use_date` and Submit the Asset
 		asset_doc.available_for_use_date = frappe.utils.nowdate()  # Set the current date
 		asset_doc.submit()
-		frappe.db.commit()
 
 		# Step 5: Handle Asset Movement
 		asset_movements = frappe.get_all(
@@ -1472,16 +1461,13 @@ class TestAsset(AssetSetup):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # Check if submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Step 6: Cancel the Asset
 		asset_doc.cancel()
-		frappe.db.commit()
 
 		# Step 7: Cancel the Purchase Invoice
 		pr = frappe.get_doc("Purchase Receipt", pr.name)
 		pr.cancel()
-		frappe.db.commit()
 
 		# Assertions or Verifications
 		self.assertEqual(asset_doc.docstatus, 2)  # Ensure Asset is canceled
@@ -1507,7 +1493,6 @@ class TestAsset(AssetSetup):
 				"asset_category": "Test_Category"  # Link to Asset Category
 			})
 			fa_item.insert()
-			frappe.db.commit()
 
 		# Step 2: Create and Submit the Purchase Invoice
 		pi = frappe.get_doc({
@@ -1525,7 +1510,6 @@ class TestAsset(AssetSetup):
 			}]
 		}).insert()
 		pi.submit()
-		frappe.db.commit()
 
 		# Step 3: Retrieve the Auto-Created Asset
 		asset = frappe.get_all(
@@ -1544,7 +1528,6 @@ class TestAsset(AssetSetup):
 		# Step 4: Set `available_for_use_date` and Submit the Asset
 		asset_doc.available_for_use_date = frappe.utils.nowdate()  # Set the current date
 		asset_doc.submit()
-		frappe.db.commit()
 
 		# Step 5: Handle Asset Movement
 		asset_movements = frappe.get_all(
@@ -1558,16 +1541,13 @@ class TestAsset(AssetSetup):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # Check if submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Step 6: Cancel the Asset
 		asset_doc.cancel()
-		frappe.db.commit()
 
 		# Step 7: Cancel the Purchase Invoice
 		pi = frappe.get_doc("Purchase Invoice", pi.name)
 		pi.cancel()
-		frappe.db.commit()
 
 		# Assertions or Verifications
 		self.assertEqual(asset_doc.docstatus, 2)  # Ensure Asset is canceled
@@ -1594,7 +1574,6 @@ class TestAsset(AssetSetup):
 				"asset_category": "Test_Category"  # Link to Asset Category
 			})
 			fa_item.insert()
-			frappe.db.commit()
 
 		# Step 2: Create and Submit the Purchase Invoice
 		pr = frappe.get_doc({
@@ -1612,7 +1591,6 @@ class TestAsset(AssetSetup):
 			}]
 		}).insert()
 		pr.submit()
-		frappe.db.commit()
 
 		# Step 3: Retrieve the Auto-Created Asset
 		asset = frappe.get_all(
@@ -1628,7 +1606,6 @@ class TestAsset(AssetSetup):
 		# Step 4: Set `available_for_use_date` and Submit the Asset
 		asset_doc.available_for_use_date = frappe.utils.nowdate()  # Set the current date
 		asset_doc.submit()
-		frappe.db.commit()
 
 		# Step 5: Handle Asset Movement
 		asset_movements = frappe.get_all(
@@ -1642,16 +1619,13 @@ class TestAsset(AssetSetup):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # Check if submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Step 6: Cancel the Asset
 		asset_doc.cancel()
-		frappe.db.commit()
 
 		# Step 7: Cancel the Purchase Invoice
 		pr = frappe.get_doc("Purchase Receipt", pr.name)
 		pr.cancel()
-		frappe.db.commit()
 
 		# Assertions or Verifications
 		self.assertEqual(asset_doc.docstatus, 2)  # Ensure Asset is canceled
@@ -1705,12 +1679,10 @@ class TestAsset(AssetSetup):
 			}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		# Cancel the asset
 		target_asset.reload()
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Verify that asset depreciation schedule is also cancelled
 		depreciation_schedules = frappe.get_all("Asset Depreciation Schedule", 
@@ -1719,7 +1691,6 @@ class TestAsset(AssetSetup):
 		for schedule in depreciation_schedules:
 			dep_doc = frappe.get_doc("Asset Depreciation Schedule", schedule.name)
 			dep_doc.cancel()
-			frappe.db.commit()
 
 		# Ensure asset and schedules are in cancelled state
 		target_asset.reload()
@@ -1776,12 +1747,10 @@ class TestAsset(AssetSetup):
 			}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		# Cancel the asset
 		target_asset.reload()
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Verify that asset depreciation schedule is also cancelled
 		depreciation_schedules = frappe.get_all("Asset Depreciation Schedule", 
@@ -1790,7 +1759,6 @@ class TestAsset(AssetSetup):
 		for schedule in depreciation_schedules:
 			dep_doc = frappe.get_doc("Asset Depreciation Schedule", schedule.name)
 			dep_doc.cancel()
-			frappe.db.commit()
 
 		# Ensure asset and schedules are in cancelled state
 		target_asset.reload()
@@ -1847,12 +1815,10 @@ class TestAsset(AssetSetup):
 			}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		# Cancel the asset
 		target_asset.reload()
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Verify that asset depreciation schedule is also cancelled
 		depreciation_schedules = frappe.get_all("Asset Depreciation Schedule", 
@@ -1861,7 +1827,6 @@ class TestAsset(AssetSetup):
 		for schedule in depreciation_schedules:
 			dep_doc = frappe.get_doc("Asset Depreciation Schedule", schedule.name)
 			dep_doc.cancel()
-			frappe.db.commit()
 
 		# Ensure asset and schedules are in cancelled state
 		target_asset.reload()
@@ -1918,12 +1883,10 @@ class TestAsset(AssetSetup):
 			}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		# Cancel the asset
 		target_asset.reload()
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Verify that asset depreciation schedule is also cancelled
 		depreciation_schedules = frappe.get_all("Asset Depreciation Schedule", 
@@ -1932,7 +1895,6 @@ class TestAsset(AssetSetup):
 		for schedule in depreciation_schedules:
 			dep_doc = frappe.get_doc("Asset Depreciation Schedule", schedule.name)
 			dep_doc.cancel()
-			frappe.db.commit()
 
 		# Ensure asset and schedules are in cancelled state
 		target_asset.reload()

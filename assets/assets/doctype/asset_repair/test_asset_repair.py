@@ -45,15 +45,19 @@ class TestAssetRepair(unittest.TestCase):
 
 		# Create the item if it doesn't exist
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
-				"gst_hsn_code":"888890",
 				"item_group":"Raw Material",
 				"stock_uom":"Nos",
 
-			}).insert()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+
+			frappe.get_doc(item_data).insert()
 
 		
 		target_asset = frappe.get_doc({
@@ -85,7 +89,6 @@ class TestAssetRepair(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		company = "_Test Company"
 		supplier = "_Test Supplier"
@@ -111,7 +114,6 @@ class TestAssetRepair(unittest.TestCase):
 		})
 		pi.insert()
 		pi.submit()
-		frappe.db.commit()
 	
 		asset_repair = frappe.get_doc({
 			"doctype": "Asset Repair",
@@ -130,7 +132,6 @@ class TestAssetRepair(unittest.TestCase):
 
 		}).insert()
 		asset_repair.submit()
-		frappe.db.commit()
 
 	def test_update_status(self):
 		asset = create_asset(submit=1)

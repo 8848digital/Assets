@@ -69,7 +69,6 @@ class TestAssetMovement(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if target_asset:
 			asset_movement = frappe.get_doc({
@@ -85,7 +84,6 @@ class TestAssetMovement(unittest.TestCase):
 			}) 
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 	#TC_FA_116
 	def test_asset_movement_issue_location_change_TC_FA_116(self):
@@ -132,7 +130,6 @@ class TestAssetMovement(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if not frappe.db.exists("Employee", "Test_employee_issue"):
 			employee_doc = frappe.get_doc({
@@ -160,7 +157,6 @@ class TestAssetMovement(unittest.TestCase):
 			}) 
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 	#TC_FA_117
 	def test_asset_movement_issue_from_employee_to_employee_TC_FA_117(self):
@@ -207,7 +203,6 @@ class TestAssetMovement(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if not frappe.db.exists("Employee", "Test_employee_issue"):
 			employee_doc = frappe.get_doc({
@@ -235,7 +230,6 @@ class TestAssetMovement(unittest.TestCase):
 			}) 
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 	#TC_FA_118
 	def test_asset_movement_issue_from_employee_to_target_location_TC_FA_118(self):
@@ -282,7 +276,6 @@ class TestAssetMovement(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if not frappe.db.exists("Employee", "Test_employee_issue"):
 			employee_doc = frappe.get_doc({
@@ -311,7 +304,6 @@ class TestAssetMovement(unittest.TestCase):
 			}) 
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 	#TC_FA_119
 	def test_asset_movement_transfer_location_change_TC_FA_119(self):
@@ -360,7 +352,6 @@ class TestAssetMovement(unittest.TestCase):
 			}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		# Create and submit the asset movement
 		if target_asset:
@@ -377,7 +368,6 @@ class TestAssetMovement(unittest.TestCase):
 			})
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 		# Cancel associated Asset Movements
 		asset_movements = frappe.get_all(
@@ -389,12 +379,10 @@ class TestAssetMovement(unittest.TestCase):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # If submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
@@ -444,7 +432,6 @@ class TestAssetMovement(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if not frappe.db.exists("Employee", "Test_employee_issue"):
 			employee_doc = frappe.get_doc({
@@ -472,7 +459,6 @@ class TestAssetMovement(unittest.TestCase):
 			}) 
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 			# Cancel associated Asset Movements
 		asset_movements = frappe.get_all(
@@ -484,12 +470,10 @@ class TestAssetMovement(unittest.TestCase):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # If submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
@@ -539,7 +523,6 @@ class TestAssetMovement(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if not frappe.db.exists("Employee", "Test_employee_issue"):
 			employee_doc = frappe.get_doc({
@@ -567,7 +550,6 @@ class TestAssetMovement(unittest.TestCase):
 			}) 
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 			# Cancel associated Asset Movements
 		asset_movements = frappe.get_all(
@@ -579,12 +561,10 @@ class TestAssetMovement(unittest.TestCase):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # If submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
@@ -648,7 +628,6 @@ class TestAssetMovement(unittest.TestCase):
 			}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if target_asset:
 			asset_movement = frappe.get_doc({
@@ -665,7 +644,6 @@ class TestAssetMovement(unittest.TestCase):
 			})
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 		# Cancel associated Asset Movements
 		asset_movements = frappe.get_all(
@@ -677,12 +655,10 @@ class TestAssetMovement(unittest.TestCase):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # If submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
@@ -747,7 +723,6 @@ class TestAssetMovement(unittest.TestCase):
 			}]
 		}).insert()
 		asset_doc_name.submit()
-		frappe.db.commit()
 		if asset_doc_name:
 			asset_movement = frappe.get_doc({
 				"doctype":"Asset Movement",
@@ -762,7 +737,6 @@ class TestAssetMovement(unittest.TestCase):
 			}) 
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 	#TC_FA_123
 	def test_cancel_multiple_asset_movement_transfer_location_change_TC_FA_123(self):
@@ -816,7 +790,6 @@ class TestAssetMovement(unittest.TestCase):
 			}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		# Create and submit the asset movement
 		if target_asset:
@@ -833,7 +806,6 @@ class TestAssetMovement(unittest.TestCase):
 			})
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 		# Cancel associated Asset Movements
 		asset_movements = frappe.get_all(
@@ -850,7 +822,6 @@ class TestAssetMovement(unittest.TestCase):
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
@@ -904,7 +875,6 @@ class TestAssetMovement(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if not frappe.db.exists("Employee", "Test_employee_issue"):
 			employee_doc = frappe.get_doc({
@@ -932,7 +902,6 @@ class TestAssetMovement(unittest.TestCase):
 			}) 
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 			# Cancel associated Asset Movements
 		asset_movements = frappe.get_all(
@@ -944,12 +913,10 @@ class TestAssetMovement(unittest.TestCase):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # If submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
@@ -1003,7 +970,6 @@ class TestAssetMovement(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if not frappe.db.exists("Employee", "Test_employee_issue"):
 			employee_doc = frappe.get_doc({
@@ -1031,7 +997,6 @@ class TestAssetMovement(unittest.TestCase):
 			}) 
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 			# Cancel associated Asset Movements
 		asset_movements = frappe.get_all(
@@ -1048,7 +1013,6 @@ class TestAssetMovement(unittest.TestCase):
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
@@ -1116,7 +1080,6 @@ class TestAssetMovement(unittest.TestCase):
 			}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if target_asset:
 			asset_movement = frappe.get_doc({
@@ -1133,7 +1096,6 @@ class TestAssetMovement(unittest.TestCase):
 			})
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 		# Cancel associated Asset Movements
 		asset_movements = frappe.get_all(
@@ -1145,12 +1107,10 @@ class TestAssetMovement(unittest.TestCase):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # If submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
@@ -1205,7 +1165,6 @@ class TestAssetMovement(unittest.TestCase):
 			}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		# Create and submit the asset movement
 		if target_asset:
@@ -1222,7 +1181,6 @@ class TestAssetMovement(unittest.TestCase):
 			})
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 		# Cancel associated Asset Movements
 		asset_movements = frappe.get_all(
@@ -1292,7 +1250,6 @@ class TestAssetMovement(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if not frappe.db.exists("Employee", "Test_employee_issue"):
 			employee_doc = frappe.get_doc({
@@ -1320,7 +1277,6 @@ class TestAssetMovement(unittest.TestCase):
 			}) 
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 			# Cancel associated Asset Movements
 		asset_movements = frappe.get_all(
@@ -1332,12 +1288,10 @@ class TestAssetMovement(unittest.TestCase):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # If submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
@@ -1390,7 +1344,6 @@ class TestAssetMovement(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if not frappe.db.exists("Employee", "Test_employee_issue"):
 			employee_doc = frappe.get_doc({
@@ -1418,7 +1371,6 @@ class TestAssetMovement(unittest.TestCase):
 			}) 
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 			# Cancel associated Asset Movements
 		asset_movements = frappe.get_all(
@@ -1435,7 +1387,6 @@ class TestAssetMovement(unittest.TestCase):
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
@@ -1502,7 +1453,6 @@ class TestAssetMovement(unittest.TestCase):
 			}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if target_asset:
 			asset_movement = frappe.get_doc({
@@ -1519,7 +1469,6 @@ class TestAssetMovement(unittest.TestCase):
 			})
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 		# Cancel associated Asset Movements
 		asset_movements = frappe.get_all(
@@ -1531,12 +1480,10 @@ class TestAssetMovement(unittest.TestCase):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # If submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
@@ -1593,7 +1540,6 @@ class TestAssetMovement(unittest.TestCase):
 			}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		# Create and submit the asset movement
 		if target_asset:
@@ -1610,7 +1556,6 @@ class TestAssetMovement(unittest.TestCase):
 			})
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 		# Cancel associated Asset Movements
 		asset_movements = frappe.get_all(
@@ -1627,7 +1572,6 @@ class TestAssetMovement(unittest.TestCase):
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
@@ -1681,7 +1625,6 @@ class TestAssetMovement(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if not frappe.db.exists("Employee", "Test_employee_issue"):
 			employee_doc = frappe.get_doc({
@@ -1709,7 +1652,6 @@ class TestAssetMovement(unittest.TestCase):
 			}) 
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 			# Cancel associated Asset Movements
 		asset_movements = frappe.get_all(
@@ -1721,12 +1663,10 @@ class TestAssetMovement(unittest.TestCase):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # If submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
@@ -1780,7 +1720,6 @@ class TestAssetMovement(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if not frappe.db.exists("Employee", "Test_employee_issue"):
 			employee_doc = frappe.get_doc({
@@ -1808,7 +1747,6 @@ class TestAssetMovement(unittest.TestCase):
 			}) 
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 			# Cancel associated Asset Movements
 		asset_movements = frappe.get_all(
@@ -1820,12 +1758,10 @@ class TestAssetMovement(unittest.TestCase):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # If submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
@@ -1893,7 +1829,6 @@ class TestAssetMovement(unittest.TestCase):
 			}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if target_asset:
 			asset_movement = frappe.get_doc({
@@ -1910,7 +1845,6 @@ class TestAssetMovement(unittest.TestCase):
 			})
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 		# Cancel associated Asset Movements
 		asset_movements = frappe.get_all(
@@ -1922,12 +1856,10 @@ class TestAssetMovement(unittest.TestCase):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # If submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
@@ -1991,7 +1923,6 @@ class TestAssetMovement(unittest.TestCase):
 			}]
 		}).insert()
 		asset_doc_name.submit()
-		frappe.db.commit()
 		if asset_doc_name:
 			asset_movement = frappe.get_doc({
 				"doctype":"Asset Movement",
@@ -2006,7 +1937,6 @@ class TestAssetMovement(unittest.TestCase):
 			}) 
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 	#TC_FA_031
 	def test_asset_movement_receipt_location_change_TC_FA_031(self):
@@ -2066,7 +1996,6 @@ class TestAssetMovement(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if target_asset:
 			asset_movement = frappe.get_doc({
@@ -2082,7 +2011,6 @@ class TestAssetMovement(unittest.TestCase):
 			}) 
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 	# TC_FA_032
 	def test_asset_movement_transfer_location_TC_FA_032(self):
@@ -2148,7 +2076,6 @@ class TestAssetMovement(unittest.TestCase):
 				}]
 			}).insert()
 			target_asset.submit()
-			frappe.db.commit()
 
 			assets.append({
 				"asset": target_asset.name,
@@ -2166,7 +2093,6 @@ class TestAssetMovement(unittest.TestCase):
 		})
 		asset_movement.insert()
 		asset_movement.submit()
-		frappe.db.commit()
 
 	# TC_FA_033
 	def test_asset_movement_multiple_issue_type_TC_FA_033(self):
@@ -2242,7 +2168,6 @@ class TestAssetMovement(unittest.TestCase):
 		})
 		asset_movement.insert()
 		asset_movement.submit()
-		frappe.db.commit()
 
 	# TC_FA_034
 	def test_asset_movement_multiple_receipt_location_change_TC_FA_034(self):
@@ -2270,7 +2195,6 @@ class TestAssetMovement(unittest.TestCase):
 				"company": company
 			}).insert()
 			employe_doc.submit()
-			frappe.db.commit()
 
 		# Create items and assets
 		assets = []
@@ -2319,7 +2243,6 @@ class TestAssetMovement(unittest.TestCase):
 		})
 		asset_movement.insert()
 		asset_movement.submit()
-		frappe.db.commit()
 
 	# TC_FA_035
 	def test_asset_movement_grouped_asset_transfer_TC_FA_035(self):
@@ -2382,7 +2305,6 @@ class TestAssetMovement(unittest.TestCase):
 			}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if target_asset:
 			# Create an Asset Movement record with the fetched asset name and location
@@ -2399,7 +2321,6 @@ class TestAssetMovement(unittest.TestCase):
 			})
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 	# TC_FA_036
 	def test_asset_movement_receipt_grouped_location_change_TC_FA_036(self):
@@ -2432,7 +2353,6 @@ class TestAssetMovement(unittest.TestCase):
 			}).insert()
 		
 		employe_doc.submit()
-		frappe.db.commit()
 		
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -2459,7 +2379,6 @@ class TestAssetMovement(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		if target_asset:
 			asset_movement = frappe.get_doc({
@@ -2475,7 +2394,6 @@ class TestAssetMovement(unittest.TestCase):
 			}) 
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 	# TC_FA_037
 	def test_asset_movement_issue_type_TC_FA_037(self):
@@ -2538,7 +2456,6 @@ class TestAssetMovement(unittest.TestCase):
 			}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		# Create the Asset Movement record
 		if target_asset:
@@ -2555,7 +2472,6 @@ class TestAssetMovement(unittest.TestCase):
 			})
 			asset_movement.insert()
 			asset_movement.submit()
-			frappe.db.commit()
 
 	def setUp(self):
 		frappe.db.set_value(

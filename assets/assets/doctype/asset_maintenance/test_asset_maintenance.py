@@ -183,7 +183,7 @@ class TestAssetMaintenance(unittest.TestCase):
 
 		# Create the item if it doesn't exist
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
@@ -191,7 +191,12 @@ class TestAssetMaintenance(unittest.TestCase):
 				"is_fixed_asset": 1,
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+
+			frappe.get_doc(item_data).insert()
 
 		
 		target_asset = frappe.get_doc({
@@ -223,7 +228,6 @@ class TestAssetMaintenance(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 	
 		asset_maintenance = frappe.get_doc({
 		"doctype": "Asset Maintenance",
@@ -246,7 +250,6 @@ class TestAssetMaintenance(unittest.TestCase):
 		}]
 		})
 		asset_maintenance.insert()
-		frappe.db.commit()
 
 	# TC_FA_041
 	def test_asset_maintenance_creation_planned_quarterly_TC_FA_041(self):
@@ -259,7 +262,7 @@ class TestAssetMaintenance(unittest.TestCase):
 
 		# Create the item if it doesn't exist
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
@@ -267,7 +270,12 @@ class TestAssetMaintenance(unittest.TestCase):
 				"is_fixed_asset": 1,
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+
+			frappe.get_doc(item_data).insert()
 
 		
 		target_asset = frappe.get_doc({
@@ -299,7 +307,6 @@ class TestAssetMaintenance(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 	
 		asset_maintenance = frappe.get_doc({
 		"doctype": "Asset Maintenance",
@@ -322,7 +329,6 @@ class TestAssetMaintenance(unittest.TestCase):
 			}]
 		})
 		asset_maintenance.insert()
-		frappe.db.commit()
 	
 	# TC_FA_042
 	def test_asset_maintenance_creation_planned_calibration_TC_FA_042(self):
@@ -335,7 +341,7 @@ class TestAssetMaintenance(unittest.TestCase):
 
 		# Create the item if it doesn't exist
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
@@ -343,7 +349,12 @@ class TestAssetMaintenance(unittest.TestCase):
 				"is_fixed_asset": 1,
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+
+			frappe.get_doc(item_data).insert()
 
 		
 		target_asset = frappe.get_doc({
@@ -375,7 +386,6 @@ class TestAssetMaintenance(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 	
 		asset_maintenance = frappe.get_doc({
 		"doctype": "Asset Maintenance",
@@ -398,7 +408,6 @@ class TestAssetMaintenance(unittest.TestCase):
 			}]
 		})
 		asset_maintenance.insert()
-		frappe.db.commit()
 
 	# TC_FA_043
 	def test_asset_maintenance_creation_on_groupeditem_TC_FA_043(self):
@@ -411,7 +420,7 @@ class TestAssetMaintenance(unittest.TestCase):
 
 		# Create the item if it doesn't exist
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
@@ -419,7 +428,12 @@ class TestAssetMaintenance(unittest.TestCase):
 				"is_fixed_asset": 1,
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+
+			frappe.get_doc(item_data).insert()
 
 		
 		target_asset = frappe.get_doc({
@@ -451,7 +465,6 @@ class TestAssetMaintenance(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 	
 		asset_maintenance = frappe.get_doc({
 		"doctype": "Asset Maintenance",
@@ -474,7 +487,6 @@ class TestAssetMaintenance(unittest.TestCase):
 			}]
 		})
 		asset_maintenance.insert()
-		frappe.db.commit()
 			
 	def test_create_asset_maintenance(self):
 		pr = make_purchase_receipt(
