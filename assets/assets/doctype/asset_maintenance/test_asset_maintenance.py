@@ -31,7 +31,7 @@ class TestAssetMaintenance(unittest.TestCase):
 
 		# Create the item if it doesn't exist
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
@@ -39,7 +39,11 @@ class TestAssetMaintenance(unittest.TestCase):
 				"is_fixed_asset": 1,
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
 
 		
 		target_asset = frappe.get_doc({
@@ -107,7 +111,7 @@ class TestAssetMaintenance(unittest.TestCase):
 
 		# Create the item if it doesn't exist
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
@@ -115,7 +119,11 @@ class TestAssetMaintenance(unittest.TestCase):
 				"is_fixed_asset": 1,
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
 
 		
 		target_asset = frappe.get_doc({
@@ -183,7 +191,7 @@ class TestAssetMaintenance(unittest.TestCase):
 
 		# Create the item if it doesn't exist
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
@@ -191,7 +199,11 @@ class TestAssetMaintenance(unittest.TestCase):
 				"is_fixed_asset": 1,
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
 
 		
 		target_asset = frappe.get_doc({
@@ -259,7 +271,7 @@ class TestAssetMaintenance(unittest.TestCase):
 
 		# Create the item if it doesn't exist
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
@@ -267,7 +279,11 @@ class TestAssetMaintenance(unittest.TestCase):
 				"is_fixed_asset": 1,
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
 
 		
 		target_asset = frappe.get_doc({
@@ -335,7 +351,7 @@ class TestAssetMaintenance(unittest.TestCase):
 
 		# Create the item if it doesn't exist
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
@@ -343,7 +359,11 @@ class TestAssetMaintenance(unittest.TestCase):
 				"is_fixed_asset": 1,
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
 
 		
 		target_asset = frappe.get_doc({
@@ -411,7 +431,7 @@ class TestAssetMaintenance(unittest.TestCase):
 
 		# Create the item if it doesn't exist
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
@@ -419,7 +439,11 @@ class TestAssetMaintenance(unittest.TestCase):
 				"is_fixed_asset": 1,
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+
 
 		
 		target_asset = frappe.get_doc({

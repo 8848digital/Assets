@@ -1273,6 +1273,8 @@ class TestAsset(AssetSetup):
 			# Check if 'gst_hsn_code' exists in Item doctype
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+			
+			frappe.get_doc(item_data).insert()
 
 		target_asset = frappe.get_doc({
 		"doctype": "Asset",
@@ -1322,12 +1324,11 @@ class TestAsset(AssetSetup):
 
 		# Step 1: Create the Item if it doesn't exist
 		if not frappe.db.exists("Item", item):
-			fa_item = frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item,
 				"item_name": item,
 				"item_group": "Products",
-				"gst_hsn_code": "01011010",
 				"stock_uom": "Nos",
 				"is_fixed_asset": 1,
 				"auto_create_assets": 1,
@@ -1335,9 +1336,12 @@ class TestAsset(AssetSetup):
 				"asset_naming_series": "ACC-ASS-.YYYY.-",  # Add the missing naming series
 				"asset_category": "Test_Category"  # Link to Asset Category
 				
-			})
-			fa_item.insert()
-			frappe.db.commit()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+			
+			frappe.get_doc(item_data).insert()
 
 		# Step 2: Create and Submit the Purchase Invoice
 		pi = frappe.get_doc({
@@ -1420,7 +1424,7 @@ class TestAsset(AssetSetup):
 				"is_fixed_asset": 1,
 				"auto_create_assets": 1,
 				"is_stock_item": 0,  # Non-stock item
-				"naming_series": "ACC-ASS-.YYYY.-",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category": "Test_Category"  # Link to Asset Category
 			})
 			fa_item.insert()
@@ -1490,24 +1494,27 @@ class TestAsset(AssetSetup):
 	# TC_FA_069
 	def test_pi_cancelation_on_asset_depr_scgedule_TC_FA_069(self):
 		supplier = "_Test Supplier"
-		item = "Test_item_cancel_pi"
+		item = "Test_item_cancel_purchasinvoice"
 
 		# Step 1: Create the Item if it doesn't exist
 		if not frappe.db.exists("Item", item):
-			fa_item = frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item,
 				"item_name": item,
 				"item_group": "Products",
 				"stock_uom": "Nos",
 				"is_fixed_asset": 1,
-				"gst_hsn_code": "01011010",
 				"auto_create_assets": 1,
 				"is_stock_item": 0,  # Non-stock item
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category": "Test_Category"  # Link to Asset Category
-			})
-			fa_item.insert()
-			frappe.db.commit()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+			
+			frappe.get_doc(item_data).insert()
 
 		# Step 2: Create and Submit the Purchase Invoice
 		pi = frappe.get_doc({
