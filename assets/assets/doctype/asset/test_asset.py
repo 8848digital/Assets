@@ -1641,17 +1641,21 @@ class TestAsset(AssetSetup):
 
 		# Ensure the item exists or create it
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
 				"item_group": "Products",
 				"is_fixed_asset": 1,  # Marking as fixed asset
 				"is_stock_item": 0,
-				"gst_hsn_code": "01011010",
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+
+			frappe.get_doc(item_data).insert()
 
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -1709,17 +1713,21 @@ class TestAsset(AssetSetup):
 
 		# Ensure the item exists or create it
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
 				"item_group": "Products",
 				"is_fixed_asset": 1,  # Marking as fixed asset
 				"is_stock_item": 0,
-				"gst_hsn_code": "01011010",
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+
+			frappe.get_doc(item_data).insert()
 
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -1777,7 +1785,7 @@ class TestAsset(AssetSetup):
 
 		# Ensure the item exists or create it
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
@@ -1787,7 +1795,12 @@ class TestAsset(AssetSetup):
 				"gst_hsn_code": "01011010",
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+
+			frappe.get_doc(item_data).insert()
 
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -1845,17 +1858,21 @@ class TestAsset(AssetSetup):
 
 		# Ensure the item exists or create it
 		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
+			item_data = {
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
 				"item_group": "Products",
 				"is_fixed_asset": 1,  # Marking as fixed asset
 				"is_stock_item": 0,
-				"gst_hsn_code": "01011010",
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category": "Test_Category"
-			}).insert()
+			}
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+
+			frappe.get_doc(item_data).insert()
 
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
