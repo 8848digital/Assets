@@ -5792,6 +5792,75 @@ class TestDepreciationBasics(AssetSetup):
 				['_Test Subsidy - _TC', gross_deprication_amount,0.0, jv.posting_date]
 			]
 			check_gl_entries(self,voucher_no=reverse_jv.name,expected_gle=expected_gle,posting_date=reverse_jv.posting_date,voucher_type=jv.doctype)
+	def test_journal_entry_against_asset_TC_FA_095(self):
+		frappe.set_user("Administrator")
+		get_details = create_company_and_supplier()
+		company = get_details.get("parent_company")
+		frappe.db.set_value("Company", company, "depreciation_cost_center", "Main - TC-1")
+		asset_category = get_asset_category()
+		location = get_location()
+
+		item = make_test_item("test_asset_item_1")
+		item.is_stock_item = 0
+		item.is_fixed_asset = 1
+		item.is_grouped_asset = 1
+		item.asset_category = asset_category
+		item.save()
+
+		pr = create_purchase_receipt(item)
+
+		asset = create_assets(company, location, pr, item.item_code)
+
+		je = frappe.get_doc(
+			{
+				"doctype": "Journal Entry",
+				"voucher_type": "Journal Entry",
+				"company": company,
+				"posting_date": today(),
+				"accounts": [
+					{
+						"account": get_or_create_account(company, "Deferred Revenue Grant Account"),
+						"debit_in_account_currency": 500000,
+						"credit_in_account_currency":0,
+						"cost_center": "Main - TC-1",
+						"reference_type": "Asset",
+						"reference_name": asset
+					},
+					{
+						"account": get_or_create_account(company, "Profit & Loss"),
+						"debit_in_account_currency": 300000,
+						"credit_in_account_currency":0,
+						"cost_center": "Main - TC-1",
+						"reference_type": "Asset",
+						"reference_name": asset
+					},
+					{
+						"account": get_or_create_account(company, "To Bank"),
+						"debit_in_account_currency": 0,
+						"credit_in_account_currency":800000,
+						"cost_center": "Main - TC-1",
+						"reference_type": "Asset",
+						"reference_name": asset
+					},
+				],
+			}
+		)
+		je.insert()
+		je.submit()
+		self.assertEqual(je.docstatus, 1)
+
+		je_gle_entries = frappe.get_all("GL Entry", filters={"voucher_no": je.name}, fields=["account", "debit", "credit"])
+
+		expected_si_entries = {
+			"To Bank - TC-1": {"debit": 0, "credit": 800000},
+			"Profit & Loss - TC-1": {"debit": 300000, "credit": 0},
+			"Deferred Revenue Grant Account - TC-1": {"debit": 500000, "credit": 0},
+		}
+
+		for entry in je_gle_entries:
+			self.assertEqual(entry["debit"], expected_si_entries.get(entry["account"], {}).get("debit", 0))
+			self.assertEqual(entry["credit"], expected_si_entries.get(entry["account"], {}).get("credit", 0))
+
 	def test_journal_entry_against_asset_refund_TC_FA_096(self):
 		frappe.set_user("Administrator")
 		get_details = create_company_and_supplier()
