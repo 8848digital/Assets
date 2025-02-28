@@ -542,3 +542,10 @@ def expense_item_pi_query(
 		query = query.where(getattr(PurchaseInvoice, searchfield).like("%" + txt + "%"))
 
 	return query
+
+@frappe.whitelist()
+def get_expense_account(purchase_invoice):
+    expense_account = frappe.db.get_value("Purchase Invoice Item", {"parent": purchase_invoice}, "expense_account")
+    amount = frappe.db.get_value("Purchase Invoice Item", {"parent": purchase_invoice}, "amount")
+
+    return {"expense_account": expense_account,"amount":amount}
