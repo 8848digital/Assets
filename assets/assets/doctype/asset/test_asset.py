@@ -6,7 +6,7 @@ import unittest
 import frappe
 from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
 from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import (
-	make_purchase_invoice,
+	make_purchase_invoice,check_gl_entries
 )
 from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
 	make_purchase_invoice as make_invoice,
@@ -18,6 +18,7 @@ from erpnext.stock.doctype.material_request.material_request import make_purchas
 from erpnext.setup.doctype.company.test_company import create_child_company
 from erpnext.buying.doctype.purchase_order.test_purchase_order import create_purchase_order
 from erpnext.buying.doctype.supplier.test_supplier import create_supplier
+from frappe.tests.utils import if_app_installed
 from erpnext.accounts.doctype.pricing_rule.test_pricing_rule import make_pricing_rule
 from frappe.utils import (
 	add_days,
@@ -5888,6 +5889,468 @@ class TestDepreciationBasics(AssetSetup):
 		pr.submit()
 		self.assertTrue(get_gl_entries("Purchase Receipt", pr.name))
 
+	@if_app_installed("erpnext")
+	def test_multiple_asset_purchasing_single_invoice_TC_FA_102(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item,
+			create_records,
+			create_company
+		)
+		create_records('_Test Supplier')
+		create_company()
+		if not frappe.db.exists("Location", "Test Location"):
+			frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert()
+	
+		item_list =["_Test Item Asset 1", "_Test Item Asset 2"]
+		
+			
+		for item in item_list:
+			if not frappe.db.exists("Item", item):
+				item = make_test_item(item)
+				item.is_stock_item = 0
+				item.is_fixed_asset = 1
+				item.asset_naming_series="ACC-ASS-.YYYY.-"
+				item.asset_category = "Computers"
+				item.is_grouped_asset = 1
+				item.auto_create_assets = 1
+				item.save()
+		
+		pi = make_purchase_invoice(
+			supplier="_Test Supplier",
+			company="_Test Company",
+			item_code="_Test Item Asset 1",
+			qty=1,
+			rate=100.0,
+			location="Test Location",
+			do_not_submit=True,
+			update_stock=True
+		)
+		pi.append("items",{
+			"item_code":"_Test Item Asset 2",
+			"qty":1,
+			"uom":"Nos",
+			"rate":1000,
+			"asset_location":"Test Location"
+		})
+		pi.save()
+		pi.submit()
+		
+		assets_name = frappe.get_list("Asset",filters={"purchase_invoice":pi.name},fields=["name"])
+		
+		for asset in assets_name:
+			asset_doc = frappe.get_doc("Asset",asset.name)
+			self.assertEqual(pi.name,asset_doc.purchase_invoice)
+   
+	@if_app_installed("erpnext")
+	def test_multiple_asset_purchasing_single_invoice_with_gst_TC_FA_103(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item,
+			create_records,
+			create_company
+		)
+		create_records('_Test Supplier')
+		create_company()
+		if frappe.db.exists("Purchase Taxes and Charges Template", "Input GST Out-state - _TC"):
+			doc = frappe.get_doc("Purchase Taxes and Charges Template", "Input GST Out-state - _TC")
+			doc.taxes[0].rate = 12
+			doc.save()
+		if not frappe.db.exists("Location", "Test Location"):
+			frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert()
+	
+		item_list =["_Test Item Asset 1", "_Test Item Asset 2"]
+		
+			
+		for item in item_list:
+			if not frappe.db.exists("Item", item):
+				item = make_test_item(item)
+				item.is_stock_item = 0
+				item.is_fixed_asset = 1
+				item.asset_naming_series="ACC-ASS-.YYYY.-"
+				item.asset_category = "Computers"
+				item.is_grouped_asset = 1
+				item.auto_create_assets = 1
+				item.save()
+		
+		pi = make_purchase_invoice(
+			supplier="_Test Supplier",
+			company="_Test Company",
+			item_code="_Test Item Asset 1",
+			qty=1,
+			rate=1000.0,
+			location="Test Location",
+			do_not_submit=True,
+			update_stock=True
+		)
+		pi.append("items",{
+			"item_code":"_Test Item Asset 2",
+			"qty":1,
+			"uom":"Nos",
+			"rate":1000,
+			"asset_location":"Test Location"
+		})
+		pi.taxes_and_charges = "Input GST Out-state - _TC"
+		pi.save()
+		pi.submit()
+	
+		self.assertTrue(get_gl_entries(pi.doctype, pi.name))
+		
+		assets_name = frappe.get_list("Asset",filters={"purchase_invoice":pi.name},fields=["name"])
+		gross_purchase_amount =0.0 
+		for asset in assets_name:
+			asset_doc = frappe.get_doc("Asset",asset.name)
+			self.assertEqual(pi.name,asset_doc.purchase_invoice)
+			gross_purchase_amount += asset_doc.gross_purchase_amount
+		
+		self.assertEqual(gross_purchase_amount,pi.total)
+  
+	@if_app_installed("erpnext")
+	def test_multiple_group_asset_purchasing_single_invoice_104(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item,
+			create_records,
+			create_company
+		)
+		create_records('_Test Supplier')
+		create_company()
+		if not frappe.db.exists("Location", "Test Location"):
+			frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert()
+		
+		item_list =["_Test Item Group Asset 1", "_Test Item Group Asset 2"]
+		
+		for item in item_list:
+			if not frappe.db.exists("Item", item):
+				item = make_test_item(item)
+				item.is_stock_item = 0
+				item.is_fixed_asset = 1
+				item.asset_naming_series="ACC-ASS-.YYYY.-"
+				item.asset_category = "Computers"
+				item.is_grouped_asset = 1
+				item.auto_create_assets = 1
+				item.save()
+			
+		pi = make_purchase_invoice(
+			supplier="_Test Supplier",
+			company="_Test Company",
+			item_code="_Test Item Group Asset 1",
+			qty=10,
+			rate=1000.0,
+			location="Test Location",
+			do_not_submit=True,
+			update_stock=True
+		)
+		pi.append("items",{
+			"item_code":"_Test Item Group Asset 2",
+			"qty":10,
+			"uom":"Nos",
+			"rate":1000,
+			"asset_location":"Test Location"
+		})
+		pi.save()
+		pi.submit()
+		
+		assets_name = frappe.get_list("Asset",filters={"purchase_invoice":pi.name},fields=["name"])
+		self.assertEqual(len(assets_name),2)
+		for asset in assets_name:
+			asset_doc = frappe.get_doc("Asset",asset.name)
+			self.assertEqual(pi.name,asset_doc.purchase_invoice)
+
+	@if_app_installed("erpnext")
+	def test_multiple_group_asset_purchasing_single_invoice_with_gst_105(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item,
+			create_records,
+			create_company
+		)
+		create_records('_Test Supplier')
+		create_company()
+		if frappe.db.exists("Purchase Taxes and Charges Template", "Input GST Out-state - _TC"):
+			doc = frappe.get_doc("Purchase Taxes and Charges Template", "Input GST Out-state - _TC")
+			doc.taxes[0].rate = 12
+			doc.save()
+		if not frappe.db.exists("Location", "Test Location"):
+			frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert()
+		
+		item_list =["_Test Item Group Asset 1", "_Test Item Group Asset 2"]
+		
+		for item in item_list:
+			if not frappe.db.exists("Item", item):
+				item = make_test_item(item)
+				item.is_stock_item = 0
+				item.is_fixed_asset = 1
+				item.asset_naming_series="ACC-ASS-.YYYY.-"
+				item.asset_category = "Computers"
+				item.is_grouped_asset = 1
+				item.auto_create_assets = 1
+				item.save()
+			
+		pi = make_purchase_invoice(
+			supplier="_Test Supplier",
+			company="_Test Company",
+			item_code="_Test Item Group Asset 1",
+			qty=10,
+			rate=1000.0,
+			location="Test Location",
+			do_not_submit=True,
+			update_stock=True
+		)
+		pi.append("items",{
+			"item_code":"_Test Item Group Asset 2",
+			"qty":10,
+			"uom":"Nos",
+			"rate":1000,
+			"asset_location":"Test Location"
+		})
+		pi.taxes_and_charges = "Input GST Out-state - _TC"
+		pi.save()
+		pi.submit()
+	
+		self.assertTrue(get_gl_entries(pi.doctype, pi.name))
+		
+		assets_name = frappe.get_list("Asset",filters={"purchase_invoice":pi.name},fields=["name"])
+		self.assertEqual(len(assets_name),2)
+		gross_purchase_amount =0.0 
+		for asset in assets_name:
+			asset_doc = frappe.get_doc("Asset",asset.name)
+			self.assertEqual(pi.name,asset_doc.purchase_invoice)
+			gross_purchase_amount += asset_doc.gross_purchase_amount
+		
+		self.assertEqual(gross_purchase_amount,pi.total)
+	@if_app_installed("erpnext")
+	def test_create_subsidy_jv_for_fixed_assets_TC_FA_091(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item,
+			create_records,
+			create_company,
+		)
+		from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
+		create_records('_Test Supplier')
+		create_company()
+		if not frappe.db.exists("Location", "Test Location"):
+			frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert()
+		
+		item_list =["_Test Item Asset 1", "_Test Item Asset 2"]
+		
+		for item in item_list:
+			if not frappe.db.exists("Item", item):
+				item = make_test_item(item)
+				item.is_stock_item = 0
+				item.is_fixed_asset = 1
+				item.asset_naming_series="ACC-ASS-.YYYY.-"
+				item.asset_category = "Computers"
+				item.auto_create_assets = 1
+				item.save()
+			
+		pi = make_purchase_invoice(
+			supplier="_Test Supplier",
+			company="_Test Company",
+			item_code="_Test Item Group Asset 1",
+			qty=10,
+			rate=100000.0,
+			location="Test Location",
+			do_not_submit=True,
+			update_stock=True
+		)
+		pi.save()
+		pi.submit()
+		
+		assets_name = frappe.get_value("Asset",{"purchase_invoice":pi.name},"name")
+		
+		jv = make_journal_entry(
+			account1="_Test Bank - _TC",
+			account2="_Test Subsidy - _TC",
+			amount=100000.0,
+			posting_date=pi.posting_date,
+			save=False
+		)
+		jv.accounts[1].reference_type = "Asset"
+		jv.accounts[1].reference_name = assets_name
+		jv.save()
+		jv.submit()
+		expected_gle = [
+			['_Test Bank - _TC', 100000.0, 0.0, jv.posting_date],
+			['_Test Subsidy - _TC', 0.0, 100000.0, jv.posting_date]
+		]
+		check_gl_entries(self,voucher_no=jv.name,expected_gle=expected_gle,posting_date=jv.posting_date,voucher_type=jv.doctype)
+  
+	@if_app_installed("erpnext")
+	def test_create_subsidy_jv_for_fixed_assets_partial_ammount_TC_FA_092(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item,
+			create_records,
+			create_company,
+		)
+		from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
+		create_records('_Test Supplier')
+		create_company()
+		if not frappe.db.exists("Location", "Test Location"):
+			frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert()
+		
+		item_list =["_Test Item Asset 1", "_Test Item Asset 2"]
+		
+		for item in item_list:
+			if not frappe.db.exists("Item", item):
+				item = make_test_item(item)
+				item.is_stock_item = 0
+				item.is_fixed_asset = 1
+				item.asset_naming_series="ACC-ASS-.YYYY.-"
+				item.asset_category = "Computers"
+				item.auto_create_assets = 1
+				item.save()
+			
+		pi = make_purchase_invoice(
+			supplier="_Test Supplier",
+			company="_Test Company",
+			item_code="_Test Item Group Asset 1",
+			qty=10,
+			rate=100000.0,
+			location="Test Location",
+			do_not_submit=True,
+			update_stock=True
+		)
+		pi.save()
+		pi.submit()
+		
+		assets_name = frappe.get_value("Asset",{"purchase_invoice":pi.name},"name")
+		
+		jv = make_journal_entry(
+			account1="_Test Bank - _TC",
+			account2="_Test Subsidy - _TC",
+			amount=100000.0,
+			posting_date=pi.posting_date,
+			save=False
+		)
+		jv.accounts[1].reference_type = "Asset"
+		jv.accounts[1].reference_name = assets_name
+		jv.save()
+		jv.submit()
+		expected_gle = [
+			['_Test Bank - _TC', 100000.0, 0.0, jv.posting_date],
+			['_Test Subsidy - _TC', 0.0, 100000.0, jv.posting_date]
+		]
+		check_gl_entries(self,voucher_no=jv.name,expected_gle=expected_gle,posting_date=jv.posting_date,voucher_type=jv.doctype)
+	
+	@if_app_installed("erpnext")
+	def test_purchase_asset_with_partial_subsidy_grant_credited_to_pl_TC_FA_093(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item,
+			create_records,
+			create_company,
+		)
+		from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
+		create_records('_Test Supplier')
+		create_company()
+		if not frappe.db.exists("Location", "Test Location"):
+			frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert()
+		
+		item ="_Test Item Asset 1"
+		useful_life = 10
+		if not frappe.db.exists("Item", item):
+			item = make_test_item(item)
+			item.is_stock_item = 0
+			item.is_fixed_asset = 1
+			item.asset_naming_series="ACC-ASS-.YYYY.-"
+			item.asset_category = "Computers"
+			item.auto_create_assets = 1
+			item.save()
+			
+		pi = make_purchase_invoice(
+			supplier="_Test Supplier",
+			company="_Test Company",
+			item_code="_Test Item Asset 1",
+			qty=10,
+			rate=150000.0,
+			location="Test Location",
+			do_not_submit=True,
+			update_stock=True
+		)
+		pi.save()
+		pi.submit()
+		
+		assets_name = frappe.get_value("Asset",{"purchase_invoice":pi.name},"name")
+		if assets_name:
+			asset_doc = frappe.get_doc("Asset",assets_name)
+			gross_deprication_amount = (800000/asset_doc.gross_purchase_amount) * (asset_doc.gross_purchase_amount/useful_life)
+		if gross_deprication_amount:
+			jv = make_journal_entry(
+				account1="_Test Bank - _TC",
+				account2="_Test Subsidy - _TC",
+				amount=gross_deprication_amount,
+				posting_date=pi.posting_date,
+				save=False
+			)
+			jv.accounts[1].reference_type = "Asset"
+			jv.accounts[1].reference_name = assets_name
+			jv.save()
+			jv.submit()
+			expected_gle = [
+				['_Test Bank - _TC', gross_deprication_amount, 0.0, jv.posting_date],
+				['_Test Subsidy - _TC', 0.0, gross_deprication_amount, jv.posting_date]
+			]
+			check_gl_entries(self,voucher_no=jv.name,expected_gle=expected_gle,posting_date=jv.posting_date,voucher_type=jv.doctype)
+   
+	@if_app_installed("erpnext")
+	def test_purchase_asset_with_partial_subsidy_grant_credited_to_pl_refund_TC_FA_094(self):
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+			make_test_item,
+			create_records,
+			create_company,
+		)
+		from erpnext.accounts.doctype.journal_entry.journal_entry import make_reverse_journal_entry
+		from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
+		create_records('_Test Supplier')
+		create_company()
+		if not frappe.db.exists("Location", "Test Location"):
+			frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert()
+		
+		item ="_Test Item Asset 1"
+		useful_life = 10
+		if not frappe.db.exists("Item", item):
+			item = make_test_item(item)
+			item.is_stock_item = 0
+			item.is_fixed_asset = 1
+			item.asset_naming_series="ACC-ASS-.YYYY.-"
+			item.asset_category = "Computers"
+			item.auto_create_assets = 1
+			item.save()
+			
+		pi = make_purchase_invoice(
+			supplier="_Test Supplier",
+			company="_Test Company",
+			item_code="_Test Item Asset 1",
+			qty=10,
+			rate=150000.0,
+			location="Test Location",
+			do_not_submit=True,
+			update_stock=True
+		)
+		pi.save()
+		pi.submit()
+		
+		assets_name = frappe.get_value("Asset",{"purchase_invoice":pi.name},"name")
+		if assets_name:
+			asset_doc = frappe.get_doc("Asset",assets_name)
+			gross_deprication_amount = (800000/asset_doc.gross_purchase_amount) * (asset_doc.gross_purchase_amount/useful_life)
+		if gross_deprication_amount:
+			jv = make_journal_entry(
+				account1="_Test Bank - _TC",
+				account2="_Test Subsidy - _TC",
+				amount=gross_deprication_amount,
+				posting_date=pi.posting_date,
+				save=False
+			)
+			jv.accounts[1].reference_type = "Asset"
+			jv.accounts[1].reference_name = assets_name
+			jv.save()
+			jv.submit()
+			reverse_jv = make_reverse_journal_entry(jv.name)
+			reverse_jv.posting_date = jv.posting_date
+			reverse_jv.save()
+			reverse_jv.submit()
+			expected_gle = [
+				['_Test Bank - _TC', 0.0,gross_deprication_amount, jv.posting_date],
+				['_Test Subsidy - _TC', gross_deprication_amount,0.0, jv.posting_date]
+			]
+			check_gl_entries(self,voucher_no=reverse_jv.name,expected_gle=expected_gle,posting_date=reverse_jv.posting_date,voucher_type=jv.doctype)
 	def test_journal_entry_against_asset_TC_FA_095(self):
 		frappe.set_user("Administrator")
 		get_details = create_company_and_supplier()
@@ -6016,8 +6479,7 @@ class TestDepreciationBasics(AssetSetup):
 		for entry in je_gle_entries:
 			self.assertEqual(entry["debit"], expected_si_entries.get(entry["account"], {}).get("debit", 0))
 			self.assertEqual(entry["credit"], expected_si_entries.get(entry["account"], {}).get("credit", 0))
-
-
+	
 def get_gl_entries(doctype, docname):
 	gl_entry = frappe.qb.DocType("GL Entry")
 	return (
