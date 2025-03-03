@@ -34,35 +34,46 @@ class TestAssetCapitalization(unittest.TestCase):
 		# Fetch target asset document
 		target_asset_name = "Test_Computer-01"
 
-		# Check if the asset exists
-		if not frappe.db.exists("Asset", target_asset_name):
-			target_asset = frappe.get_doc({
-				"doctype":"Asset",
-				"company":"_Test Company",
-				"item_code":"Test_Computer-01",
-				"asset_name":"Test_Computer-01",
-				"location":"Test Location",
-				"is_composite_asset":1,
-				"asset_quantiy":1,
-				"purchase_date":nowdate()
-				})
-		
-		item_name = ["Test_Monitor-01","Test_Keyboard-01","Test_Mouse-01"]
-		for item in item_name:
-			if not frappe.db.exists("Item",item):
+		# Recursive function to check and create an asset
+		def ensure_asset_exists(asset_name):
+			if not frappe.db.exists("Asset", asset_name):
+				return frappe.get_doc({
+					"doctype": "Asset",
+					"company": "_Test Company",
+					"item_code": asset_name,
+					"asset_name": asset_name,
+					"location": "Test Location",
+					"is_composite_asset": 1,
+					"asset_quantiy": 1,
+					"purchase_date": nowdate()
+				}).insert()
+			return frappe.get_doc("Asset", asset_name)
+
+		target_asset = ensure_asset_exists(target_asset_name)
+
+		item_name = ["Test_Monitor-01", "Test_Keyboard-01", "Test_Mouse-01"]
+
+		# Recursive function to create items
+		def ensure_items_exist(items, index=0):
+			if index >= len(items):
+				return
+			item = items[index]
+			if not frappe.db.exists("Item", item):
 				item_data = {
-				"doctype": "Item",
-				"item_code": item,
-				"item_name": item,
-				"asset_naming_series": "ACC-ASS-.YYYY.-",
-				"asset_category":"Test_Category"
-			}
-			
-				# Check if 'gst_hsn_code' exists in Item doctype
+					"doctype": "Item",
+					"item_code": item,
+					"item_name": item,
+					"asset_naming_series": "ACC-ASS-.YYYY.-",
+					"asset_category": "Test_Category"
+				}
 				if frappe.db.has_column("Item", "gst_hsn_code"):
-					item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+					item_data["gst_hsn_code"] = "01011010"
 
 				frappe.get_doc(item_data).insert()
+
+			ensure_items_exist(items, index + 1)
+
+		ensure_items_exist(item_name)
 
 		# Define stock items
 		stock_items = [
@@ -71,7 +82,7 @@ class TestAssetCapitalization(unittest.TestCase):
 			{"item_code": "Test_Mouse-01", "item_name": "Test_Mouse-01", "warehouse": "_Test Warehouse - _TC", "stock_qty": 1, "stock_uom": "Nos", "valuation_rate": 1000, "amount": 1000},
 		]
 
-		asset_items =[]
+		asset_items = []
 
 		# Define service items
 		service_items = [
@@ -85,14 +96,15 @@ class TestAssetCapitalization(unittest.TestCase):
 			}
 		]
 
-		# Calculate stock_items_total (sum of the amounts for all stock items)
-		stock_items_total = sum(item["amount"] for item in stock_items)
+		# Recursive function to calculate total amounts
+		def calculate_total(items, index=0, total=0):
+			if index >= len(items):
+				return total
+			return calculate_total(items, index + 1, total + items[index]["amount"])
 
-		# Calculate service_items_total (sum of the amounts for all service items)
-		service_items_total = sum(item["amount"] for item in service_items)
-
-		asset_items_total = sum(item["amount"] for item in asset_items)
-
+		stock_items_total = calculate_total(stock_items)
+		service_items_total = calculate_total(service_items)
+		asset_items_total = calculate_total(asset_items)
 
 		# Create Asset Capitalization document without triggering validation
 		asset_capitalize = frappe.get_doc({
@@ -108,8 +120,8 @@ class TestAssetCapitalization(unittest.TestCase):
 			"stock_items_total": stock_items_total,  # Add the calculated total here
 			"service_items_total": service_items_total,  # Add the calculated total here
 			"asset_items_total": asset_items_total,
-			"total_value":stock_items_total+asset_items_total+service_items_total,
-			"target_incoming_rate":stock_items_total+asset_items_total+service_items_total
+			"total_value": stock_items_total + asset_items_total + service_items_total,
+			"target_incoming_rate": stock_items_total + asset_items_total + service_items_total
 		})
 
 		# Override validate method temporarily for this test
@@ -131,7 +143,7 @@ class TestAssetCapitalization(unittest.TestCase):
 
 		# Check if the asset exists
 		if not frappe.db.exists("Asset", target_asset_name):
-			target_asset = frappe.get_doc({
+			frappe.get_doc({
 				"doctype": "Asset",
 				"company": "_Test Company",
 				"item_code": "Test_Computer-01",
@@ -142,31 +154,33 @@ class TestAssetCapitalization(unittest.TestCase):
 				"purchase_date": nowdate()
 			}).insert()
 
-		item_name = ["Test_Monitor-01", "Test_Keyboard-01", "Test_Mouse-01"]
-		for item in item_name:
+		item_names = ["Test_Monitor-01", "Test_Keyboard-01", "Test_Mouse-01"]
+
+		def create_items_recursively(items):
+			if not items:
+				return
+			item = items[0]
 			if not frappe.db.exists("Item", item):
 				item_data = {
 					"doctype": "Item",
 					"item_code": item,
 					"item_name": item,
 					"asset_category": "Test_Category",
-					"is_stock_item": 1  # Ensure these are marked as stock items
+					"is_stock_item": 1
 				}
-
-				# Check if 'gst_hsn_code' exists in Item doctype
 				if frappe.db.has_column("Item", "gst_hsn_code"):
-					item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
-
+					item_data["gst_hsn_code"] = "01011010"
 				frappe.get_doc(item_data).insert()
+			create_items_recursively(items[1:])
 
-		# Define stock items
+		create_items_recursively(item_names)
+
 		stock_items = [
 			{"item_code": "Test_Monitor-01", "item_name": "Test_Monitor-01", "warehouse": "_Test Warehouse - _TC", "stock_qty": 1, "stock_uom": "Nos", "valuation_rate": 5000, "amount": 5000,"cost_center": "_Test Cost Center - _TC"},
 			{"item_code": "Test_Keyboard-01", "item_name": "Test_Keyboard-01", "warehouse": "_Test Warehouse - _TC", "stock_qty": 1, "stock_uom": "Nos", "valuation_rate": 4000, "amount": 4000,"cost_center": "_Test Cost Center - _TC"},
 			{"item_code": "Test_Mouse-01", "item_name": "Test_Mouse-01", "warehouse": "_Test Warehouse - _TC", "stock_qty": 1, "stock_uom": "Nos", "valuation_rate": 1000, "amount": 1000,"cost_center": "_Test Cost Center - _TC"},
 		]
 
-		# Define service items
 		service_items = [
 			{
 				"item_code": "Test Service Item",
@@ -177,14 +191,17 @@ class TestAssetCapitalization(unittest.TestCase):
 			}
 		]
 
-		# Calculate totals
 		stock_items_total = sum(item["amount"] for item in stock_items)
 		service_items_total = sum(item["amount"] for item in service_items)
-		asset_items_total = 0  # Adjust if you need asset items
-		# Create and submit Purchase Orders for each stock item
+		asset_items_total = 0
+
 		supplier = "_Test Supplier"
 		purchase_orders = []
-		for item in stock_items:
+
+		def create_purchase_orders_recursively(items):
+			if not items:
+				return
+			item = items[0]
 			po = frappe.get_doc({
 				"doctype": "Purchase Order",
 				"company": "_Test Company",
@@ -199,10 +216,16 @@ class TestAssetCapitalization(unittest.TestCase):
 			}).insert()
 			po.submit()
 			purchase_orders.append(po)
+			create_purchase_orders_recursively(items[1:])
 
-		# Create and submit Purchase Receipts for each Purchase Order
+		create_purchase_orders_recursively(stock_items)
+
 		purchase_receipts = []
-		for po in purchase_orders:
+
+		def create_purchase_receipts_recursively(orders):
+			if not orders:
+				return
+			po = orders[0]
 			pr = frappe.get_doc({
 				"doctype": "Purchase Receipt",
 				"company": "_Test Company",
@@ -217,9 +240,14 @@ class TestAssetCapitalization(unittest.TestCase):
 			}).insert()
 			pr.submit()
 			purchase_receipts.append(pr)
+			create_purchase_receipts_recursively(orders[1:])
 
-		# Create and submit Purchase Invoices for each Purchase Receipt
-		for pr in purchase_receipts:
+		create_purchase_receipts_recursively(purchase_orders)
+
+		def create_purchase_invoices_recursively(receipts):
+			if not receipts:
+				return
+			pr = receipts[0]
 			pi = frappe.get_doc({
 				"doctype": "Purchase Invoice",
 				"company": "_Test Company",
@@ -233,16 +261,17 @@ class TestAssetCapitalization(unittest.TestCase):
 				}]
 			}).insert()
 			pi.submit()
+			create_purchase_invoices_recursively(receipts[1:])
 
-		
-		# Create Asset Capitalization
+		create_purchase_invoices_recursively(purchase_receipts)
+
 		asset_capitalize = frappe.get_doc({
 			"doctype": "Asset Capitalization",
 			"company": "_Test Company",
 			"entry_type": "Capitalization",
 			"capitalization_method": "Create a new composite asset",
 			"target_item_code": target_asset_name,
-			"target_asset_location":"Test Location",
+			"target_asset_location": "Test Location",
 			"target_asset": target_asset_name,
 			"posting_date": nowdate(),
 			"posting_time": frappe.utils.now(),
@@ -251,18 +280,16 @@ class TestAssetCapitalization(unittest.TestCase):
 			"stock_items_total": stock_items_total,
 			"total_value": stock_items_total + asset_items_total + service_items_total,
 			"target_incoming_rate": stock_items_total + asset_items_total + service_items_total,
-			})
+		})
 
-		# Override validate method temporarily for this test
 		def dummy_validate(self):
 			pass
 
-		# Temporarily override validate method to do nothing
 		asset_capitalize.validate = dummy_validate.__get__(asset_capitalize)
 
-		# Insert and save the document
 		asset_capitalize.insert()
 		asset_capitalize.submit()
+
 	
 	#TC_FA_145
 	def test_create_decapitalize_asset_TC_FA_145(self):
@@ -270,64 +297,64 @@ class TestAssetCapitalization(unittest.TestCase):
 		target_asset_name = "Test_Computer-01"
 
 		# Check if the asset exists
-		if not frappe.db.exists("Asset", target_asset_name):
-			target_asset = frappe.get_doc({
-				"doctype": "Asset",
-				"company": "_Test Company",
-				"item_code": "Test_Computer-01",
-				"asset_name": "Test_Computer-01",
-				"location": "Test Location",
-				"is_composite_asset": 1,
-				"asset_quantity": 1,
-				"purchase_date": nowdate()
-			}).insert()
+		def create_asset():
+			if not frappe.db.exists("Asset", target_asset_name):
+				frappe.get_doc({
+					"doctype": "Asset",
+					"company": "_Test Company",
+					"item_code": "Test_Computer-01",
+					"asset_name": "Test_Computer-01",
+					"location": "Test Location",
+					"is_composite_asset": 1,
+					"asset_quantity": 1,
+					"purchase_date": nowdate()
+				}).insert()
 
-		item_name = ["Test_Monitor-1", "Test_Keyboard-1", "Test_Mouse-1"]
-		for item in item_name:
+		create_asset()
+
+		# Recursive function to create items
+		def create_items(item_list, index=0):
+			if index >= len(item_list):
+				return
+			item = item_list[index]
 			if not frappe.db.exists("Item", item):
 				item_data = {
 					"doctype": "Item",
 					"item_code": item,
 					"item_name": item,
 					"asset_category": "Test_Category",
-					"is_stock_item": 0 , # Ensure these are marked as stock items
-					"is_fixed_asset":1,
-					"auto_create_assets":1,
-					"is_grouped_asset":1
+					"is_stock_item": 0,  # Ensure these are marked as stock items
+					"is_fixed_asset": 1,
+					"auto_create_assets": 1,
+					"is_grouped_asset": 1
 				}
-
-				# Check if 'gst_hsn_code' exists in Item doctype
 				if frappe.db.has_column("Item", "gst_hsn_code"):
-					item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
-
+					item_data["gst_hsn_code"] = "01011010"
 				frappe.get_doc(item_data).insert()
+			create_items(item_list, index + 1)
+
+		create_items(["Test_Monitor-1", "Test_Keyboard-1", "Test_Mouse-1"])
 
 		# Define stock items
 		stock_items = [
-			{"item_code": "Test_Monitor-01", "item_name": "Test_Monitor-01", "warehouse": "_Test Warehouse - _TC", "stock_qty": 1, "stock_uom": "Nos", "valuation_rate": 5000, "amount": 5000,"cost_center": "_Test Cost Center - _TC"},
-			{"item_code": "Test_Keyboard-01", "item_name": "Test_Keyboard-01", "warehouse": "_Test Warehouse - _TC", "stock_qty": 1, "stock_uom": "Nos", "valuation_rate": 4000, "amount": 4000,"cost_center": "_Test Cost Center - _TC"},
-			{"item_code": "Test_Mouse-01", "item_name": "Test_Mouse-01", "warehouse": "_Test Warehouse - _TC", "stock_qty": 1, "stock_uom": "Nos", "valuation_rate": 1000, "amount": 1000,"cost_center": "_Test Cost Center - _TC"},
+			{"item_code": "Test_Monitor-01", "item_name": "Test_Monitor-01", "warehouse": "_Test Warehouse - _TC", "stock_qty": 1, "stock_uom": "Nos", "valuation_rate": 5000, "amount": 5000, "cost_center": "_Test Cost Center - _TC"},
+			{"item_code": "Test_Keyboard-01", "item_name": "Test_Keyboard-01", "warehouse": "_Test Warehouse - _TC", "stock_qty": 1, "stock_uom": "Nos", "valuation_rate": 4000, "amount": 4000, "cost_center": "_Test Cost Center - _TC"},
+			{"item_code": "Test_Mouse-01", "item_name": "Test_Mouse-01", "warehouse": "_Test Warehouse - _TC", "stock_qty": 1, "stock_uom": "Nos", "valuation_rate": 1000, "amount": 1000, "cost_center": "_Test Cost Center - _TC"},
 		]
 
-		# Define service items
-		service_items = [
-			{
-				"item_code": "Test Service Item",
-				"expense_account": "Expenses Included In Valuation - _TC",
-				"uom": "Nos",
-				"amount": 5000,
-				"cost_center": "_Test Cost Center - _TC"
-			}
-		]
+		service_items = [{"item_code": "Test Service Item", "expense_account": "Expenses Included In Valuation - _TC", "uom": "Nos", "amount": 5000, "cost_center": "_Test Cost Center - _TC"}]
 
-		# Calculate totals
 		stock_items_total = sum(item["amount"] for item in stock_items)
 		service_items_total = sum(item["amount"] for item in service_items)
-		asset_items_total = 0  # Adjust if you need asset items
-		# Create and submit Purchase Orders for each stock item
+		asset_items_total = 0
+
 		supplier = "_Test Supplier"
 		purchase_orders = []
-		for item in stock_items:
+
+		def create_purchase_order(index=0):
+			if index >= len(stock_items):
+				return
+			item = stock_items[index]
 			po = frappe.get_doc({
 				"doctype": "Purchase Order",
 				"company": "_Test Company",
@@ -342,10 +369,16 @@ class TestAssetCapitalization(unittest.TestCase):
 			}).insert()
 			po.submit()
 			purchase_orders.append(po)
+			create_purchase_order(index + 1)
 
-		# Create and submit Purchase Receipts for each Purchase Order
+		create_purchase_order()
+
 		purchase_receipts = []
-		for po in purchase_orders:
+
+		def create_purchase_receipt(index=0):
+			if index >= len(purchase_orders):
+				return
+			po = purchase_orders[index]
 			pr = frappe.get_doc({
 				"doctype": "Purchase Receipt",
 				"company": "_Test Company",
@@ -360,9 +393,14 @@ class TestAssetCapitalization(unittest.TestCase):
 			}).insert()
 			pr.submit()
 			purchase_receipts.append(pr)
+			create_purchase_receipt(index + 1)
 
-		# Create and submit Purchase Invoices for each Purchase Receipt
-		for pr in purchase_receipts:
+		create_purchase_receipt()
+
+		def create_purchase_invoice(index=0):
+			if index >= len(purchase_receipts):
+				return
+			pr = purchase_receipts[index]
 			pi = frappe.get_doc({
 				"doctype": "Purchase Invoice",
 				"company": "_Test Company",
@@ -376,9 +414,10 @@ class TestAssetCapitalization(unittest.TestCase):
 				}]
 			}).insert()
 			pi.submit()
+			create_purchase_invoice(index + 1)
 
-		
-		# Create Asset Capitalization
+		create_purchase_invoice()
+
 		asset_capitalize = frappe.get_doc({
 			"doctype": "Asset Capitalization",
 			"company": "_Test Company",
@@ -386,7 +425,7 @@ class TestAssetCapitalization(unittest.TestCase):
 			"capitalization_method": "Create a new composite asset",
 			"target_item_code": target_asset_name,
 			"target_warehouse": "_Test Warehouse - _TC",
-			"target_asset_location":"Test Location",
+			"target_asset_location": "Test Location",
 			"target_asset": target_asset_name,
 			"posting_date": nowdate(),
 			"posting_time": frappe.utils.now(),
@@ -395,18 +434,15 @@ class TestAssetCapitalization(unittest.TestCase):
 			"stock_items_total": stock_items_total,
 			"total_value": stock_items_total + asset_items_total + service_items_total,
 			"target_incoming_rate": stock_items_total + asset_items_total + service_items_total,
-			})
+		})
 
-		# Override validate method temporarily for this test
 		def dummy_validate(self):
 			pass
 
-		# Temporarily override validate method to do nothing
 		asset_capitalize.validate = dummy_validate.__get__(asset_capitalize)
-
-		# Insert and save the document
 		asset_capitalize.insert()
 		asset_capitalize.submit()
+
 
 	def test_capitalization_with_perpetual_inventory(self):
 		company = "_Test Company with perpetual inventory"
