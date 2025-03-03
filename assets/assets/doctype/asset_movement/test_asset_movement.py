@@ -1991,7 +1991,6 @@ class TestAssetMovement(unittest.TestCase):
 			asset.submit()
 			assets.append(asset.name)
 
-		frappe.db.commit()
 
 		# Create Issue Type Asset Movement
 		issue_movement = frappe.get_doc({
@@ -2007,11 +2006,9 @@ class TestAssetMovement(unittest.TestCase):
 		})
 		issue_movement.insert()
 		issue_movement.submit()
-		frappe.db.commit()
 
 		# Cancel the Issue Movement
 		issue_movement.cancel()
-		frappe.db.commit()
 
 		# Create Transfer Type Asset Movement using the same assets
 		transfer_movement = frappe.get_doc({
@@ -2027,7 +2024,6 @@ class TestAssetMovement(unittest.TestCase):
 		})
 		transfer_movement.insert()
 		transfer_movement.submit()
-		frappe.db.commit()
 
 	# TC_FA_150
 	def test_single_asset_movement_with_purposetype_transfer_issue_150(self):
@@ -2082,8 +2078,6 @@ class TestAssetMovement(unittest.TestCase):
 		}).insert()
 		asset.submit()
 
-		frappe.db.commit()
-
 		# Create Issue Type Asset Movement (Single Asset Tagged)
 		issue_movement = frappe.get_doc({
 			"doctype": "Asset Movement",
@@ -2098,11 +2092,9 @@ class TestAssetMovement(unittest.TestCase):
 		})
 		issue_movement.insert()
 		issue_movement.submit()
-		frappe.db.commit()
 
 		# Cancel the Issue Movement
 		issue_movement.cancel()
-		frappe.db.commit()
 
 		# Create Transfer Type Asset Movement (Same Single Asset)
 		transfer_movement = frappe.get_doc({
@@ -2118,7 +2110,6 @@ class TestAssetMovement(unittest.TestCase):
 		})
 		transfer_movement.insert()
 		transfer_movement.submit()
-		frappe.db.commit()
 
 	# TC_FA_151
 	def test_multiple_asset_movement_with_purposetype_transfer_issue_151(self):
@@ -2173,8 +2164,6 @@ class TestAssetMovement(unittest.TestCase):
 		}).insert()
 		asset.submit()
 
-		frappe.db.commit()
-
 		# Create Issue Type Asset Movement (Single Asset Tagged)
 		issue_movement = frappe.get_doc({
 			"doctype": "Asset Movement",
@@ -2189,11 +2178,9 @@ class TestAssetMovement(unittest.TestCase):
 		})
 		issue_movement.insert()
 		issue_movement.submit()
-		frappe.db.commit()
 
 		# Cancel the Issue Movement
 		issue_movement.cancel()
-		frappe.db.commit()
 
 		# Create Transfer Type Asset Movement (Same Single Asset)
 		transfer_movement = frappe.get_doc({
@@ -2209,11 +2196,9 @@ class TestAssetMovement(unittest.TestCase):
 		})
 		transfer_movement.insert()
 		transfer_movement.submit()
-		frappe.db.commit()
 
 		# Cancel the Issue Movement
 		transfer_movement.cancel()
-		frappe.db.commit()
 
 	# TC_FA_152
 	def test_single_asset_movement_with_purposetype_transfer_issue_152(self):
@@ -2267,7 +2252,6 @@ class TestAssetMovement(unittest.TestCase):
 			"purchase_date": "2024-04-01"
 		}).insert()
 		asset.submit()
-		frappe.db.commit()
 
 		# Create a single asset movement (either Issue or Transfer)
 		asset_movement = frappe.get_doc({
@@ -2283,11 +2267,9 @@ class TestAssetMovement(unittest.TestCase):
 		})
 		asset_movement.insert()
 		asset_movement.submit()
-		frappe.db.commit()
 
 		# Cancel the movement
 		asset_movement.cancel()
-		frappe.db.commit()
 
 	# TC_FA_153
 	def test_multiple_asset_movement_with_purposetype_transfer_issue_cancel_TC_FA_153(self):
@@ -2347,7 +2329,6 @@ class TestAssetMovement(unittest.TestCase):
 			asset.submit()
 			assets.append(asset.name)
 
-		frappe.db.commit()
 
 		# Create Issue Type Asset Movement
 		issue_movement = frappe.get_doc({
@@ -2363,11 +2344,9 @@ class TestAssetMovement(unittest.TestCase):
 		})
 		issue_movement.insert()
 		issue_movement.submit()
-		frappe.db.commit()
 
 		# Cancel the Issue Movement
 		issue_movement.cancel()
-		frappe.db.commit()
 
 		# Create Transfer Type Asset Movement using the same assets
 		transfer_movement = frappe.get_doc({
@@ -2382,11 +2361,9 @@ class TestAssetMovement(unittest.TestCase):
 		})
 		transfer_movement.insert()
 		transfer_movement.submit()
-		frappe.db.commit()
 
 		# Cancel the Transfer Movement
 		transfer_movement.cancel()
-		frappe.db.commit()
 
 	# TC_FA_154
 	def test_single_asset_movement_with_purposetype_transfer_issue_cancel_TC_FA_154(self):
@@ -2442,7 +2419,6 @@ class TestAssetMovement(unittest.TestCase):
 			"purchase_date": "2024-04-01"
 		}).insert()
 		asset.submit()
-		frappe.db.commit()
 
 		# Create Issue Type Asset Movement
 		issue_movement = frappe.get_doc({
@@ -2458,11 +2434,9 @@ class TestAssetMovement(unittest.TestCase):
 		})
 		issue_movement.insert()
 		issue_movement.submit()
-		frappe.db.commit()
 
 		# Cancel the Issue Movement
 		issue_movement.cancel()
-		frappe.db.commit()
 
 		# Create Transfer Type Asset Movement
 		transfer_movement = frappe.get_doc({
@@ -2477,11 +2451,9 @@ class TestAssetMovement(unittest.TestCase):
 		})
 		transfer_movement.insert()
 		transfer_movement.submit()
-		frappe.db.commit()
 
 		# Cancel the Transfer Movement
 		transfer_movement.cancel()
-		frappe.db.commit()
 
 
 

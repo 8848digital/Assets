@@ -1947,119 +1947,20 @@ class TestAsset(AssetSetup):
 
 		self.assertRaises(frappe.MandatoryError, asset.save)
 	
-	# TC_FA_135
-	def test_create_pi_and_debit_note_TC_FA_135(self):
-		"""
-		Function to create and submit a Purchase Order and Purchase Invoice,
-		then create a Debit Note/Return when an asset is auto-created.
-		"""
-		company = "_Test Company"
-		supplier = "_Test Supplier"
-		item_code = "Test_USB_Wire"
-		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
-		required_by_date = nowdate()
-
-		# Ensure prerequisites exist
-		if not frappe.db.exists("Company", company):
-			create_child_company()
-
-		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"is_stock_item": 0,
-				"is_fixed_asset": 1,
-				"gst_hsn_code": "01011010",
-				"auto_create_assets": 1,
-				"asset_category": "Test_Category",
-				"asset_naming_series": "ACC-ASS-.YYYY.-"
-			}).insert()
-
-		# Create and submit Purchase Invoice
-		pi = frappe.get_doc({
-			"doctype": "Purchase Invoice",
-			"company": company,
-			"supplier": supplier,
-			"update_stock": 1,  # Update stock
-			"posting_date": nowdate(),
-			"items": [
-				{
-					"item_code": item_code,
-					"qty": qty,
-					"rate": rate,
-					"location": "Test Location",  # Linking the correct warehouse
-					"asset_location": "Test Location",  # Specifying asset location
-					"expense_account": "_Test Account Cost for Goods Sold - _TC"
-				}
-			]
-		})
-		pi.insert()
-		pi.submit()
-		frappe.db.commit()
-
-		# Create Debit Note / Return
-		debit_note = frappe.get_doc({
-			"doctype": "Purchase Invoice",
-			"company": company,
-			"supplier": supplier,
-			"is_return": 1,  # Mark as a return
-			"return_against": pi.name,  # Link to original Purchase Invoice
-			"items": [
-				{
-					"item_code": item_code,
-					"qty": -qty,  # Negative quantity to indicate return
-					"rate": rate,
-					"location": "Test Location",
-					"asset_location": "Test Location",
-					"expense_account": "_Test Account Cost for Goods Sold - _TC"
-				}
-			]
-		})
-		debit_note.insert()
-		debit_note.submit()
-		frappe.db.commit()
-	
-	# TC_FA_136
-	def test_create_pi_asset_and_createdebitnote__TC_FA_136(self):
-		"""
-		Function to create and submit a Purchase Order and Purchase Invoice,
-		then attempt to create a Debit Note/Return after asset submission.
-		"""
-		company = "_Test Company"
-		supplier = "_Test Supplier"
-		item_code = "Test_USB_Wire"
-		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
-		required_by_date = nowdate()
-
-		# Ensure prerequisites exist
-		if not frappe.db.exists("Company", company):
-			create_child_company()
-
-		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"is_stock_item": 0,
-				"is_fixed_asset": 1,
-				"gst_hsn_code": "01011010",
-				"auto_create_assets": 1,
-				"asset_category": "Test_Category",
-				"asset_naming_series": "ACC-ASS-.YYYY.-"
-			}).insert()
-
-		# Create and submit Purchase Invoice
+	def create_purchase_invoice(self, company, supplier, item_code, qty, rate, is_return=False, return_against=None):
+		"""Creates and submits a Purchase Invoice, optionally as a return."""
 		pi = frappe.get_doc({
 			"doctype": "Purchase Invoice",
 			"company": company,
 			"supplier": supplier,
 			"update_stock": 1,
 			"posting_date": nowdate(),
+			"is_return": is_return,
+			"return_against": return_against,
 			"items": [
 				{
 					"item_code": item_code,
-					"qty": qty,
+					"qty": -qty if is_return else qty,
 					"rate": rate,
 					"location": "Test Location",
 					"asset_location": "Test Location",
@@ -2069,31 +1970,37 @@ class TestAsset(AssetSetup):
 		})
 		pi.insert()
 		pi.submit()
-		frappe.db.commit()
+		return pi
 
-		# Fetch the auto-created asset
+	def handle_asset_submission(self, item_code):
+		"""Fetches and submits an auto-created asset."""
 		asset = frappe.get_list("Asset", filters={"item_code": item_code}, fields=["name", "docstatus"])
 		if asset:
 			asset_doc = frappe.get_doc("Asset", asset[0].name)
 			asset_doc.available_for_use_date = nowdate()
-			asset_doc.submit()  # Submit the asset
-			frappe.db.commit()
+			asset_doc.submit()
+			return asset_doc
+		return None
 
-			# Cancel the asset before proceeding with the return
+	def cancel_asset(self, asset_doc):
+		"""Cancels an asset document."""
+		if asset_doc:
 			asset_doc.cancel()
-			frappe.db.commit()
-
-		# Create the Debit Note / Return
-		debit_note = frappe.get_doc({
+	
+	def create_purchase_invoice(self, company, supplier, item_code, qty, rate, is_return=False, return_against=None):
+		"""Creates and submits a Purchase Invoice, optionally as a return."""
+		pi = frappe.get_doc({
 			"doctype": "Purchase Invoice",
 			"company": company,
 			"supplier": supplier,
-			"is_return": 1,
-			"return_against": pi.name,
+			"update_stock": 1,
+			"posting_date": nowdate(),
+			"is_return": is_return,
+			"return_against": return_against,
 			"items": [
 				{
 					"item_code": item_code,
-					"qty": -qty,
+					"qty": -qty if is_return else qty,
 					"rate": rate,
 					"location": "Test Location",
 					"asset_location": "Test Location",
@@ -2101,10 +2008,74 @@ class TestAsset(AssetSetup):
 				}
 			]
 		})
-		debit_note.insert()
-		debit_note.submit()
-		frappe.db.commit()
-	
+		pi.insert()
+		pi.submit()
+		return pi
+
+	def handle_asset_submission(self, item_code):
+		"""Fetches and submits an auto-created asset."""
+		asset = frappe.get_list("Asset", filters={"item_code": item_code}, fields=["name", "docstatus"])
+		if asset:
+			asset_doc = frappe.get_doc("Asset", asset[0].name)
+			asset_doc.available_for_use_date = nowdate()
+			asset_doc.submit()
+			return asset_doc
+		return None
+
+	def cancel_asset(self, asset_doc):
+		"""Cancels an asset document."""
+		if asset_doc:
+			asset_doc.cancel()
+			
+	# TC_FA_135
+	def test_create_pi_and_debit_note_TC_FA_135(self):
+		"""Test case to create a PI and a Debit Note when an asset is auto-created."""
+		company, supplier, item_code, qty, rate = "_Test Company", "_Test Supplier", "Test_USB_Wire", 1, 500
+
+		if not frappe.db.exists("Company", company):
+			self.create_child_company()
+		
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_stock_item": 0,
+				"is_fixed_asset": 1,
+				"gst_hsn_code": "01011010",
+				"auto_create_assets": 1,
+				"asset_category": "Test_Category",
+				"asset_naming_series": "ACC-ASS-.YYYY.-"
+			}).insert()
+		
+		pi = self.create_purchase_invoice(company, supplier, item_code, qty, rate)
+		self.create_purchase_invoice(company, supplier, item_code, qty, rate, is_return=True, return_against=pi.name)
+
+	# TC_FA_136
+	def test_create_pi_asset_and_createdebitnote_TC_FA_136(self):  # FIXED: Added `self`
+		"""Test case to create a PI, submit an asset, cancel it, and then create a Debit Note."""
+		company, supplier, item_code, qty, rate = "_Test Company", "_Test Supplier", "Test_USB_Wire", 1, 500
+		
+		if not frappe.db.exists("Company", company):
+			self.create_child_company()
+		
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_stock_item": 0,
+				"is_fixed_asset": 1,
+				"gst_hsn_code": "01011010",
+				"auto_create_assets": 1,
+				"asset_category": "Test_Category",
+				"asset_naming_series": "ACC-ASS-.YYYY.-"
+			}).insert()
+		
+		pi = self.create_purchase_invoice(company, supplier, item_code, qty, rate)
+		asset_doc = self.handle_asset_submission(item_code)
+		self.cancel_asset(asset_doc)
+		self.create_purchase_invoice(company, supplier, item_code, qty, rate, is_return=True, return_against=pi.name)
 
 	def test_pr_or_pi_mandatory_if_not_existing_asset(self):
 		"""Tests if either PI or PR is present if CWIP is enabled and is_existing_asset=0."""
