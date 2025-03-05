@@ -177,3 +177,41 @@ frappe.ui.form.on("Asset Repair Consumed Item", {
 		);
 	},
 });
+
+frappe.ui.form.on("Asset Repair Purchase Invoice", {
+    purchase_invoice: function(frm, cdt, cdn) {
+        let row = locals[cdt][cdn];
+        if (row.purchase_invoice) {
+            frappe.call({
+                method: "assets.assets.doctype.asset_repair.asset_repair.get_expense_account",
+                args: {
+                    purchase_invoice: row.purchase_invoice
+                },
+                callback: function(r) {
+                    if (r.message) {
+                        frappe.model.set_value(cdt, cdn, "expense_account", r.message.expense_account);
+                        frappe.model.set_value(cdt, cdn, "repair_cost", r.message.amount);
+
+                        // Update the parent repair_cost field
+                        update_total_repair_cost(frm);
+                    }
+                }
+            });
+        }
+    },
+
+    repair_cost: function(frm, cdt, cdn) {
+        update_total_repair_cost(frm);
+    }
+});
+
+// Function to update the total repair cost in the parent doctype
+function update_total_repair_cost(frm) {
+    let total_repair_cost = 0;
+    frm.doc.invoices.forEach(row => {
+        total_repair_cost += row.repair_cost || 0;
+    });
+
+    frm.set_value("repair_cost", total_repair_cost);
+    frm.refresh_field("repair_cost");
+}
