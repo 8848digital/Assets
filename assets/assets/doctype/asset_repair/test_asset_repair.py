@@ -136,7 +136,7 @@ class TestAssetRepair(unittest.TestCase):
 			# Check if 'gst_hsn_code' exists in Item doctype
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
-
+			frappe.get_doc(item_data).insert()
 		
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -167,7 +167,6 @@ class TestAssetRepair(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 
 		company = "_Test Company"
 		supplier = "_Test Supplier"
@@ -193,7 +192,6 @@ class TestAssetRepair(unittest.TestCase):
 		})
 		pi.insert()
 		pi.submit()
-		frappe.db.commit()
 	
 		asset_repair = frappe.get_doc({
 			"doctype": "Asset Repair",
@@ -212,7 +210,6 @@ class TestAssetRepair(unittest.TestCase):
 
 		}).insert()
 		asset_repair.submit()
-		frappe.db.commit()
 
 	# TC_FA_137
 	def test_pending_asset_repair_submit_on_complete_status_TC_FA_137(self):
