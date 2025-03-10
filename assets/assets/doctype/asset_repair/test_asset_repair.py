@@ -486,9 +486,9 @@ class TestAssetRepair(unittest.TestCase):
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
-				"is_stock_item": 0,  # FIX: Ensuring it is a non-stock item
-				"is_fixed_asset": 1,  # Marking as fixed asset
-				"is_purchase_item": 1,  # Allow purchase of this asset
+				"is_stock_item": 0,
+				"is_fixed_asset": 1,
+				"is_purchase_item": 1,
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category": "Test_Category",
 				"item_group": "Raw Material",
@@ -497,7 +497,7 @@ class TestAssetRepair(unittest.TestCase):
 
 			# Check if 'gst_hsn_code' exists in Item doctype
 			if frappe.db.has_column("Item", "gst_hsn_code"):
-				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+				item_data["gst_hsn_code"] = "01011010"
 			frappe.get_doc(item_data).insert()
 		
 		# Create Asset (Non-Stock)
@@ -532,6 +532,8 @@ class TestAssetRepair(unittest.TestCase):
 			]
 		}).insert()
 		target_asset.submit()
+		self.assertEqual(target_asset.company, company)
+		self.assertEqual(target_asset.item_code, item_code)
 
 		# Create Purchase Invoice (for Non-Stock Asset)
 		supplier = "_Test Supplier"
@@ -541,33 +543,37 @@ class TestAssetRepair(unittest.TestCase):
 			"doctype": "Purchase Invoice",
 			"company": company,
 			"supplier": supplier,
-			"update_stock": 0,  # FIX: No stock update for non-stock item
+			"update_stock": 0,
 			"posting_date": nowdate(),
 			"items": [
 				{
 					"item_code": item_code,
 					"qty": qty,
 					"rate": rate,
-					"location": "Test Location",  # Linking the correct warehouse
-					"asset_location": "Test Location",  # Specifying asset location
+					"location": "Test Location",
+					"asset_location": "Test Location",
 					"expense_account": "_Test Account Cost for Goods Sold - _TC",
 				}
 			]
 		})
 		pi.insert()
 		pi.submit()
+		self.assertEqual(pi.company, company)
+		self.assertEqual(pi.supplier, supplier)
 
 		# Create Asset Repair
 		asset_repair = frappe.get_doc({
 			"doctype": "Asset Repair",
-			"asset": target_asset.name,  # Using asset name instead of object
+			"asset": target_asset.name,
 			"company": company,
 			"failure_date": "17-01-2025 14:49:20",
 			"completion_date": "17-01-2025 14:52:22",
 			"repair_status": "Completed",
+			"capitalize_repair_cost": 1,  # Directly setting the value
+			"stock_consumption": 1,
 			"invoices": [
 				{
-					"purchase_invoice": pi.name,  # Using .name instead of object
+					"purchase_invoice": pi.name,
 					"expense_account": "Service - _TC",
 					"repair_cost": 10000,
 				}
@@ -576,6 +582,8 @@ class TestAssetRepair(unittest.TestCase):
 		frappe.db.set_value("Asset Repair", asset_repair.name, "capitalize_repair_cost", 1)
 		frappe.db.set_value("Asset Repair", asset_repair.name, "stock_consumption", 1)
 		asset_repair.submit()
+		self.assertEqual(asset_repair.company, company)
+		self.assertEqual(asset_repair.repair_status, "Completed")
 		
 	def test_update_status(self):
 		asset = create_asset(submit=1)
