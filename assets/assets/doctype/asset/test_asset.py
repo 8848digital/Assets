@@ -1192,6 +1192,8 @@ class TestAsset(AssetSetup):
 				"asset_quantity": 1,
 				"purchase_date": nowdate()
 			}).insert()
+			self.assertEqual(target_asset.company, "_Test Company")
+			self.assertEqual(target_asset.asset_name, "Test_Computer-01")
 
 		item_name = ["Test_Monitor-01", "Test_Keyboard-01", "Test_Mouse-01"]
 		for item in item_name:
@@ -1209,6 +1211,7 @@ class TestAsset(AssetSetup):
 					item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
 				frappe.get_doc(item_data).insert()
 
+				self.assertEqual(item_data.item_code, item)
 
 		# Define stock items
 		stock_items = [
@@ -1251,6 +1254,9 @@ class TestAsset(AssetSetup):
 			po.submit()
 			purchase_orders.append(po)
 
+			self.assertEqual(po.company, "_Test Company")
+			self.assertEqual(po.supplier, "_Test Supplier")
+
 		# Create and submit Purchase Receipts for each Purchase Order
 		purchase_receipts = []
 		for po in purchase_orders:
@@ -1269,6 +1275,9 @@ class TestAsset(AssetSetup):
 			pr.submit()
 			purchase_receipts.append(pr)
 
+			self.assertEqual(pr.company, "_Test Company")
+			self.assertEqual(pr.supplier, "_Test Supplier")
+
 		# Create and submit Purchase Invoices for each Purchase Receipt
 		for pr in purchase_receipts:
 			pi = frappe.get_doc({
@@ -1284,6 +1293,9 @@ class TestAsset(AssetSetup):
 				}]
 			}).insert()
 			pi.submit()
+
+			self.assertEqual(pi.company, "_Test Company")
+			self.assertEqual(pi.supplier, "_Test Supplier")
 
 		
 		# Create Asset Capitalization
@@ -1315,6 +1327,8 @@ class TestAsset(AssetSetup):
 		asset_capitalize.insert()
 		asset_capitalize.submit()
 		frappe.db.commit()
+
+		self.assertEqual(asset_capitalize.company, "_Test Company")
 		
 	# TC_FA_025
 	def test_finance_book_creation_on_asset_TC_FA_025(self):
