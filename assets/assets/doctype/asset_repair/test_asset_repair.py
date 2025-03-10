@@ -499,7 +499,10 @@ class TestAssetRepair(unittest.TestCase):
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
 			frappe.get_doc(item_data).insert()
-		
+
+		# Verify item exists
+		self.assertTrue(frappe.db.exists("Item", item_code))
+
 		# Create Asset (Non-Stock)
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -533,6 +536,10 @@ class TestAssetRepair(unittest.TestCase):
 		}).insert()
 		target_asset.submit()
 
+		# Verify asset exists and is submitted
+		self.assertTrue(frappe.db.exists("Asset", target_asset.name))
+		self.assertEqual(frappe.db.get_value("Asset", target_asset.name, "docstatus"), 1)
+
 		# Create Purchase Invoice (for Non-Stock Asset)
 		supplier = "_Test Supplier"
 		qty, rate = 1, 500
@@ -557,6 +564,10 @@ class TestAssetRepair(unittest.TestCase):
 		pi.insert()
 		pi.submit()
 
+		# Verify purchase invoice exists and is submitted
+		self.assertTrue(frappe.db.exists("Purchase Invoice", pi.name))
+		self.assertEqual(frappe.db.get_value("Purchase Invoice", pi.name, "docstatus"), 1)
+
 		# Create Asset Repair
 		asset_repair = frappe.get_doc({
 			"doctype": "Asset Repair",
@@ -575,6 +586,14 @@ class TestAssetRepair(unittest.TestCase):
 		}).insert()
 		frappe.db.set_value("Asset Repair", asset_repair.name, "stock_consumption", 1)
 		asset_repair.submit()
+
+		# Verify asset repair exists and is submitted
+		self.assertTrue(frappe.db.exists("Asset Repair", asset_repair.name))
+		self.assertEqual(frappe.db.get_value("Asset Repair", asset_repair.name, "docstatus"), 1)
+
+		# Verify stock consumption field is set correctly
+		self.assertEqual(frappe.db.get_value("Asset Repair", asset_repair.name, "stock_consumption"), 1)
+
 		
 	def test_update_status(self):
 		asset = create_asset(submit=1)
