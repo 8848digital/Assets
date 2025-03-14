@@ -9,7 +9,7 @@ from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle 
 	get_serial_nos_from_bundle,
 	make_serial_batch_bundle,
 )
-from frappe.utils import flt, nowdate, nowtime, today
+from frappe.utils import flt, nowdate, nowtime, today,now_datetime
 from erpnext.setup.doctype.company.test_company import create_child_company
 from assets.assets.doctype.asset.asset import (
 	get_asset_account,
@@ -499,7 +499,7 @@ class TestAssetRepair(unittest.TestCase):
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"
 			frappe.get_doc(item_data).insert()
-		
+
 		# Create Asset (Non-Stock)
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -509,11 +509,11 @@ class TestAssetRepair(unittest.TestCase):
 			"asset_category": "Test_Category",
 			"location": "Test Location",
 			"is_existing_asset": 1,
-			"available_for_use_date": "02-04-2024",
+			"available_for_use_date": nowdate(),  # Dynamic date
 			"gross_purchase_amount": 8000,
 			"total_asset": 8000,
 			"asset_quantity": 2,
-			"purchase_date": "01-04-2024",
+			"purchase_date": nowdate(),  # Dynamic date
 			"calculate_depreciation": 0,
 			"opening_accumulated_depreciation": 8000,
 			"opening_number_of_booked_depreciations": 8,
@@ -524,7 +524,7 @@ class TestAssetRepair(unittest.TestCase):
 					"finance_book": "2024-2025",
 					"frequency_of_depreciation": 1,
 					"depreciation_method": "Straight Line",
-					"depreciation_start_date": "01-06-2025",
+					"depreciation_start_date": nowdate(),  # Dynamic date
 					"total_number_of_depreciations": 12,
 					"total_number_of_booked_depreciations": 7,
 					"value_after_depreciation": 5000,
@@ -566,8 +566,8 @@ class TestAssetRepair(unittest.TestCase):
 			"doctype": "Asset Repair",
 			"asset": target_asset.name,
 			"company": company,
-			"failure_date": "17-01-2025 14:49:20",
-			"completion_date": "17-01-2025 14:52:22",
+			"failure_date": now_datetime().strftime("%d-%m-%Y %H:%M:%S"),  # Dynamic date & time
+			"completion_date": now_datetime().strftime("%d-%m-%Y %H:%M:%S"),  # Dynamic date & time
 			"repair_status": "Completed",
 			"capitalize_repair_cost": 1,  # Directly setting the value
 			"stock_consumption": 1,
