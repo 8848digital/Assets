@@ -30,6 +30,7 @@ from frappe.utils import (
 	getdate,
 	is_last_day_of_the_month,
 	nowdate,
+	now_datetime,
 )
 import frappe.utils
 from frappe.utils.data import add_to_date
@@ -1190,7 +1191,7 @@ class TestAsset(AssetSetup):
 				"location": "Test Location",
 				"is_composite_asset": 1,
 				"asset_quantity": 1,
-				"purchase_date": nowdate()
+				"purchase_date": now_datetime().strftime("%Y-%m-%d")
 			}).insert()
 			self.assertEqual(target_asset.company, "_Test Company")
 			self.assertEqual(target_asset.asset_name, "Test_Computer-01")
@@ -1211,7 +1212,7 @@ class TestAsset(AssetSetup):
 					item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
 				frappe.get_doc(item_data).insert()
 
-				self.assertEqual(item_data.item_code, item)
+				self.assertEqual(item_data["item_code"], item)
 
 		# Define stock items
 		stock_items = [
@@ -1247,7 +1248,7 @@ class TestAsset(AssetSetup):
 					"item_code": item["item_code"],
 					"qty": item["stock_qty"],
 					"rate": item["valuation_rate"],
-					"schedule_date": nowdate(),
+					"schedule_date": now_datetime().strftime("%Y-%m-%d"),
 					"warehouse": "_Test Warehouse - _TC"
 				}]
 			}).insert()
@@ -1264,7 +1265,7 @@ class TestAsset(AssetSetup):
 				"doctype": "Purchase Receipt",
 				"company": "_Test Company",
 				"supplier": supplier,
-				"posting_date": nowdate(),
+				"posting_date": now_datetime().strftime("%Y-%m-%d"),
 				"items": [{
 					"item_code": po.items[0].item_code,
 					"qty": po.items[0].qty,
@@ -1297,7 +1298,6 @@ class TestAsset(AssetSetup):
 			self.assertEqual(pi.company, "_Test Company")
 			self.assertEqual(pi.supplier, "_Test Supplier")
 
-		
 		# Create Asset Capitalization
 		asset_capitalize = frappe.get_doc({
 			"doctype": "Asset Capitalization",
@@ -1305,16 +1305,16 @@ class TestAsset(AssetSetup):
 			"entry_type": "Decapitalization",
 			"capitalization_method": "Create a new composite asset",
 			"target_item_code": target_asset_name,
-			"target_asset_location":"Test Location",
+			"target_asset_location": "Test Location",
 			"target_asset": target_asset_name,
-			"posting_date": nowdate(),
+			"posting_date": now_datetime().strftime("%Y-%m-%d"),
 			"posting_time": frappe.utils.now(),
 			"stock_items": stock_items,
 			"service_items": service_items,
 			"stock_items_total": stock_items_total,
 			"total_value": stock_items_total + asset_items_total + service_items_total,
 			"target_incoming_rate": stock_items_total + asset_items_total + service_items_total,
-			})
+		})
 
 		# Override validate method temporarily for this test
 		def dummy_validate(self):
