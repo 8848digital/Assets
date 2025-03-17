@@ -1326,7 +1326,6 @@ class TestAsset(AssetSetup):
 		# Insert and save the document
 		asset_capitalize.insert()
 		asset_capitalize.submit()
-		frappe.db.commit()
 
 		self.assertEqual(asset_capitalize.company, "_Test Company")
 		
