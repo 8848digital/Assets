@@ -470,8 +470,8 @@ class TestAssetRepair(unittest.TestCase):
 		}).insert()
 		asset_repair.submit()
 
-	# TC_FA_141
-	def test_stock_consumption_cost_asset_repair_submit_on_complete_status_TC_FA_141(self):
+	# TC_FA_140
+	def test_capitalize_repair_cost_asset_repair_submit_on_complete_status_TC_FA_140(self):
 		company = "_Test Company"
 		item_code = "Test_asset_nostock_repair_item1"
 		asset_name = "Test_asset_maintainance"
@@ -486,9 +486,10 @@ class TestAssetRepair(unittest.TestCase):
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
-				"is_stock_item": 0,  # FIX: Ensuring it is a non-stock item
-				"is_fixed_asset": 1,  # Marking as fixed asset
-				"is_purchase_item": 1,  # Allow purchase of this asset
+				"is_stock_item": 0,
+				"is_fixed_asset": 1,
+				"is_purchase_item": 1,
+
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category": "Test_Category",
 				"item_group": "Raw Material",
@@ -543,10 +544,11 @@ class TestAssetRepair(unittest.TestCase):
 			]
 		}).insert()
 		target_asset.submit()
+		self.assertEqual(target_asset.company, company)
+		self.assertEqual(target_asset.total_asset, 8000)
+		self.assertEqual(target_asset.asset_quantity, 2)
+		self.assertEqual(target_asset.is_fully_depreciated, 1)
 
-		# Verify asset exists and is submitted
-		self.assertTrue(frappe.db.exists("Asset", target_asset.name))
-		self.assertEqual(frappe.db.get_value("Asset", target_asset.name, "docstatus"), 1)
 
 		# Create Purchase Invoice (for Non-Stock Asset)
 		supplier = "_Test Supplier"
@@ -556,52 +558,50 @@ class TestAssetRepair(unittest.TestCase):
 			"doctype": "Purchase Invoice",
 			"company": company,
 			"supplier": supplier,
-			"update_stock": 0,  # FIX: No stock update for non-stock item
-			"posting_date": today,
+			"update_stock": 0,
+			"posting_date": nowdate(),
+
 			"items": [
 				{
 					"item_code": item_code,
 					"qty": qty,
 					"rate": rate,
-					"location": "Test Location",  # Linking the correct warehouse
-					"asset_location": "Test Location",  # Specifying asset location
+					"location": "Test Location",
+					"asset_location": "Test Location",
 					"expense_account": "_Test Account Cost for Goods Sold - _TC",
 				}
 			]
 		})
 		pi.insert()
 		pi.submit()
-
-		# Verify purchase invoice exists and is submitted
-		self.assertTrue(frappe.db.exists("Purchase Invoice", pi.name))
-		self.assertEqual(frappe.db.get_value("Purchase Invoice", pi.name, "docstatus"), 1)
+	
+		self.assertEqual(pi.items[0].item_code, item_code)
+		self.assertEqual(pi.items[0].qty, qty)
+		self.assertEqual(pi.items[0].rate, rate)
 
 		# Create Asset Repair
 		asset_repair = frappe.get_doc({
 			"doctype": "Asset Repair",
-			"asset": target_asset.name,  # Using asset name instead of object
+			"asset": target_asset.name,
 			"company": company,
-			"failure_date": failure_date,
-			"completion_date": completion_date,
+			"failure_date": "17-01-2025 14:49:20",
+			"completion_date": "17-01-2025 14:52:22",
+      "capitalize_repair_cost": 1,
 			"repair_status": "Completed",
 			"invoices": [
 				{
-					"purchase_invoice": pi.name,  # Using .name instead of object
+					"purchase_invoice": pi.name,
 					"expense_account": "Service - _TC",
 					"repair_cost": 10000,
 				}
 			]
 		}).insert()
-		frappe.db.set_value("Asset Repair", asset_repair.name, "stock_consumption", 1)
 		asset_repair.submit()
 
-		# Verify asset repair exists and is submitted
-		self.assertTrue(frappe.db.exists("Asset Repair", asset_repair.name))
-		self.assertEqual(frappe.db.get_value("Asset Repair", asset_repair.name, "docstatus"), 1)
-
-		# Verify stock consumption field is set correctly
-		self.assertEqual(frappe.db.get_value("Asset Repair", asset_repair.name, "stock_consumption"), 1)
-
+		self.assertEqual(asset_repair.company, company)
+		self.assertEqual(asset_repair.repair_status, "Completed")
+		self.assertEqual(asset_repair.invoices[0].purchase_invoice, pi.name)
+		self.assertEqual(asset_repair.invoices[0].repair_cost, 10000)
 
 		
 	def test_update_status(self):
