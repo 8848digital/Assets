@@ -18,7 +18,6 @@ class TestLocation(unittest.TestCase):
 				"doctype":"Location",
 				"location_name":"Test_newyork",	
 			}).insert()
-			frappe.db.commit()
 	
 	# TC_FA_089
 	def test_create_group_location_TC_FA_089(self):
@@ -34,7 +33,6 @@ class TestLocation(unittest.TestCase):
 				"location_name":"Test_parent",	
 				"parent_location":grouped_location
 			}).insert()
-			frappe.db.commit()
 
 	# TC_FA_090
 	def test_create_group_location_TC_FA_090(self):
@@ -50,7 +48,6 @@ class TestLocation(unittest.TestCase):
 				"location_name":"Test_child",	
 				"parent_location":grouped_location
 			}).insert()
-			frappe.db.commit()
 			
 	def runTest(self):
 		locations = ["Basil Farm", "Division 1", "Field 1", "Block 1"]
