@@ -1599,12 +1599,13 @@ class TestAsset(AssetSetup):
 				"is_stock_item": 0,  # Non-stock item
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category": "Test_Category"  # Link to Asset Category
-        
+			}
+
 			# Check if 'gst_hsn_code' exists in Item doctype
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+
 			frappe.get_doc(item_data).insert()
-			})
 
 		# Step 2: Create and Submit the Purchase Invoice
 		pr = frappe.get_doc({
@@ -1630,7 +1631,6 @@ class TestAsset(AssetSetup):
 			fields=["name"]
 		)
 
-		
 		asset_name = asset[0]["name"]
 		asset_doc = frappe.get_doc("Asset", asset_name)
 
@@ -1661,6 +1661,7 @@ class TestAsset(AssetSetup):
 		# Assertions or Verifications
 		self.assertEqual(asset_doc.docstatus, 2)  # Ensure Asset is canceled
 		self.assertEqual(pr.docstatus, 2)        # Ensure Purchase Invoice is canceled
+
 	
 	# TC_FA_069
 	def test_pi_cancelation_on_asset_depr_scgedule_TC_FA_069(self):
@@ -1769,7 +1770,7 @@ class TestAsset(AssetSetup):
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
 			frappe.get_doc(item_data).insert()
-			})
+			
 
 		# Step 2: Create and Submit the Purchase Invoice
 		pr = frappe.get_doc({
