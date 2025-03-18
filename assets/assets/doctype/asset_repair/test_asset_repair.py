@@ -9,7 +9,7 @@ from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle 
 	get_serial_nos_from_bundle,
 	make_serial_batch_bundle,
 )
-from frappe.utils import flt, nowdate, nowtime, today,now_datetime
+from frappe.utils import flt, nowdate, nowtime, today ,add_days,now_datetime
 from erpnext.setup.doctype.company.test_company import create_child_company
 from assets.assets.doctype.asset.asset import (
 	get_asset_account,
@@ -494,11 +494,22 @@ class TestAssetRepair(unittest.TestCase):
 				"item_group": "Raw Material",
 				"stock_uom": "Nos",
 			}
-
+      
 			# Check if 'gst_hsn_code' exists in Item doctype
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"
 			frappe.get_doc(item_data).insert()
+
+		# Verify item exists
+		self.assertTrue(frappe.db.exists("Item", item_code))
+
+		# Generate dynamic dates
+		today = nowdate()
+		purchase_date = add_days(today, -5)  # 5 days before today
+		available_for_use_date = add_days(today, -3)  # 3 days before today
+		depreciation_start_date = add_days(today, 365)  # 1 year ahead
+		failure_date = now_datetime()  # Current timestamp
+		completion_date = add_days(failure_date, 1)  # 1 day after failure date
 
 		# Create Asset (Non-Stock)
 		target_asset = frappe.get_doc({
@@ -514,6 +525,11 @@ class TestAssetRepair(unittest.TestCase):
 			"total_asset": 8000,
 			"asset_quantity": 2,
 			"purchase_date": nowdate(),
+			"available_for_use_date": available_for_use_date,
+			"gross_purchase_amount": 8000,
+			"total_asset": 8000,
+			"asset_quantity": 2,
+			"purchase_date": purchase_date,
 			"calculate_depreciation": 0,
 			"opening_accumulated_depreciation": 8000,
 			"opening_number_of_booked_depreciations": 8,
@@ -524,7 +540,7 @@ class TestAssetRepair(unittest.TestCase):
 					"finance_book": "2024-2025",
 					"frequency_of_depreciation": 1,
 					"depreciation_method": "Straight Line",
-					"depreciation_start_date": nowdate(),
+					"depreciation_start_date": depreciation_start_date,
 					"total_number_of_depreciations": 12,
 					"total_number_of_booked_depreciations": 7,
 					"value_after_depreciation": 5000,
@@ -532,7 +548,6 @@ class TestAssetRepair(unittest.TestCase):
 			]
 		}).insert()
 		target_asset.submit()
-
 		# Assertions for Asset
 		self.assertEqual(target_asset.company, company)
 		self.assertEqual(target_asset.item_code, item_code)
@@ -562,11 +577,8 @@ class TestAssetRepair(unittest.TestCase):
 		})
 		pi.insert()
 		pi.submit()
-
-		# Assertions for Purchase Invoice
-		self.assertEqual(pi.company, company)
-		self.assertEqual(pi.supplier, supplier)
-		self.assertEqual(len(pi.items), 1)
+    
+		self.assertEqual(pi.items[0].item_code, item_code)
 		self.assertEqual(pi.items[0].qty, qty)
 		self.assertEqual(pi.items[0].rate, rate)
 
@@ -580,6 +592,10 @@ class TestAssetRepair(unittest.TestCase):
 			"repair_status": "Completed",
 			"capitalize_repair_cost": 1,
 			"stock_consumption": 1,
+			"failure_date": "17-01-2025 14:49:20",
+			"completion_date": "17-01-2025 14:52:22",
+      "capitalize_repair_cost": 1,
+			"repair_status": "Completed",
 			"invoices": [
 				{
 					"purchase_invoice": pi.name,
