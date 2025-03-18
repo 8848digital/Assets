@@ -38,7 +38,7 @@ class TestAssetRepair(unittest.TestCase):
 		company = "_Test Company"
 		item_code = "Test_asset_repair_item1"
 		asset_name = "Test_asset_maintainance"
-    
+		
 		# Ensure the company exists
 		if not frappe.db.exists("Company", company):
 			create_child_company()
@@ -53,9 +53,8 @@ class TestAssetRepair(unittest.TestCase):
 				"is_fixed_asset": 1,  # Marking as fixed asset
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category": "Test_Category",
-				"item_group":"Raw Material",
-				"stock_uom":"Nos",
-
+				"item_group": "Raw Material",
+				"stock_uom": "Nos",
 			}
 
 			# Check if 'gst_hsn_code' exists in Item doctype
@@ -63,50 +62,50 @@ class TestAssetRepair(unittest.TestCase):
 				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
 			frappe.get_doc(item_data).insert()
 
+		today = nowdate()
+		
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
 			"company": company,
 			"item_code": item_code,
 			"asset_name": item_code,
-			"asset_category":"Test_Category",
+			"asset_category": "Test_Category",
 			"location": "Test Location",
-			"is_existing_asset":1,
-			"available_for_use_date":"02-04-2024",
-			"gross_purchase_amount":8000,
-			"total_asset":8000,
-			"asset_quantity":2,
-			"purchase_date":"01-04-2024",
-			"calculate_depreciation":0,
-			"opening_accumulated_depreciation":8000,
-			"opening_number_of_booked_depreciations":8,
-			"is_fully_depreciated":1,
-			"maintenance_required":1,
-			"finance_books":[{
-				"finance_book":"2024-2025",
-				"frequency_of_depreciation":1,
-				"depreciation_method":"Straight Line",
-				"depreciation_start_date":"01-06-2025",
-				"total_number_of_depreciations":12,
-				"total_number_of_booked_depreciations":7,
-				"value_after_depreciation":5000
-					}]
+			"is_existing_asset": 1,
+			"available_for_use_date": add_days(today, 1),  # Tomorrow
+			"gross_purchase_amount": 8000,
+			"total_asset": 8000,
+			"asset_quantity": 2,
+			"purchase_date": today,  # Today's date
+			"calculate_depreciation": 0,
+			"opening_accumulated_depreciation": 8000,
+			"opening_number_of_booked_depreciations": 8,
+			"is_fully_depreciated": 1,
+			"maintenance_required": 1,
+			"finance_books": [{
+				"finance_book": "2024-2025",  # Dynamic financial year
+				"frequency_of_depreciation": 1,
+				"depreciation_method": "Straight Line",
+				"depreciation_start_date": add_days(today, 365),  # One year later
+				"total_number_of_depreciations": 12,
+				"total_number_of_booked_depreciations": 7,
+				"value_after_depreciation": 5000
+			}]
 		}).insert()
 		target_asset.submit()
 
 		company = "_Test Company"
 		supplier = "_Test Supplier"
 		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
-		required_by_date = nowdate()
+		required_by_date = today
 
 		asset_repair = frappe.get_doc({
 			"doctype": "Asset Repair",
-			"asset":target_asset,
+			"asset": target_asset,
 			"company": company,
-			"failure_date":"17-01-2025 14:49:20",
-			"completion_date":"17-01-2025 14:52:22",
-			"repair_status":"Completed",
-
-
+			"failure_date": now_datetime(),  # Current date & time
+			"completion_date": add_days(now_datetime(), 1),  # Completion date as tomorrow
+			"repair_status": "Completed",
 		}).insert()
 		asset_repair.submit()
 
