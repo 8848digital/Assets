@@ -509,11 +509,11 @@ class TestAssetRepair(unittest.TestCase):
 			"asset_category": "Test_Category",
 			"location": "Test Location",
 			"is_existing_asset": 1,
-			"available_for_use_date": nowdate(),  # Dynamic date
+			"available_for_use_date": nowdate(),
 			"gross_purchase_amount": 8000,
 			"total_asset": 8000,
 			"asset_quantity": 2,
-			"purchase_date": nowdate(),  # Dynamic date
+			"purchase_date": nowdate(),
 			"calculate_depreciation": 0,
 			"opening_accumulated_depreciation": 8000,
 			"opening_number_of_booked_depreciations": 8,
@@ -524,7 +524,7 @@ class TestAssetRepair(unittest.TestCase):
 					"finance_book": "2024-2025",
 					"frequency_of_depreciation": 1,
 					"depreciation_method": "Straight Line",
-					"depreciation_start_date": nowdate(),  # Dynamic date
+					"depreciation_start_date": nowdate(),
 					"total_number_of_depreciations": 12,
 					"total_number_of_booked_depreciations": 7,
 					"value_after_depreciation": 5000,
@@ -532,8 +532,12 @@ class TestAssetRepair(unittest.TestCase):
 			]
 		}).insert()
 		target_asset.submit()
+
+		# Assertions for Asset
 		self.assertEqual(target_asset.company, company)
 		self.assertEqual(target_asset.item_code, item_code)
+		self.assertEqual(target_asset.asset_quantity, 2)
+		self.assertEqual(target_asset.total_asset, 8000)
 
 		# Create Purchase Invoice (for Non-Stock Asset)
 		supplier = "_Test Supplier"
@@ -558,18 +562,23 @@ class TestAssetRepair(unittest.TestCase):
 		})
 		pi.insert()
 		pi.submit()
+
+		# Assertions for Purchase Invoice
 		self.assertEqual(pi.company, company)
 		self.assertEqual(pi.supplier, supplier)
+		self.assertEqual(len(pi.items), 1)
+		self.assertEqual(pi.items[0].qty, qty)
+		self.assertEqual(pi.items[0].rate, rate)
 
 		# Create Asset Repair
 		asset_repair = frappe.get_doc({
 			"doctype": "Asset Repair",
 			"asset": target_asset.name,
 			"company": company,
-			"failure_date": now_datetime().strftime("%d-%m-%Y %H:%M:%S"),  # Dynamic date & time
-			"completion_date": now_datetime().strftime("%d-%m-%Y %H:%M:%S"),  # Dynamic date & time
+			"failure_date": now_datetime().strftime("%d-%m-%Y %H:%M:%S"),
+			"completion_date": now_datetime().strftime("%d-%m-%Y %H:%M:%S"),
 			"repair_status": "Completed",
-			"capitalize_repair_cost": 1,  # Directly setting the value
+			"capitalize_repair_cost": 1,
 			"stock_consumption": 1,
 			"invoices": [
 				{
@@ -579,11 +588,15 @@ class TestAssetRepair(unittest.TestCase):
 				}
 			]
 		}).insert()
-		frappe.db.set_value("Asset Repair", asset_repair.name, "capitalize_repair_cost", 1)
-		frappe.db.set_value("Asset Repair", asset_repair.name, "stock_consumption", 1)
 		asset_repair.submit()
+
+		# Assertions for Asset Repair
 		self.assertEqual(asset_repair.company, company)
 		self.assertEqual(asset_repair.repair_status, "Completed")
+		self.assertEqual(asset_repair.capitalize_repair_cost, 1)
+		self.assertEqual(asset_repair.stock_consumption, 1)
+		self.assertEqual(asset_repair.invoices[0].repair_cost, 10000)
+
 		
 	def test_update_status(self):
 		asset = create_asset(submit=1)
