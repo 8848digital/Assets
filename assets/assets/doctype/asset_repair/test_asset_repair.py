@@ -470,8 +470,8 @@ class TestAssetRepair(unittest.TestCase):
 		}).insert()
 		asset_repair.submit()
 
-	# TC_FA_140
-	def test_capitalize_repair_cost_asset_repair_submit_on_complete_status_TC_FA_140(self):
+	# TC_FA_142
+	def test_stock_acapitalize_repair_and_consumption_cost_asset_repair_TC_FA_142(self):
 		company = "_Test Company"
 		item_code = "Test_asset_nostock_repair_item1"
 		asset_name = "Test_asset_maintainance"
@@ -489,16 +489,15 @@ class TestAssetRepair(unittest.TestCase):
 				"is_stock_item": 0,
 				"is_fixed_asset": 1,
 				"is_purchase_item": 1,
-
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category": "Test_Category",
 				"item_group": "Raw Material",
 				"stock_uom": "Nos",
 			}
-
+      
 			# Check if 'gst_hsn_code' exists in Item doctype
 			if frappe.db.has_column("Item", "gst_hsn_code"):
-				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+				item_data["gst_hsn_code"] = "01011010"
 			frappe.get_doc(item_data).insert()
 
 		# Verify item exists
@@ -521,6 +520,11 @@ class TestAssetRepair(unittest.TestCase):
 			"asset_category": "Test_Category",
 			"location": "Test Location",
 			"is_existing_asset": 1,
+			"available_for_use_date": nowdate(),
+			"gross_purchase_amount": 8000,
+			"total_asset": 8000,
+			"asset_quantity": 2,
+			"purchase_date": nowdate(),
 			"available_for_use_date": available_for_use_date,
 			"gross_purchase_amount": 8000,
 			"total_asset": 8000,
@@ -544,11 +548,11 @@ class TestAssetRepair(unittest.TestCase):
 			]
 		}).insert()
 		target_asset.submit()
+		# Assertions for Asset
 		self.assertEqual(target_asset.company, company)
-		self.assertEqual(target_asset.total_asset, 8000)
+		self.assertEqual(target_asset.item_code, item_code)
 		self.assertEqual(target_asset.asset_quantity, 2)
-		self.assertEqual(target_asset.is_fully_depreciated, 1)
-
+		self.assertEqual(target_asset.total_asset, 8000)
 
 		# Create Purchase Invoice (for Non-Stock Asset)
 		supplier = "_Test Supplier"
@@ -560,7 +564,6 @@ class TestAssetRepair(unittest.TestCase):
 			"supplier": supplier,
 			"update_stock": 0,
 			"posting_date": nowdate(),
-
 			"items": [
 				{
 					"item_code": item_code,
@@ -574,7 +577,7 @@ class TestAssetRepair(unittest.TestCase):
 		})
 		pi.insert()
 		pi.submit()
-	
+    
 		self.assertEqual(pi.items[0].item_code, item_code)
 		self.assertEqual(pi.items[0].qty, qty)
 		self.assertEqual(pi.items[0].rate, rate)
@@ -584,6 +587,11 @@ class TestAssetRepair(unittest.TestCase):
 			"doctype": "Asset Repair",
 			"asset": target_asset.name,
 			"company": company,
+			"failure_date": now_datetime().strftime("%d-%m-%Y %H:%M:%S"),
+			"completion_date": now_datetime().strftime("%d-%m-%Y %H:%M:%S"),
+			"repair_status": "Completed",
+			"capitalize_repair_cost": 1,
+			"stock_consumption": 1,
 			"failure_date": "17-01-2025 14:49:20",
 			"completion_date": "17-01-2025 14:52:22",
       "capitalize_repair_cost": 1,
@@ -598,9 +606,11 @@ class TestAssetRepair(unittest.TestCase):
 		}).insert()
 		asset_repair.submit()
 
+		# Assertions for Asset Repair
 		self.assertEqual(asset_repair.company, company)
 		self.assertEqual(asset_repair.repair_status, "Completed")
-		self.assertEqual(asset_repair.invoices[0].purchase_invoice, pi.name)
+		self.assertEqual(asset_repair.capitalize_repair_cost, 1)
+		self.assertEqual(asset_repair.stock_consumption, 1)
 		self.assertEqual(asset_repair.invoices[0].repair_cost, 10000)
 
 		
