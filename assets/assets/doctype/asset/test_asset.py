@@ -3763,8 +3763,8 @@ class TestAsset(AssetSetup):
 
 		# frappe.db.commit()
 		print(f"Asset Created: {pi.name},{asset_pi.name}")
-	#TC_FA_047
-	def test_case_repair_asset_TC_FA_047(self):
+
+	def test_case_repair_asset_47(self):
 		item_code = "Test_asset1"
 		company = "_Test Company"
 		location='Test'
