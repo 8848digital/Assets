@@ -914,7 +914,6 @@ class TestAsset(AssetSetup):
 		# Insert and save the document
 		asset_capitalize.insert()
 		asset_capitalize.submit()
-		frappe.db.commit()
 	
 
 	# TC_FA_021
@@ -3073,7 +3072,6 @@ class TestAsset(AssetSetup):
 			asset_dep_doc = frappe.get_doc("Asset Depreciation Schedule", asset_dep)
 			asset_dep_doc.submit()
 			asset_doc.submit()
-			frappe.db.commit()
 
 	def test_case_fix_asset_tc_fa_014(self):
 		# Set up variables based on your scenario
@@ -3100,8 +3098,7 @@ class TestAsset(AssetSetup):
 			location=location,
 			do_not_submit=False
 		)
-		frappe.db.commit()
-		print(pr.name)
+		pr.insert()
 
 		# # Fetch the created Asset linked to the item in PR
 		asset = frappe.get_value("Asset", {"item_code": item_code, "location": location, "purchase_receipt": pr.name}, "name")
@@ -3123,7 +3120,6 @@ class TestAsset(AssetSetup):
 			asset_dep_doc = frappe.get_doc("Asset Depreciation Schedule", asset_dep)
 			asset_dep_doc.submit()
 			asset_doc.submit()
-			frappe.db.commit()
 
 	def test_case_fix_asset_tc_fa_015(self):
 		# Set up variables based on your scenario
@@ -3150,8 +3146,7 @@ class TestAsset(AssetSetup):
 			location=location,
 			do_not_submit=False
 		)
-		frappe.db.commit()
-		print(pr.name)
+		pr.insert()
 
 		# # Fetch the created Asset linked to the item in PR
 		asset = frappe.get_value("Asset", {"item_code": item_code, "location": location, "purchase_receipt": pr.name}, "name")
@@ -3173,7 +3168,6 @@ class TestAsset(AssetSetup):
 			asset_dep_doc = frappe.get_doc("Asset Depreciation Schedule", asset_dep)
 			asset_dep_doc.submit()
 			asset_doc.submit()
-			frappe.db.commit()
 
 	def test_case_fix_asset_tc_fa_016(self):
 		# Set up variables based on your scenario
@@ -3200,8 +3194,7 @@ class TestAsset(AssetSetup):
 			location=location,
 			do_not_submit=False
 		)
-		frappe.db.commit()
-		print(pr.name)
+		pr.insert()
 
 		# # Fetch the created Asset linked to the item in PR
 		asset = frappe.get_value("Asset", {"item_code": item_code, "location": location, "purchase_receipt": pr.name}, "name")
@@ -3223,7 +3216,6 @@ class TestAsset(AssetSetup):
 			asset_dep_doc = frappe.get_doc("Asset Depreciation Schedule", asset_dep)
 			asset_dep_doc.submit()
 			asset_doc.submit()
-			frappe.db.commit()
 
 
 	def test_case_fix_asset_tc_fa_017(self):
@@ -3275,7 +3267,6 @@ class TestAsset(AssetSetup):
 			asset_dep_doc = frappe.get_doc("Asset Depreciation Schedule", asset_dep)
 			asset_dep_doc.submit()
 			asset_doc.submit()
-			frappe.db.commit()
 
 	def test_case_fix_asset_tc_fa_018(self):
 		# Set up variables based on your scenario
@@ -3326,7 +3317,6 @@ class TestAsset(AssetSetup):
 			asset_dep_doc = frappe.get_doc("Asset Depreciation Schedule", asset_dep)
 			asset_dep_doc.submit()
 			asset_doc.submit()
-			frappe.db.commit()
 
 	def test_case_fix_asset_tc_fa_019(self):
 		# Set up variables based on your scenario
@@ -3377,7 +3367,6 @@ class TestAsset(AssetSetup):
 			asset_dep_doc = frappe.get_doc("Asset Depreciation Schedule", asset_dep)
 			asset_dep_doc.submit()
 			asset_doc.submit()
-			frappe.db.commit()
 
 
 	def test_case_fix_asset_tc_fa_020(self):
@@ -3429,7 +3418,6 @@ class TestAsset(AssetSetup):
 			asset_dep_doc = frappe.get_doc("Asset Depreciation Schedule", asset_dep)
 			asset_dep_doc.submit()
 			asset_doc.submit()
-			frappe.db.commit()
 
 	def test_case_fix_asset_tc_fa_026(self):
 		asset_doc = frappe.new_doc("Asset")
@@ -3451,7 +3439,6 @@ class TestAsset(AssetSetup):
 		try:
 			asset_doc.insert()
 			asset_doc.submit()
-			frappe.db.commit()
 			print(f"Asset Created: {asset_doc.name}")
 		except Exception as e:
 			print(f"Error: {str(e)}")
@@ -3477,7 +3464,6 @@ class TestAsset(AssetSetup):
 		try:
 			asset_doc.insert()
 			asset_doc.submit()
-			frappe.db.commit()
 			print(f"Asset Created: {asset_doc.name}")
 		except Exception as e:
 			print(f"Error: {str(e)}")
@@ -3504,7 +3490,6 @@ class TestAsset(AssetSetup):
 		try:
 			asset_doc.insert()
 			asset_doc.submit()
-			frappe.db.commit()
 			print(f"Asset Created: {asset_doc.name}")
 		except Exception as e:
 			print(f"Error: {str(e)}")
@@ -3535,7 +3520,6 @@ class TestAsset(AssetSetup):
 			asset.insert()
 			asset.submit()
 			asset.cancel()
-			frappe.db.commit()
 
 			print(f"Asset Created: {asset.name}")
 		except Exception as e:
@@ -3575,7 +3559,6 @@ class TestAsset(AssetSetup):
 			amended_asset.opening_accumulated_depreciation = 900
 			amended_asset.insert()
 			amended_asset.submit()
-			frappe.db.commit()
 
 			print(f"Asset Created: {asset.name}")
 		except Exception as e:
@@ -3612,7 +3595,6 @@ class TestAsset(AssetSetup):
 			pi_asset.submit()
 			pi_asset.cancel()
 			pi.cancel()
-			# frappe.db.commit()
 			print(f"Asset Created: {pi.name},{pi_asset.name}")
 		else:
 			asset_pi=frappe.new_doc("Asset")
@@ -3634,7 +3616,6 @@ class TestAsset(AssetSetup):
 			})
 			asset_pi.save()
 			asset_pi.submit()
-			# frappe.db.commit()
 			print(f"Asset Created: {pi.name},{asset_pi.name}")
 			
 	#TC_FA_074
@@ -3667,7 +3648,6 @@ class TestAsset(AssetSetup):
 			pi_asset.submit()
 			pi_asset.cancel()
 			pi.cancel()
-			# frappe.db.commit()
 			print(f"Asset Created: {pi.name},{pi_asset.name}")
 		else:
 			asset_pi=frappe.new_doc("Asset")
@@ -3689,7 +3669,6 @@ class TestAsset(AssetSetup):
 			})
 			asset_pi.save()
 			asset_pi.submit()
-			# frappe.db.commit()
 			print(f"Asset Created: {pi.name},{asset_pi.name}")
 
 
@@ -3761,7 +3740,6 @@ class TestAsset(AssetSetup):
 			amended_asset.insert()
 			amended_asset.submit()
 
-		# frappe.db.commit()
 		print(f"Asset Created: {pi.name},{asset_pi.name}")
 	#TC_FA_047
 	def test_case_repair_asset_TC_FA_047(self):
@@ -3842,8 +3820,6 @@ class TestAsset(AssetSetup):
 		repair_asset.increase_in_asset_life = 12
 		repair_asset.insert()
 		repair_asset.submit()
-		# frappe.db.commit()
-		# pass
 
 	#TC_FA_048
 	def test_case_repair_asset_TC_FA_048(self):
@@ -3945,7 +3921,6 @@ class TestAsset(AssetSetup):
 		# repair_asset.increase_in_asset_life = 12
 		repair_asset.insert()
 		repair_asset.submit()
-		# frappe.db.commit()
 
 	#TC_FA_051
 	def test_cases_fix_asset_TC_FA_051(self):
@@ -3975,7 +3950,6 @@ class TestAsset(AssetSetup):
 		asset_value_adjustment.new_asset_value = 200000
 		asset_value_adjustment.save()
 		asset_value_adjustment.submit()
-		# frappe.db.commit()
 		print(f"Asset Created: {asset_value_adjustment.name},{asset_new_value_adjust.name}")
 
 	#TC_FA_052
@@ -4004,7 +3978,6 @@ class TestAsset(AssetSetup):
 		asset_scrapped.reload()
 		self.assertEquals(asset_scrapped.status,"Partially Depreciated")
 		scrap_asset(asset_scrapped.name, scrap_date=None)
-		# frappe.db.commit()
 		print(f"Asset Created:{asset_scrapped.name}")
 
 	#TC_FA_053
@@ -4025,7 +3998,6 @@ class TestAsset(AssetSetup):
 		asset_scrapped.reload()
 		self.assertEquals(asset_scrapped.status,"Fully Depreciated")
 		scrap_asset(asset_scrapped.name, scrap_date=None)
-		# frappe.db.commit()
 		print(f"Asset Created:{asset_scrapped.name}")
 
 	#TC_FA_054
@@ -4055,7 +4027,6 @@ class TestAsset(AssetSetup):
 		self.assertEquals(asset_scrapped.status,"Partially Depreciated")
 		scrap_asset(asset_scrapped.name, scrap_date=None)
 		restore_asset(asset_scrapped.name)
-		# frappe.db.commit()
 		print(f"Asset Created:{asset_scrapped.name}")
 
 	#TC_FA_055
@@ -4077,7 +4048,6 @@ class TestAsset(AssetSetup):
 		self.assertEquals(asset_scrapped.status,"Fully Depreciated")
 		scrap_asset(asset_scrapped.name, scrap_date=None)
 		restore_asset(asset_scrapped.name)
-		# frappe.db.commit()
 		print(f"Asset Created:{asset_scrapped.name}")
 
 	#TC_FA_056
@@ -4123,7 +4093,6 @@ class TestAsset(AssetSetup):
 			self.assertEquals(pi_asset.status,"Fully Depreciated")
 			scrap_asset(pi_asset.name, scrap_date=None)
 			
-			# frappe.db.commit()
 			print(f"Asset Created: {pi.name},{pi_asset.name}")
 		else:
 			pi_doc=frappe.get_doc("Purchase Invoice",pi.name)
@@ -4163,7 +4132,6 @@ class TestAsset(AssetSetup):
 			self.assertEquals(pi_asset.status,"Fully Depreciated")
 			scrap_asset(pi_asset.name, scrap_date=None)
 			
-			# frappe.db.commit()
 			print(f"Asset Created: {pi.name},{pi_asset.name}")
 
 	#TC_FA_057
@@ -4209,7 +4177,6 @@ class TestAsset(AssetSetup):
 			self.assertEquals(pi_asset.status,"Fully Depreciated")
 			scrap_asset(pi_asset.name, scrap_date=None)
 			
-			# frappe.db.commit()
 			print(f"Asset Created: {pi.name},{pi_asset.name}")
 		else:
 			pi_doc=frappe.get_doc("Purchase Invoice",pi.name)
@@ -4250,7 +4217,6 @@ class TestAsset(AssetSetup):
 			scrap_asset(pi_asset.name, scrap_date=None)
 			
 			print(f"Asset Created: {pi.name},{pi_asset.name}")
-		frappe.db.commit()
 
 	#TC_FA_058
 	def test_cases_sell_profit_asset_TC_FA_058(self):
@@ -4272,7 +4238,6 @@ class TestAsset(AssetSetup):
 		si.get("items")[0].rate = 3000
 		si.insert()
 		si.submit()
-		frappe.db.commit()
 
 		print(f"Asset Created: {asset.name}")
 
@@ -4296,7 +4261,6 @@ class TestAsset(AssetSetup):
 		si.get("items")[0].rate = 1000
 		si.insert()
 		si.submit()
-		frappe.db.commit()
 
 		print(f"Asset Created: {asset.name}")
 
@@ -4320,7 +4284,6 @@ class TestAsset(AssetSetup):
 		si.get("items")[0].rate = 1000
 		si.insert()
 		si.submit()
-		# frappe.db.commit()
 
 		print(f"Asset Created: {asset.name}")
 
@@ -4354,7 +4317,6 @@ class TestAsset(AssetSetup):
 			si.insert()
 			si.submit()
 			
-			# frappe.db.commit()
 			print(f"Asset Created: {pi.name},{pi_asset.name}")
 		else:
 			pi_doc=frappe.get_doc("Purchase Invoice",pi.name)
@@ -4377,7 +4339,6 @@ class TestAsset(AssetSetup):
 			si.insert()
 			si.submit()
 			print(f"Asset Created: {pi.name},{pi_asset.name}")
-		# frappe.db.commit()
 
 	#TC_FA_062
 	def test_cases_shell_pr_asset_TCFA_062(self):
@@ -4409,7 +4370,6 @@ class TestAsset(AssetSetup):
 			si.insert()
 			si.submit()
 			
-			# frappe.db.commit()
 			print(f"Asset Created: {pi.name},{pi_asset.name}")
 		else:
 			pi_doc=frappe.get_doc("Purchase Invoice",pi.name)
@@ -4432,7 +4392,6 @@ class TestAsset(AssetSetup):
 			si.insert()
 			si.submit()
 			print(f"Asset Created: {pi.name},{pi_asset.name}")
-		# frappe.db.commit()
 
 	#TC_FA_063
 	def test_cases_sold_fully_depreciated_TC_FA_063(self):
@@ -4486,7 +4445,6 @@ class TestAsset(AssetSetup):
 			# self.assertEquals(pi_asset.status,"Fully Depreciated")
 			# scrap_asset(pi_asset.name, scrap_date=None)
 			
-			# frappe.db.commit()
 			print(f"Asset Created: {pi.name},{pi_asset.name}")
 		else:
 			pi_doc=frappe.get_doc("Purchase Invoice",pi.name)
@@ -4533,7 +4491,6 @@ class TestAsset(AssetSetup):
 			si.insert()
 			si.submit()
 			print(f"Asset Created: {pi.name},{pi_asset.name}")
-		# frappe.db.commit()
 	
 	#TC_FA_064
 	def test_case_split_asset_error_message_TC_FA_064(self):
@@ -4603,7 +4560,6 @@ class TestAsset(AssetSetup):
 		pi_asset.save()
 		pi_asset.submit()
 		split_asset(pi_asset.name,split_qty=3)
-		# frappe.db.commit()
 		print(f"Asset:{pi_asset.name}")
 	
 	#TC_FA_066
@@ -4634,7 +4590,6 @@ class TestAsset(AssetSetup):
 		pi_asset.save()
 		pi_asset.submit()
 		split_asset(pi_asset.name,split_qty=3.5)
-		# frappe.db.commit()
 		print(f"Asset:{pi_asset.name}")
 
 	#TC_FA_080
@@ -4691,7 +4646,6 @@ class TestAsset(AssetSetup):
 			si.company='_Test Company'
 			si.save()
 			si.submit()
-			# frappe.db.commit()
 			print(f"Asset:{pi_asset.name}")
 		else:
 			pricing_rule=frappe.new_doc("Pricing Rule")
@@ -4726,7 +4680,6 @@ class TestAsset(AssetSetup):
 			si.due_date = frappe.utils.nowdate()
 			si.save()
 			si.submit()
-			# frappe.db.commit()
 			print(f"Asset:{pi_asset.name}")
 
 	#TC_FA_081
@@ -4782,7 +4735,6 @@ class TestAsset(AssetSetup):
 			si.company='_Test Company'
 			si.save()
 			si.submit()
-			# frappe.db.commit()
 			print(f"Asset:{pi_asset.name}")
 		else:
 			pricing_rule=frappe.new_doc("Pricing Rule")
@@ -4817,7 +4769,6 @@ class TestAsset(AssetSetup):
 			si.due_date = frappe.utils.nowdate()
 			si.save()
 			si.submit()
-			# frappe.db.commit()
 			print(f"Asset:{pi_asset.name}")
 		# pass
 
@@ -4900,7 +4851,6 @@ class TestAsset(AssetSetup):
 			si.company='_Test Company'
 			si.save()
 			si.submit()
-			# frappe.db.commit()
 			print(f"Asset:{pi_asset.name}")
 		else:
 			pricing_rule=frappe.new_doc("Pricing Rule")
@@ -4937,7 +4887,6 @@ class TestAsset(AssetSetup):
 			si.due_date = frappe.utils.nowdate()
 			si.save()
 			si.submit()
-			# frappe.db.commit()
 			print(f"Asset:{pi_asset.name}")
 
 	#TC_FA_085
@@ -5033,7 +4982,6 @@ class TestAsset(AssetSetup):
 		adjust_asset_value.difference_account = "Revaluation Reserve - _TC"
 		adjust_asset_value.save()
 		adjust_asset_value.submit()
-		# frappe.db.commit()
 		print(f"Asset:{pi_asset.name}")
 
 	#TC_FA_084
@@ -5074,7 +5022,6 @@ class TestAsset(AssetSetup):
 		adjust_asset_value.difference_account = "Revaluation Reserve - _TC"
 		adjust_asset_value.save()
 		adjust_asset_value.submit()
-		# frappe.db.commit()
 		print(f"Asset:{pi_asset.name}")
 
 	# TC_FA_146

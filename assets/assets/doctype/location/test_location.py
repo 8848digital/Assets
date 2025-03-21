@@ -27,7 +27,6 @@ class TestLocation(unittest.TestCase):
 				"location_name":"Test_newyork1",	
 				"is_group":1
 			}).insert()
-			frappe.db.commit()
 			location = frappe.get_doc({
 				"doctype":"Location",
 				"location_name":"Test_parent",	
@@ -42,7 +41,6 @@ class TestLocation(unittest.TestCase):
 				"location_name":"Test_group_location",	
 				"is_group":1
 			}).insert()
-			frappe.db.commit()
 			location = frappe.get_doc({
 				"doctype":"Location",
 				"location_name":"Test_child",	

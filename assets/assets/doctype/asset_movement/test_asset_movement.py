@@ -853,7 +853,6 @@ class TestAssetMovement(unittest.TestCase):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # If submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
@@ -1044,7 +1043,6 @@ class TestAssetMovement(unittest.TestCase):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # If submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
@@ -1228,12 +1226,10 @@ class TestAssetMovement(unittest.TestCase):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # If submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
 		target_asset.cancel()
-		frappe.db.commit()
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
@@ -1418,7 +1414,6 @@ class TestAssetMovement(unittest.TestCase):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # If submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)
@@ -1603,7 +1598,6 @@ class TestAssetMovement(unittest.TestCase):
 			movement_doc = frappe.get_doc("Asset Movement", movement["name"])
 			if movement_doc.docstatus == 1:  # If submitted
 				movement_doc.cancel()
-				frappe.db.commit()
 
 		# Cancel the Asset
 		target_asset = frappe.get_doc("Asset", target_asset.name)

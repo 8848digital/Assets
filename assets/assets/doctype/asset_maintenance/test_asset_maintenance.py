@@ -75,7 +75,6 @@ class TestAssetMaintenance(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 	
 		asset_maintenance = frappe.get_doc({
 		"doctype": "Asset Maintenance",
@@ -98,7 +97,6 @@ class TestAssetMaintenance(unittest.TestCase):
 			}]
 		})
 		asset_maintenance.insert()
-		frappe.db.commit()
 
 	# TC_FA_039
 	def test_asset_maintenance_creation_overdue_TC_FA_039(self):
@@ -155,7 +153,6 @@ class TestAssetMaintenance(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 	
 		asset_maintenance = frappe.get_doc({
 		"doctype": "Asset Maintenance",
@@ -178,7 +175,6 @@ class TestAssetMaintenance(unittest.TestCase):
 		}]
 		})
 		asset_maintenance.insert()
-		frappe.db.commit()
 	
 	# TC_FA_040
 	def test_asset_maintenance_creation_cancel_TC_FA_040(self):
