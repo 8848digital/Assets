@@ -603,6 +603,132 @@ class TestAssetRepair(unittest.TestCase):
 		self.assertEqual(asset_repair.invoices[0].purchase_invoice, pi.name)
 		self.assertEqual(asset_repair.invoices[0].repair_cost, 10000)
 
+	# TC_FA_142
+	def test_stock_acapitalize_repair_and_consumption_cost_asset_repair_TC_FA_142(self):
+		company = "_Test Company"
+		item_code = "Test_asset_nostock_repair_item1"
+		asset_name = "Test_asset_maintainance"
+
+		# Ensure the company exists
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+
+		# Create the non-stock asset item if it doesn't exist
+		if not frappe.db.exists("Item", item_code):
+			item_data = {
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_stock_item": 0,
+				"is_fixed_asset": 1,
+				"is_purchase_item": 1,
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
+				"asset_category": "Test_Category",
+				"item_group": "Raw Material",
+				"stock_uom": "Nos",
+			}
+
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"
+			frappe.get_doc(item_data).insert()
+
+		# Create Asset (Non-Stock)
+		target_asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item_code,
+			"asset_name": item_code,
+			"asset_category": "Test_Category",
+			"location": "Test Location",
+			"is_existing_asset": 1,
+			"available_for_use_date": nowdate(),
+			"gross_purchase_amount": 8000,
+			"total_asset": 8000,
+			"asset_quantity": 2,
+			"purchase_date": nowdate(),
+			"calculate_depreciation": 0,
+			"opening_accumulated_depreciation": 8000,
+			"opening_number_of_booked_depreciations": 8,
+			"is_fully_depreciated": 1,
+			"maintenance_required": 1,
+			"finance_books": [
+				{
+					"finance_book": "2024-2025",
+					"frequency_of_depreciation": 1,
+					"depreciation_method": "Straight Line",
+					"depreciation_start_date": nowdate(),
+					"total_number_of_depreciations": 12,
+					"total_number_of_booked_depreciations": 7,
+					"value_after_depreciation": 5000,
+				}
+			]
+		}).insert()
+		target_asset.submit()
+
+		# Assertions for Asset
+		self.assertEqual(target_asset.company, company)
+		self.assertEqual(target_asset.item_code, item_code)
+		self.assertEqual(target_asset.asset_quantity, 2)
+		self.assertEqual(target_asset.total_asset, 8000)
+
+		# Create Purchase Invoice (for Non-Stock Asset)
+		supplier = "_Test Supplier"
+		qty, rate = 1, 500
+
+		pi = frappe.get_doc({
+			"doctype": "Purchase Invoice",
+			"company": company,
+			"supplier": supplier,
+			"update_stock": 0,
+			"posting_date": nowdate(),
+			"items": [
+				{
+					"item_code": item_code,
+					"qty": qty,
+					"rate": rate,
+					"location": "Test Location",
+					"asset_location": "Test Location",
+					"expense_account": "_Test Account Cost for Goods Sold - _TC",
+				}
+			]
+		})
+		pi.insert()
+		pi.submit()
+
+		# Assertions for Purchase Invoice
+		self.assertEqual(pi.company, company)
+		self.assertEqual(pi.supplier, supplier)
+		self.assertEqual(len(pi.items), 1)
+		self.assertEqual(pi.items[0].qty, qty)
+		self.assertEqual(pi.items[0].rate, rate)
+
+		# Create Asset Repair
+		asset_repair = frappe.get_doc({
+			"doctype": "Asset Repair",
+			"asset": target_asset.name,
+			"company": company,
+			"failure_date": now_datetime().strftime("%d-%m-%Y %H:%M:%S"),
+			"completion_date": now_datetime().strftime("%d-%m-%Y %H:%M:%S"),
+			"repair_status": "Completed",
+			"capitalize_repair_cost": 1,
+			"stock_consumption": 1,
+			"invoices": [
+				{
+					"purchase_invoice": pi.name,
+					"expense_account": "Service - _TC",
+					"repair_cost": 10000,
+				}
+			]
+		}).insert()
+		asset_repair.submit()
+
+		# Assertions for Asset Repair
+		self.assertEqual(asset_repair.company, company)
+		self.assertEqual(asset_repair.repair_status, "Completed")
+		self.assertEqual(asset_repair.capitalize_repair_cost, 1)
+		self.assertEqual(asset_repair.stock_consumption, 1)
+		self.assertEqual(asset_repair.invoices[0].repair_cost, 10000)
 		
 	def test_update_status(self):
 		asset = create_asset(submit=1)
