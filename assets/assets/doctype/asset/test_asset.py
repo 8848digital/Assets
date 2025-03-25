@@ -7380,6 +7380,103 @@ class TestDepreciationBasics(AssetSetup):
 
 		self.assertNotEqual(return_asset_status_1.status, "Sold")
 		self.assertNotEqual(return_asset_status_2.status, "Sold")
+
+	def test_multiple_group_asset_sales_return_single_invoice_with_GST_TC_FA_113(self):
+		from erpnext.accounts.doctype.sales_invoice.sales_invoice import make_sales_return
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_company_or_supplier, create_or_get_purchase_taxes_template
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		get_details = get_company_or_supplier()
+		company = get_details.get("company")
+		frappe.db.set_value("Company", company, "depreciation_cost_center", "Main - TC-5")
+		customer = get_or_create_customer("_Test Supplier")
+		supplier = get_details.get("supplier")
+		asset_category = get_asset_category()
+		tax_account = create_or_get_purchase_taxes_template(company)
+		location = get_location()
+		item_1 = make_test_item("test_asset_item_1")
+		item_1.is_stock_item = 0
+		item_1.is_fixed_asset = 1
+		item_1.is_grouped_asset = 1
+		item_1.asset_category = asset_category
+		item_1.save()
+
+		item_2 = make_test_item("test_asset_item_2")
+		item_2.is_stock_item = 0
+		item_2.is_fixed_asset = 1
+		item_2.is_grouped_asset = 1
+		item_2.asset_category = asset_category
+		item_2.save()
+		pr = create_purchase_receipt(item_1, company, supplier, item_2)
+		asset_1 = create_assets(company, location, pr, item_1.item_code)
+		asset_2 = create_assets(company, location, pr, item_2.item_code)
+		si = frappe.get_doc(
+			{
+				"doctype": "Sales Invoice",
+				"company": company,
+				"posting_date": frappe.utils.today(),
+				"customer": customer,
+				"items": [
+					{
+						"item_code": item_1.item_code,
+						"qty": 1,
+						"rate": 1000,
+						"asset": asset_1
+					},
+					{
+						"item_code": item_2.item_code,
+						"qty": 1,
+						"rate": 1000,
+						"asset": asset_2
+					}
+				],
+			}
+		)
+		taxes = [
+			{
+				"charge_type": "On Net Total",
+				"add_deduct_tax": "Add",
+				"category": "Total",
+				"rate": 9,
+				"account_head": tax_account.get('sgst_account'),
+				"description": "SGST"
+			},
+			{
+				"charge_type": "On Net Total",
+				"add_deduct_tax": "Add",
+				"category": "Total",
+				"rate": 9,
+				"account_head": tax_account.get('cgst_account'),
+				"description": "CGST"
+			}
+		]
+		for tax in taxes:
+			si.append("taxes", tax)
+		si.insert()
+		si.submit()
+		self.assertEqual(si.docstatus, 1)
+		asset_1_status = frappe.get_doc("Asset", asset_1)
+		asset_2_status = frappe.get_doc("Asset", asset_2)
+		self.assertEqual(asset_1_status.status, "Sold")
+		self.assertEqual(asset_2_status.status, "Sold")
+
+		gl_entries_si = get_gl_entries("Sales Invoice", si.name)
+		self.assertGreater(len(gl_entries_si), 1)
+
+		sr = make_sales_return(si.name)
+		sr.insert()
+		sr.submit()
+
+		self.assertEqual(sr.docstatus, 1)
+		self.assertEqual(sr.status, "Return")
+
+		gl_entries_sr = get_gl_entries("Sales Invoice", sr.name)
+		self.assertGreater(len(gl_entries_sr), 1)
+
+		return_asset_status_1 = frappe.get_doc("Asset", asset_1)
+		return_asset_status_2 = frappe.get_doc("Asset", asset_2)
+
+		self.assertNotEqual(return_asset_status_1.status, "Sold")
+		self.assertNotEqual(return_asset_status_2.status, "Sold")
 	
 def get_gl_entries(doctype, docname):
 	gl_entry = frappe.qb.DocType("GL Entry")
