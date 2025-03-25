@@ -31,6 +31,7 @@ from frappe.utils import (
 	is_last_day_of_the_month,
 	nowdate,
 	now_datetime,
+	today
 )
 import frappe.utils
 from frappe.utils.data import add_to_date
@@ -82,7 +83,7 @@ class TestAsset(AssetSetup):
 
 		self.assertEqual(asset.asset_category, "Computers")
 
-    # TC_FA_001
+	# TC_FA_001
 	def test_create_asset_automatic_on_po_pr_TC_FA_001(self):
 		"""
 		Function to create and submit a Purchase Order and Purchase Receipt.
@@ -6817,6 +6818,68 @@ class TestDepreciationBasics(AssetSetup):
 			self.assertEqual(entry["credit"], expected_si_entries.get(entry["account"], {}).get("credit", 0))
 
 	@if_app_installed("erpnext")
+	def test_multiple_asset_selling_single_invoice_TC_FA_106(self):
+		"""Selling multiple assets in a single invoice (without GST)."""
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_company_or_supplier
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		get_details = get_company_or_supplier()
+		company = get_details["company"]
+		supplier = get_details["supplier"]
+		customer = get_or_create_customer("_Test Customer")
+		frappe.db.set_value("Company", company, "depreciation_cost_center", "Main - TC-5")
+
+		asset_category = get_asset_category()
+		location = get_location()
+
+		item1 = make_test_item("test_asset_item_1")
+		item1.is_stock_item = 0
+		item1.is_fixed_asset = 1
+		item1.asset_category = asset_category
+		item1.save()
+
+		item2 = make_test_item("test_asset_item_2")
+		item2.is_stock_item = 0
+		item2.is_fixed_asset = 1
+		item2.asset_category = asset_category
+		item2.save()
+
+		# pr = create_purchase_receipt(item1, item2)
+		pr = create_purchase_receipt(item1, company, supplier, item2)
+
+		asset1 = create_assets(company, location, pr, item1.item_code)
+		asset2 = create_assets(company, location, pr, item2.item_code)
+
+		si = frappe.get_doc(
+			{
+				"doctype": "Sales Invoice",
+				"company": company,
+				"posting_date": frappe.utils.today(),
+				"due_date": today(),
+				"customer": customer,
+				"items": [
+					{
+						"item_code": item1.item_code,
+						"qty": 1,
+						"rate": 1000,
+						"asset": asset1
+					},
+					{
+						"item_code": item2.item_code,
+						"qty": 1,
+						"rate": 1000,
+						"asset": asset2
+					}
+				],
+			}
+		)
+		si.insert()
+		si.submit()
+
+		self.assertEqual(si.docstatus, 1)
+		self.assertEqual(frappe.get_doc("Asset", asset1).status, "Sold")
+		self.assertEqual(frappe.get_doc("Asset", asset2).status, "Sold")
+
+	@if_app_installed("erpnext")
 	def test_multiple_asset_selling_single_invoice_with_GST_TC_FA_107(self):
 		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 		from erpnext.buying.doctype.purchase_order.test_purchase_order import (
@@ -7092,3 +7155,117 @@ def get_or_create_account(company, account_name):
 		).insert(ignore_permissions=True).name
 
 	return account
+
+def get_asset_category():
+	finance_book = "_Test Finance Book"
+	asset_category = "_test_1122_asset_categorys"
+	if not frappe.db.exists("Finance Book", finance_book):
+		frappe.get_doc(
+			{
+				"doctype": "Finance Book",
+				"finance_book_name": finance_book
+			}
+		).insert()
+
+	if not frappe.db.exists("Asset Category", asset_category):
+		frappe.get_doc(
+			{
+				"doctype": "Asset Category",
+				"asset_category_name": asset_category,
+				"finance_books": [
+					{
+						"finance_book": finance_book,
+						"depreciation_method": "Straight Line",
+						"total_number_of_depreciations": 3,
+						"frequency_of_depreciation": 4,
+						"depreciation_start_date": today()
+					}
+				],
+				"accounts": [
+					{
+						"company_name": "Test Company-5566",
+						"fixed_asset_account": "Buildings - TC-5",
+						"accumulated_depreciation_account": "Accumulated Depreciation - TC-5",
+						"depreciation_expense_account": "Depreciation - TC-5"
+					}
+				]
+			}
+		).insert()
+
+	return asset_category
+
+def get_location():
+	location = "Hyderabad"
+	if not frappe.db.exists("Location", location):
+		frappe.get_doc(
+			{
+				"doctype": "Location",
+				"location_name": location
+			}
+		).insert()
+
+	return location
+
+def create_purchase_receipt(item_1, company, supplier, item_2 = None):
+	items = [
+		{
+			"item_code": item_1.item_code,
+			"qty": 1,
+			"rate": 1000
+		}
+	]
+	if item_2:
+		items.append(
+			{
+				"item_code": item_2.item_code,
+				"qty": 1,
+				"rate": 1000
+			}
+		)
+
+	pr = frappe.get_doc(
+		{
+			"doctype": "Purchase Receipt",
+			"company": company,
+			"supplier": supplier,
+			"posting_date": today(),
+			"items": items
+		}
+	)
+	pr.insert()
+	pr.submit()
+	return pr.name
+
+def create_assets(company, location, pr, item):
+	asset = frappe.get_doc(
+		{
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item,
+			"asset_owner": "Company",
+			"location": location,
+			"purchase_receipt": pr,
+			"gross_purchase_amount": 2000,
+			"purchase_amount": 2000,
+			"purchase_date": today(),
+			"available_for_use_date": today()
+		}
+	)
+	asset.insert()
+	asset.submit()
+
+	return asset.name
+
+def get_or_create_customer(customer):
+	if not frappe.db.exists("Customer", customer):
+		return frappe.get_doc(
+			{
+				"doctype": "Customer",
+				"customer_name": customer,
+				"customer_type": "Individual",
+				"customer_group": "All Customer Groups",
+				"territory": "All Territories"
+			}
+		).insert().name
+	else:
+		return customer
