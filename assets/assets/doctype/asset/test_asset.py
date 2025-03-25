@@ -7835,7 +7835,6 @@ def get_or_create_customer(customer):
 
 
 
-@if_app_installed("erpnext")
 def create_pi(company, supplier):
 	from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 	item_2 = make_test_item("test_asset_item_for_repair_2")
