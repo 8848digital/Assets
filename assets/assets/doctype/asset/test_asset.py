@@ -7477,6 +7477,56 @@ class TestDepreciationBasics(AssetSetup):
 
 		self.assertNotEqual(return_asset_status_1.status, "Sold")
 		self.assertNotEqual(return_asset_status_2.status, "Sold")
+
+	@if_app_installed("erpnext")
+	def test_asset_repair_with_stock_consume_TC_FA_049(self):
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import get_company_or_supplier
+		from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+		get_details = get_company_or_supplier()
+		company = get_details.get("company")
+		supplier = get_details.get("supplier")
+		frappe.db.set_value("Company", company, "depreciation_cost_center", "Main - TC-5")
+		asset_category = get_asset_category()
+		location = get_location()
+
+		item_1 = make_test_item("test_asset_item_for_repair_1")
+		item_1.is_stock_item = 0
+		item_1.is_fixed_asset = 1
+		item_1.asset_category = asset_category
+		item_1.save()
+
+		pr = create_purchase_receipt(item_1, company, supplier)
+
+		asset = create_assets(company, location, pr, item_1.item_code)
+
+		pi = create_pi(company, supplier)
+		pi.insert()
+		pi.submit()
+		self.assertEqual(pi.docstatus, 1)
+
+		pi_gle_entries = frappe.get_all("GL Entry", filters={"voucher_no": pi.name}, fields=["account", "debit", "credit"])
+		expected_pi_entries = {
+			"Cost of Goods Sold - TC-5": {"debit": 1000, "credit": 0},
+			"Creditors - TC-5": {"debit": 0, "credit": 1000},
+		}
+		for entry in pi_gle_entries:
+			self.assertEqual(entry["debit"], expected_pi_entries.get(entry["account"], {}).get("debit", 0))
+			self.assertEqual(entry["credit"], expected_pi_entries.get(entry["account"], {}).get("credit", 0))
+
+		asset_repair = create_assets_repairs(company, asset, pi.name)
+		asset_repair.insert()
+		asset_repair.submit()
+		self.assertEqual(asset_repair.docstatus, 1)
+
+		asset_repair_gle_entries = frappe.get_all("GL Entry", filters={"voucher_no": asset_repair.name}, fields=["account", "debit", "credit"])
+		expected_si_entries = {
+			"Buildings - TC-5": {"debit": 1400, "credit": 0},
+			"Cost of Goods Sold - TC-5": {"debit": 0, "credit": 900},
+			"Stock Adjustment - TC-5": {"debit": 0, "credit": 500},
+		}
+		for entry in asset_repair_gle_entries:
+			self.assertEqual(entry["debit"], expected_si_entries.get(entry["account"], {}).get("debit", 0))
+			self.assertEqual(entry["credit"], expected_si_entries.get(entry["account"], {}).get("credit", 0))
 	
 def get_gl_entries(doctype, docname):
 	gl_entry = frappe.qb.DocType("GL Entry")
@@ -7782,3 +7832,79 @@ def get_or_create_customer(customer):
 		).insert().name
 	else:
 		return customer
+
+
+
+def create_pi(company, supplier):
+	from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+	item_2 = make_test_item("test_asset_item_for_repair_2")
+	item_2.is_stock_item = 0
+	item_2.is_fixed_asset = 0
+	item_2.asset_category = get_asset_category()
+	item_2.save()
+
+	pi = frappe.get_doc(
+		{
+			"doctype": "Purchase Invoice",
+			"company": company,
+			"supplier": supplier,
+			"posting_date": today(),
+			"due_date": today(),
+			"update_stock": 1,
+			"items": [
+				{
+					"item_code": item_2.item_code,
+					"qty": 1,
+					"rate": 1000,
+					"expense_account": "Cost of Goods Sold - TC-5",
+				}
+			]
+
+		}
+	)
+
+	return pi
+
+def create_assets_repairs(company, asset, pi_1, pi_2 = None):
+	from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+	from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
+	item = make_test_item("service_item_for_asset_review")
+	make_stock_entry(company = company, target = "Stores - TC-5", item_code = item.item_code, qty = 10, rate = 1000)
+	invoices = [
+		{
+			"purchase_invoice": pi_1,
+			"expense_account": "Cost of Goods Sold - TC-5",
+			"repair_cost": 1000
+		}
+	]
+	if pi_2:
+		invoices.append(
+			{
+				"purchase_invoice": pi_2,
+				"expense_account": "Cost of Goods Sold - TC-5",
+				"repair_cost": 1000
+			}
+		)
+	asset_repair = frappe.get_doc(
+		{
+			"doctype": "Asset Repair",
+			"company": company,
+			"asset": asset,
+			"failure_date": frappe.utils.now(),
+			"cost_center": "Main - TC-5",
+			"repair_status": "Completed",
+			"invoices": invoices,
+			"capitalize_repair_cose": 1,
+			"stock_consumption": 1,
+			"stock_items": [
+				{
+					"item_code": item.item_code,
+					"warehouse": "Stores - TC-5",
+					"valuation_rate": 500,
+					"consumed_quantity": 3
+				}
+			]
+		}
+	)
+
+	return asset_repair
