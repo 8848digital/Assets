@@ -63,7 +63,7 @@ class AssetRepair(AccountsController):
 	# end: auto-generated types
 
 	def validate(self):
-		self.asset_doc = frappe.get_doc("Asset", self.asset)
+		# self.asset_doc = frappe.get_doc("Asset", self.asset)
 		self.validate_dates()
 		self.validate_purchase_invoice()
 		self.validate_purchase_invoice_repair_cost()
