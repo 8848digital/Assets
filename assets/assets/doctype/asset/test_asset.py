@@ -6669,23 +6669,25 @@ class TestDepreciationBasics(AssetSetup):
 			create_company,
 		)
 		from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
+
 		create_records('_Test Supplier')
 		create_company()
+
 		if not frappe.db.exists("Location", "Test Location"):
 			frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert()
-		
-		item_list =["_Test Item Asset 1", "_Test Item Asset 2"]
-		
+
+		item_list = ["_Test Item Asset 1", "_Test Item Asset 2", "_Test Item Group Asset 1"]
+
 		for item in item_list:
 			if not frappe.db.exists("Item", item):
-				item = make_test_item(item)
-				item.is_stock_item = 0
-				item.is_fixed_asset = 1
-				item.asset_naming_series="ACC-ASS-.YYYY.-"
-				item.asset_category = "Computers"
-				item.auto_create_assets = 1
-				item.save()
-			
+				item_doc = make_test_item(item)
+				item_doc.is_stock_item = 0
+				item_doc.is_fixed_asset = 1
+				item_doc.asset_naming_series = "ACC-ASS-.YYYY.-"
+				item_doc.asset_category = "Computers"
+				item_doc.auto_create_assets = 1
+				item_doc.save()
+
 		pi = make_purchase_invoice(
 			supplier="_Test Supplier",
 			company="_Test Company",
@@ -6698,9 +6700,9 @@ class TestDepreciationBasics(AssetSetup):
 		)
 		pi.save()
 		pi.submit()
-		
-		assets_name = frappe.get_value("Asset",{"purchase_invoice":pi.name},"name")
-		
+
+		assets_name = frappe.get_value("Asset", {"purchase_invoice": pi.name}, "name")
+
 		jv = make_journal_entry(
 			account1="_Test Bank - _TC",
 			account2="_Test Subsidy - _TC",
@@ -6712,11 +6714,12 @@ class TestDepreciationBasics(AssetSetup):
 		jv.accounts[1].reference_name = assets_name
 		jv.save()
 		jv.submit()
+
 		expected_gle = [
 			['_Test Bank - _TC', 100000.0, 0.0, jv.posting_date],
 			['_Test Subsidy - _TC', 0.0, 100000.0, jv.posting_date]
 		]
-		check_gl_entries(self,voucher_no=jv.name,expected_gle=expected_gle,posting_date=jv.posting_date,voucher_type=jv.doctype)
+		check_gl_entries(self, voucher_no=jv.name, expected_gle=expected_gle, posting_date=jv.posting_date, voucher_type=jv.doctype)
   
 	@if_app_installed("erpnext")
 	def test_create_subsidy_jv_for_fixed_assets_partial_ammount_TC_FA_092(self):
@@ -6726,23 +6729,25 @@ class TestDepreciationBasics(AssetSetup):
 			create_company,
 		)
 		from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
+		
 		create_records('_Test Supplier')
 		create_company()
+
 		if not frappe.db.exists("Location", "Test Location"):
 			frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert()
-		
-		item_list =["_Test Item Asset 1", "_Test Item Asset 2"]
-		
+
+		item_list = ["_Test Item Asset 1", "_Test Item Asset 2", "_Test Item Group Asset 1"]
+
 		for item in item_list:
 			if not frappe.db.exists("Item", item):
-				item = make_test_item(item)
-				item.is_stock_item = 0
-				item.is_fixed_asset = 1
-				item.asset_naming_series="ACC-ASS-.YYYY.-"
-				item.asset_category = "Computers"
-				item.auto_create_assets = 1
-				item.save()
-			
+				item_doc = make_test_item(item)
+				item_doc.is_stock_item = 0
+				item_doc.is_fixed_asset = 1
+				item_doc.asset_naming_series = "ACC-ASS-.YYYY.-"
+				item_doc.asset_category = "Computers"
+				item_doc.auto_create_assets = 1
+				item_doc.save()
+
 		pi = make_purchase_invoice(
 			supplier="_Test Supplier",
 			company="_Test Company",
@@ -6755,9 +6760,9 @@ class TestDepreciationBasics(AssetSetup):
 		)
 		pi.save()
 		pi.submit()
-		
-		assets_name = frappe.get_value("Asset",{"purchase_invoice":pi.name},"name")
-		
+
+		assets_name = frappe.get_value("Asset", {"purchase_invoice": pi.name}, "name")
+
 		jv = make_journal_entry(
 			account1="_Test Bank - _TC",
 			account2="_Test Subsidy - _TC",
@@ -6769,11 +6774,12 @@ class TestDepreciationBasics(AssetSetup):
 		jv.accounts[1].reference_name = assets_name
 		jv.save()
 		jv.submit()
+
 		expected_gle = [
 			['_Test Bank - _TC', 100000.0, 0.0, jv.posting_date],
 			['_Test Subsidy - _TC', 0.0, 100000.0, jv.posting_date]
 		]
-		check_gl_entries(self,voucher_no=jv.name,expected_gle=expected_gle,posting_date=jv.posting_date,voucher_type=jv.doctype)
+		check_gl_entries(self, voucher_no=jv.name, expected_gle=expected_gle, posting_date=jv.posting_date, voucher_type=jv.doctype)
 	
 	@if_app_installed("erpnext")
 	def test_purchase_asset_with_partial_subsidy_grant_credited_to_pl_TC_FA_093(self):
