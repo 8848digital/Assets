@@ -5031,10 +5031,9 @@ class TestAsset(AssetSetup):
 		adjust_asset_value=create_asset_value_adjustment(pi_asset.name,pi_asset.asset_category,pi_asset.company)
 		adjust_asset_value.date = frappe.utils.nowdate()
 		adjust_asset_value.new_asset_value = 30000
-		adjust_asset_value.difference_account = "Revaluation Reserve - _TC"
+		adjust_asset_value.difference_account = "_Test Bank - _TC"
 		adjust_asset_value.save()
 		adjust_asset_value.submit()
-		# frappe.db.commit()
 		print(f"Asset:{pi_asset.name}")
 
 	#TC_FA_084
@@ -5072,10 +5071,9 @@ class TestAsset(AssetSetup):
 		adjust_asset_value.date = frappe.utils.nowdate()
 		adjust_asset_value.current_asset_value = 24000
 		adjust_asset_value.new_asset_value = 20000
-		adjust_asset_value.difference_account = "Revaluation Reserve - _TC"
+		adjust_asset_value.difference_account = "_Test Bank - _TC"
 		adjust_asset_value.save()
 		adjust_asset_value.submit()
-		# frappe.db.commit()
 		print(f"Asset:{pi_asset.name}")
 
 	# TC_FA_141

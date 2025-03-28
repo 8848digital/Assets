@@ -9,7 +9,7 @@ from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle 
 	get_serial_nos_from_bundle,
 	make_serial_batch_bundle,
 )
-from frappe.utils import flt, nowdate, nowtime, today ,add_days,now_datetime,getdate
+from frappe.utils import flt, nowdate, nowtime, today ,add_days,now_datetime,get_datetime, getdate
 from erpnext.setup.doctype.company.test_company import create_child_company
 from assets.assets.doctype.asset.asset import (
 	get_asset_account,
@@ -213,10 +213,10 @@ class TestAssetRepair(unittest.TestCase):
 
 	# TC_FA_137
 	def test_pending_asset_repair_submit_on_complete_status_TC_FA_137(self):
-
 		company = "_Test Company"
 		item_code = "Test_asset_repair_item1"
 		asset_name = "Test_asset_maintainance"
+		
 		# Ensure the company exists
 		if not frappe.db.exists("Company", company):
 			create_child_company()
@@ -231,69 +231,73 @@ class TestAssetRepair(unittest.TestCase):
 				"is_fixed_asset": 1,  # Marking as fixed asset
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category": "Test_Category",
-				"item_group":"Raw Material",
-				"stock_uom":"Nos",
-
+				"item_group": "Raw Material",
+				"stock_uom": "Nos",
 			}
 
 			# Check if 'gst_hsn_code' exists in Item doctype
 			if frappe.db.has_column("Item", "gst_hsn_code"):
-				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+				item_data["gst_hsn_code"] = "01011010"
+			
 			frappe.get_doc(item_data).insert()
-		
+			frappe.db.commit()
+		# Create asset
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
 			"company": company,
 			"item_code": item_code,
 			"asset_name": item_code,
-			"asset_category":"Test_Category",
+			"asset_category": "Test_Category",
 			"location": "Test Location",
-			"is_existing_asset":1,
-			"available_for_use_date":"02-04-2024",
-			"gross_purchase_amount":8000,
-			"total_asset":8000,
-			"asset_quantity":2,
-			"purchase_date":"01-04-2024",
-			"calculate_depreciation":0,
-			"opening_accumulated_depreciation":8000,
-			"opening_number_of_booked_depreciations":8,
-			"is_fully_depreciated":1,
-			"maintenance_required":1,
-			"finance_books":[{
-				"finance_book":"2024-2025",
-				"frequency_of_depreciation":1,
-				"depreciation_method":"Straight Line",
-				"depreciation_start_date":"01-06-2025",
-				"total_number_of_depreciations":12,
-				"total_number_of_booked_depreciations":7,
-				"value_after_depreciation":5000
-					}]
+			"is_existing_asset": 1,
+			"available_for_use_date": nowdate(),
+			"gross_purchase_amount": 8000,
+			"total_asset": 8000,
+			"asset_quantity": 2,
+			"purchase_date": add_days(nowdate(), -1),
+			"calculate_depreciation": 0,
+			"opening_accumulated_depreciation": 8000,
+			"opening_number_of_booked_depreciations": 8,
+			"is_fully_depreciated": 1,
+			"maintenance_required": 1,
+			"finance_books": [{
+				"finance_book": "2024-2025",
+				"frequency_of_depreciation": 1,
+				"depreciation_method": "Straight Line",
+				"depreciation_start_date": add_days(nowdate(), 60),
+				"total_number_of_depreciations": 12,
+				"total_number_of_booked_depreciations": 7,
+				"value_after_depreciation": 5000
+			}]
 		}).insert()
 		target_asset.submit()
 
-		company = "_Test Company"
-		supplier = "_Test Supplier"
-		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
-		required_by_date = nowdate()
-	
+		# Create asset repair entry
+		failure_date = now_datetime()
+		completion_date = add_days(failure_date, 1)
+		
 		asset_repair = frappe.get_doc({
 			"doctype": "Asset Repair",
-			"asset":target_asset,
+			"asset": target_asset.name,
 			"company": company,
-			"failure_date":"17-01-2025 14:49:20",
-			"completion_date":"17-01-2025 14:52:22",
-			"repair_status":"Pending",
-			
-
+			"failure_date": failure_date,
+			"completion_date": completion_date,
+			"repair_status": "Pending",
 		}).insert()
+		
+		# Assert values
+		self.assertEqual(asset_repair.asset, target_asset.name)
+		self.assertEqual(asset_repair.company, company)
+		self.assertEqual(asset_repair.repair_status, "Pending")
+		self.assertEqual(asset_repair.failure_date, failure_date)
+		self.assertEqual(asset_repair.completion_date, completion_date)
 	
 
 	# TC_FA_138
 	def test_completed_asset_repair_submit_on_complete_status_TC_FA_138(self):
-
 		company = "_Test Company"
 		item_code = "Test_asset_repair_item1"
-		asset_name = "Test_asset_maintainance"
+
 		# Ensure the company exists
 		if not frappe.db.exists("Company", company):
 			create_child_company()
@@ -308,66 +312,73 @@ class TestAssetRepair(unittest.TestCase):
 				"is_fixed_asset": 1,  # Marking as fixed asset
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category": "Test_Category",
-				"item_group":"Raw Material",
-				"stock_uom":"Nos",
-
+				"item_group": "Raw Material",
+				"stock_uom": "Nos",
 			}
 
 			# Check if 'gst_hsn_code' exists in Item doctype
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+
 			frappe.get_doc(item_data).insert()
-		
+
+		# Create Asset
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
 			"company": company,
 			"item_code": item_code,
 			"asset_name": item_code,
-			"asset_category":"Test_Category",
+			"asset_category": "Test_Category",
 			"location": "Test Location",
-			"is_existing_asset":1,
-			"available_for_use_date":"02-04-2024",
-			"gross_purchase_amount":8000,
-			"total_asset":8000,
-			"asset_quantity":2,
-			"purchase_date":"01-04-2024",
-			"calculate_depreciation":0,
-			"opening_accumulated_depreciation":8000,
-			"opening_number_of_booked_depreciations":8,
-			"is_fully_depreciated":1,
-			"maintenance_required":1,
-			"finance_books":[{
-				"finance_book":"2024-2025",
-				"frequency_of_depreciation":1,
-				"depreciation_method":"Straight Line",
-				"depreciation_start_date":"01-06-2025",
-				"total_number_of_depreciations":12,
-				"total_number_of_booked_depreciations":7,
-				"value_after_depreciation":5000
-					}]
+			"is_existing_asset": 1,
+			"available_for_use_date": nowdate(),  # Dynamic current date
+			"gross_purchase_amount": 8000,
+			"total_asset": 8000,
+			"asset_quantity": 2,
+			"purchase_date": nowdate(),
+			"calculate_depreciation": 0,
+			"opening_accumulated_depreciation": 8000,
+			"opening_number_of_booked_depreciations": 8,
+			"is_fully_depreciated": 1,
+			"maintenance_required": 1,
+			"finance_books": [{
+				"finance_book": "2024-2025",
+				"frequency_of_depreciation": 1,
+				"depreciation_method": "Straight Line",
+				"depreciation_start_date": add_days(now_datetime(), 365),  # One year later
+				"total_number_of_depreciations": 12,
+				"total_number_of_booked_depreciations": 7,
+				"value_after_depreciation": 5000
+			}]
 		}).insert()
 		target_asset.submit()
 
-		company = "_Test Company"
-		supplier = "_Test Supplier"
-		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
-		required_by_date = nowdate()
-	
+		# Define dynamic failure and completion dates
+		failure_date = get_datetime(add_days(now_datetime(), 5))  # 5 days later
+		completion_date = get_datetime(add_days(now_datetime(), 6))  # 6 days later
+
+		# Create Asset Repair
 		asset_repair = frappe.get_doc({
 			"doctype": "Asset Repair",
-			"asset":target_asset,
+			"asset": target_asset.name,
 			"company": company,
-			"failure_date":"17-01-2025 14:49:20",
-			"completion_date":"17-01-2025 14:52:22",
-			"repair_status":"Completed",
-			
-
+			"failure_date": failure_date,
+			"completion_date": completion_date,
+			"repair_status": "Completed",
 		}).insert()
+		
 		asset_repair.submit()
+
+		# Assertions to validate the values
+		self.assertEqual(asset_repair.asset, target_asset.name)
+		self.assertEqual(asset_repair.company, company)
+		self.assertEqual(asset_repair.repair_status, "Completed")
+		self.assertEqual(str(asset_repair.failure_date), str(failure_date))  # Ensure dates match
+		self.assertEqual(str(asset_repair.completion_date), str(completion_date))
 	
 	# TC_FA_139
 	def test_service_item_asset_repair_submit_on_complete_status_TC_FA_139(self):
-		company = "_Test Company"
+		company = "Test Jio Financial Services Limited"
 		item_code = "Test_asset_nostock_repair_item1"
 		asset_name = "Test_asset_maintainance"
 

@@ -44,7 +44,7 @@ class TestAssetMaintenance(unittest.TestCase):
 			# Check if 'gst_hsn_code' exists in Item doctype
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
-
+			frappe.get_doc(item_data).insert()
 		
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -75,7 +75,6 @@ class TestAssetMaintenance(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 	
 		asset_maintenance = frappe.get_doc({
 		"doctype": "Asset Maintenance",
@@ -98,7 +97,6 @@ class TestAssetMaintenance(unittest.TestCase):
 			}]
 		})
 		asset_maintenance.insert()
-		frappe.db.commit()
 
 	# TC_FA_039
 	def test_asset_maintenance_creation_overdue_TC_FA_039(self):
@@ -124,7 +122,7 @@ class TestAssetMaintenance(unittest.TestCase):
 			# Check if 'gst_hsn_code' exists in Item doctype
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
-
+			frappe.get_doc(item_data).insert()
 		
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -155,7 +153,6 @@ class TestAssetMaintenance(unittest.TestCase):
 					}]
 		}).insert()
 		target_asset.submit()
-		frappe.db.commit()
 	
 		asset_maintenance = frappe.get_doc({
 		"doctype": "Asset Maintenance",
@@ -178,7 +175,6 @@ class TestAssetMaintenance(unittest.TestCase):
 		}]
 		})
 		asset_maintenance.insert()
-		frappe.db.commit()
 	
 	# TC_FA_040
 	def test_asset_maintenance_creation_cancel_TC_FA_040(self):
@@ -285,7 +281,7 @@ class TestAssetMaintenance(unittest.TestCase):
 			# Check if 'gst_hsn_code' exists in Item doctype
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
-
+			frappe.get_doc(item_data).insert()
 		
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -363,7 +359,7 @@ class TestAssetMaintenance(unittest.TestCase):
 			# Check if 'gst_hsn_code' exists in Item doctype
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
-
+			frappe.get_doc(item_data).insert()
 		
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -561,29 +557,30 @@ class TestAssetMaintenance(unittest.TestCase):
 
 
 def create_asset_data():
-	if not frappe.db.exists("Asset Category", "Equipment"):
-		create_asset_category()
-
-	if not frappe.db.exists("Location", "Test Location"):
-		frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert()
-
-	if not frappe.db.exists("Item", "Photocopier"):
-		meta = frappe.get_meta("Asset")
-		naming_series = meta.get_field("naming_series").options
-		frappe.get_doc(
-			{
-				"doctype": "Item",
-				"item_code": "Photocopier",
-				"item_name": "Photocopier",
-				"item_group": "All Item Groups",
-				"company": "_Test Company",
-				"is_fixed_asset": 1,
-				"is_stock_item": 0,
-				"asset_category": "Equipment",
-				"auto_create_assets": 1,
-				"asset_naming_series": naming_series,
-			}
-		).insert()
+    if not frappe.db.exists("Asset Category", "Equipment"):
+        create_asset_category()
+    if not frappe.db.exists("Location", "Test Location"):
+        frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert()
+    if not frappe.db.exists("Item", "Photocopier"):
+        meta = frappe.get_meta("Asset")
+        naming_series = meta.get_field("naming_series").options
+        doc = frappe.get_doc(
+            {
+                "doctype": "Item",
+                "item_code": "Photocopier",
+                "item_name": "Photocopier",
+                "item_group": "All Item Groups",
+                "company": "_Test Company",
+                "is_fixed_asset": 1,
+                "is_stock_item": 0,
+                "asset_category": "Equipment",
+                "auto_create_assets": 1,
+                "asset_naming_series": naming_series,
+            }
+        )
+        if frappe.db.has_column("Item", "gst_hsn_code"):
+            doc.gst_hsn_code = "01011010"  # Add only if field exists
+        doc.insert()
 
 
 def create_maintenance_team():
