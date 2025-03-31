@@ -240,7 +240,6 @@ class TestAssetRepair(unittest.TestCase):
 				item_data["gst_hsn_code"] = "01011010"
 			
 			frappe.get_doc(item_data).insert()
-			frappe.db.commit()
 		# Create asset
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
