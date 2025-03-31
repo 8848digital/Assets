@@ -32,7 +32,8 @@ from frappe.utils import (
 	is_last_day_of_the_month,
 	nowdate,
 	now_datetime,
-	today
+	today,
+	add_years
 )
 import frappe.utils
 from frappe.utils.data import add_to_date
@@ -5176,6 +5177,15 @@ class TestAsset(AssetSetup):
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
 
+		# Get the current date
+		today = getdate()
+
+		# Dynamically determine financial year start and next year
+		financial_year_start = today.replace(month=4, day=1)
+		available_for_use_date = add_days(financial_year_start, 1)  # April 2nd of the same year
+		financial_year = f"{financial_year_start.year}-{add_years(financial_year_start, 1).year}"
+		depreciation_start_date = add_years(financial_year_start, 1).replace(month=6, day=1)  # June 1st of next year
+
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
 			"company": company,
@@ -5184,22 +5194,22 @@ class TestAsset(AssetSetup):
 			"asset_category": "Test_Category",
 			"location": "Test Location",
 			"is_existing_asset": 1,
-			"available_for_use_date": "2024-04-02",
+			"available_for_use_date": available_for_use_date,
 			"gross_purchase_amount": "12000",
 			"asset_quantity": 1,
-			"purchase_date": "2024-04-01",
+			"purchase_date": financial_year_start,
 			"calculate_depreciation": 1,
 			"opening_accumulated_depreciation": "7000",
 			"opening_number_of_booked_depreciations": 7,
 			"finance_books": [{
-				"finance_book": "2024-2025",
+				"finance_book": f"{getdate('2024-04-01').year}-{getdate('2025-03-31').year}",
 				"frequency_of_depreciation": 1,
 				"depreciation_method": "Double Declining Balance",
-				"depreciation_start_date": "2025-06-01",
+				"depreciation_start_date": depreciation_start_date,
 				"total_number_of_depreciations": 12,
 				"total_number_of_booked_depreciations": 7,
 				"value_after_depreciation": 5000,
-				"daily_prorata_based":1
+				"daily_prorata_based": 1
 			}]
 		}).insert()
 		target_asset.submit()
