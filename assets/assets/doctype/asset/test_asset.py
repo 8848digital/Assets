@@ -14,6 +14,7 @@ from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
 from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
 	make_purchase_receipt,
 )
+from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 from erpnext.stock.doctype.material_request.material_request import make_purchase_order
 from erpnext.setup.doctype.company.test_company import create_child_company
 from erpnext.buying.doctype.purchase_order.test_purchase_order import create_purchase_order
@@ -3037,24 +3038,13 @@ class TestAsset(AssetSetup):
 		depreciation_method = "Staight Line"
 		total_depreciations = 12
 		depreciation_frequency_months = 1
-
-		# Ensure prerequisites exist
+		
 		if not frappe.db.exists("Item", item_code):
-			item_data = {
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"is_stock_item": 0,
-				"is_fixed_asset": 0	
-			}
+			item_create = make_test_item(item_code)
+			item_create.is_stock_item = 0
+			item_create.is_fixed_asset = 0
+			item_create.insert()
 
-			# Check if 'gst_hsn_code' exists in Item doctype
-			if frappe.db.has_column("Item", "gst_hsn_code"):
-				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
-
-			frappe.get_doc(item_data).insert()
-
-		# Create the Purchase Receipt (PR)
 		pr = make_purchase_receipt(
 			company=company,
 			supplier=supplier,
@@ -3102,21 +3092,11 @@ class TestAsset(AssetSetup):
 		total_depreciations = 12
 		depreciation_frequency_months = 1
 
-		# Ensure prerequisites exist
 		if not frappe.db.exists("Item", item_code):
-			item_data = {
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"is_stock_item": 0,
-				"is_fixed_asset": 0	
-			}
-
-			# Check if 'gst_hsn_code' exists in Item doctype
-			if frappe.db.has_column("Item", "gst_hsn_code"):
-				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
-
-			frappe.get_doc(item_data).insert()
+			item_create = make_test_item(item_code)
+			item_create.is_stock_item = 0
+			item_create.is_fixed_asset = 0
+			item_create.insert()
 
 		# Create the Purchase Receipt (PR)
 		pr = make_purchase_receipt(
@@ -3168,19 +3148,10 @@ class TestAsset(AssetSetup):
 
 		# Ensure prerequisites exist
 		if not frappe.db.exists("Item", item_code):
-			item_data = {
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"is_stock_item": 0,
-				"is_fixed_asset": 0	
-			}
-
-			# Check if 'gst_hsn_code' exists in Item doctype
-			if frappe.db.has_column("Item", "gst_hsn_code"):
-				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
-
-			frappe.get_doc(item_data).insert()
+			item_create = make_test_item(item_code)
+			item_create.is_stock_item = 0
+			item_create.is_fixed_asset = 0
+			item_create.insert()
 
 		# Create the Purchase Receipt (PR)
 		pr = make_purchase_receipt(
@@ -3232,19 +3203,10 @@ class TestAsset(AssetSetup):
 
 		# Ensure prerequisites exist
 		if not frappe.db.exists("Item", item_code):
-			item_data = {
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"is_stock_item": 0,
-				"is_fixed_asset": 0	
-			}
-
-			# Check if 'gst_hsn_code' exists in Item doctype
-			if frappe.db.has_column("Item", "gst_hsn_code"):
-				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
-
-			frappe.get_doc(item_data).insert()
+			item_create = make_test_item(item_code)
+			item_create.is_stock_item = 0
+			item_create.is_fixed_asset = 0
+			item_create.insert()
 
 		# Create the Purchase Receipt (PR)
 		pr = make_purchase_receipt(
@@ -3297,19 +3259,10 @@ class TestAsset(AssetSetup):
 
 		# Ensure prerequisites exist
 		if not frappe.db.exists("Item", item_code):
-			item_data = {
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"is_stock_item": 0,
-				"is_fixed_asset": 0	
-			}
-
-			# Check if 'gst_hsn_code' exists in Item doctype
-			if frappe.db.has_column("Item", "gst_hsn_code"):
-				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
-
-			frappe.get_doc(item_data).insert()
+			item_create = make_test_item(item_code)
+			item_create.is_stock_item = 0
+			item_create.is_fixed_asset = 0
+			item_create.insert()
 
 		# Create the Purchase Invoice (PR)
 		pi = make_purchase_invoice(
@@ -3362,19 +3315,10 @@ class TestAsset(AssetSetup):
 
 		# Ensure prerequisites exist
 		if not frappe.db.exists("Item", item_code):
-			item_data = {
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"is_stock_item": 0,
-				"is_fixed_asset": 0	
-			}
-
-			# Check if 'gst_hsn_code' exists in Item doctype
-			if frappe.db.has_column("Item", "gst_hsn_code"):
-				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
-
-			frappe.get_doc(item_data).insert()
+			item_create = make_test_item(item_code)
+			item_create.is_stock_item = 0
+			item_create.is_fixed_asset = 0
+			item_create.insert()
 
 		# Create the Purchase Invoice (PR)
 		pi = make_purchase_invoice(
@@ -3428,19 +3372,10 @@ class TestAsset(AssetSetup):
 
 		# Ensure prerequisites exist
 		if not frappe.db.exists("Item", item_code):
-			item_data = {
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"is_stock_item": 0,
-				"is_fixed_asset": 0	
-			}
-
-			# Check if 'gst_hsn_code' exists in Item doctype
-			if frappe.db.has_column("Item", "gst_hsn_code"):
-				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
-
-			frappe.get_doc(item_data).insert()
+			item_create = make_test_item(item_code)
+			item_create.is_stock_item = 0
+			item_create.is_fixed_asset = 0
+			item_create.insert()
 
 		# Create the Purchase Invoice (PR)
 		pi = make_purchase_invoice(
@@ -3495,19 +3430,10 @@ class TestAsset(AssetSetup):
 
 		# Ensure prerequisites exist
 		if not frappe.db.exists("Item", item_code):
-			item_data = {
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"is_stock_item": 0,
-				"is_fixed_asset": 0	
-			}
-
-			# Check if 'gst_hsn_code' exists in Item doctype
-			if frappe.db.has_column("Item", "gst_hsn_code"):
-				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
-
-			frappe.get_doc(item_data).insert()
+			item_create = make_test_item(item_code)
+			item_create.is_stock_item = 0
+			item_create.is_fixed_asset = 0
+			item_create.insert()
 
 		# Create the Purchase Invoice (PR)
 		pi = make_purchase_invoice(
