@@ -416,13 +416,17 @@ class TestAssetRepair(unittest.TestCase):
 		purchase_invoice = frappe.new_doc("Purchase Invoice")
 		purchase_invoice.company = company
 		purchase_invoice.supplier = supplier
-		purchase_invoice.posting_date = nowdate()
+		purchase_invoice.posting_date = nowdate()  # Dynamic date
 		purchase_invoice.append("items", {
 			"item_code": "Test Service Item",
 			"qty": 1,
 			"rate": 5000
 		})
 		purchase_invoice.submit()
+
+		# Define dynamic dates
+		purchase_date = add_days(nowdate(), -30)  # Purchase date 30 days before today
+		depreciation_start_date = purchase_date  # Ensure it's not earlier than purchase_date
 
 		# Create Asset
 		grouped_asset = frappe.get_doc({
@@ -433,10 +437,10 @@ class TestAssetRepair(unittest.TestCase):
 			"asset_category": "Test_Category",
 			"location": location,
 			"is_existing_asset": 1,
-			"available_for_use_date": getdate("2024-01-01"),
+			"available_for_use_date": purchase_date,  # Same as purchase date
 			"gross_purchase_amount": "12000",
 			"asset_quantity": 5,
-			"purchase_date": getdate("2024-01-01"),
+			"purchase_date": purchase_date,  # Dynamic date
 			"calculate_depreciation": 1,
 			"finance_books": [{
 				"finance_book": "Test Finance Book 1",
@@ -444,7 +448,7 @@ class TestAssetRepair(unittest.TestCase):
 				"total_number_of_depreciations": 12,
 				"frequency_of_depreciation": 1,
 				"salvage_value_percentage": 10,
-				"depreciation_start_date": getdate("31-01-2024")
+				"depreciation_start_date": depreciation_start_date  # Same as purchase_date
 			}]
 		}).insert()
 		grouped_asset.submit()
@@ -455,7 +459,7 @@ class TestAssetRepair(unittest.TestCase):
 			"asset": grouped_asset.name,
 			"company": company,
 			"cost_center": "Main - _TC",
-			"failure_date": nowdate(),
+			"failure_date": nowdate(),  # Dynamic date
 			"repair_status": "Completed",
 			"capitalize_repair_cost": 1,
 			"increase_in_asset_life": 12

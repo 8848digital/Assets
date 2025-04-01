@@ -1420,25 +1420,26 @@ class TestAsset(AssetSetup):
 		asset_new_value_adjust.company = "_Test Company"
 		asset_new_value_adjust.item_code = "Test_asset1"
 		asset_new_value_adjust.is_existing_asset = 1
-		asset_new_value_adjust.location  = "Test"
-		asset_new_value_adjust.available_for_use_date = getdate("01-09-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
-		asset_new_value_adjust.purchase_date = getdate("01-08-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
+		asset_new_value_adjust.location = "Test"
+		asset_new_value_adjust.available_for_use_date = nowdate()  # Using current date
+		asset_new_value_adjust.purchase_date = nowdate()  # Using current date
 		asset_new_value_adjust.calculate_depreciation = 1
 		asset_new_value_adjust.gross_purchase_amount = 12000
 		asset_new_value_adjust.calculate_depreciation = 1
 		asset_new_value_adjust.append("finance_books", {
-		"finance_book": "Test Finance Book 1",
-		"depreciation_method": "Straight Line",
-		"total_number_of_depreciations": 12,
-		"frequency_of_depreciation": 1,
-		"depreciation_start_date":getdate("30-04-2025")
+			"finance_book": "Test Finance Book 1",
+			"depreciation_method": "Straight Line",
+			"total_number_of_depreciations": 12,
+			"frequency_of_depreciation": 1,
+			"depreciation_start_date": nowdate()  # Using current date
 		})
 		asset_new_value_adjust.insert()
 		asset_new_value_adjust.submit()
-		compnay_abbr = frappe.db.get_value("Company",asset_new_value_adjust.company,"abbr")
-		asset_value_adjustment=create_asset_value_adjustment(asset_new_value_adjust.name,asset_new_value_adjust.asset_category,asset_new_value_adjust.company)
-		asset_value_adjustment.date =  frappe.utils.nowdate()
-		asset_value_adjustment.difference_account= "_Test Account Cost for Goods Sold - _TC" #f"Accumulated Depreciations - {compnay_abbr}"
+		
+		company_abbr = frappe.db.get_value("Company", asset_new_value_adjust.company, "abbr")
+		asset_value_adjustment = create_asset_value_adjustment(asset_new_value_adjust.name, asset_new_value_adjust.asset_category, asset_new_value_adjust.company)
+		asset_value_adjustment.date = nowdate()  # Using current date
+		asset_value_adjustment.difference_account = "_Test Account Cost for Goods Sold - _TC"  # f"Accumulated Depreciations - {company_abbr}"
 		asset_value_adjustment.new_asset_value = 200000
 		asset_value_adjustment.save()
 		asset_value_adjustment.submit()
@@ -4945,15 +4946,16 @@ class TestAsset(AssetSetup):
 		adjust_asset_value.difference_account = "_Test Bank - _TC"
 		adjust_asset_value.save()
 		adjust_asset_value.submit()
-		print(f"Asset:{pi_asset.name}")
+		
 
 	# TC_FA_141
 	def test_stock_consumption_cost_asset_repair_submit_on_complete_status_TC_FA_141(self):
 		item_code = "Test_asset1"
 		company = "_Test Company"
-		location='Test'
-		supplier = '_Test Supplier'
-		warehouse = 'Cost of Goods Sold - _TC'
+		location = "Test"
+		supplier = "_Test Supplier"
+		warehouse = "Cost of Goods Sold - _TC"
+
 		if not frappe.db.exists("Warehouse", {"warehouse_name": "Cost of Goods Sold - _TIRC", "company": "_Test Indian Registered Company"}):
 			frappe.get_doc({
 				"doctype": "Warehouse",
@@ -4979,16 +4981,22 @@ class TestAsset(AssetSetup):
 				"asset_naming_series": "ACC-ASS-.YYYY.-",
 				"asset_category": "Test_Category"
 			}).insert()
-		purchase_invoice=frappe.new_doc("Purchase Invoice")
-		purchase_invoice.company='_Test Company'
-		purchase_invoice.supplier=supplier
-		purchase_invoice.posting_date=nowdate()
-		purchase_invoice.append("items",{
-			"item_code":'Test Service Item',
-			"qty":1,
-			"rate":5000
+
+		purchase_invoice = frappe.new_doc("Purchase Invoice")
+		purchase_invoice.company = company
+		purchase_invoice.supplier = supplier
+		purchase_invoice.posting_date = nowdate()
+		purchase_invoice.append("items", {
+			"item_code": "Test Service Item",
+			"qty": 1,
+			"rate": 5000
 		})
 		purchase_invoice.submit()
+
+		# Define dynamic dates
+		purchase_date = add_days(nowdate(), -30)  # 30 days before today
+		depreciation_start_date = purchase_date  # Ensuring it's not before purchase_date
+
 		grouped_asset = frappe.get_doc({
 			"doctype": "Asset",
 			"company": company,
@@ -4997,10 +5005,10 @@ class TestAsset(AssetSetup):
 			"asset_category": "Test_Category",
 			"location": location,
 			"is_existing_asset": 1,
-			"available_for_use_date": getdate("2024-01-01"),
+			"available_for_use_date": purchase_date,  # Same as purchase_date
 			"gross_purchase_amount": "12000",
 			"asset_quantity": 5,
-			"purchase_date": getdate("2024-01-01"),
+			"purchase_date": purchase_date,
 			"calculate_depreciation": 1,
 			"finance_books": [{
 				"finance_book": "Test Finance Book 1",
@@ -5008,44 +5016,46 @@ class TestAsset(AssetSetup):
 				"total_number_of_depreciations": 12,
 				"frequency_of_depreciation": 1,
 				"salvage_value_percentage": 10,
-				"depreciation_start_date": getdate("31-01-2024")
+				"depreciation_start_date": depreciation_start_date  # Same as purchase_date
 			}]
 		}).insert()
 		grouped_asset.submit()
-		purchase_invoice_stock=frappe.new_doc("Purchase Invoice")
-		purchase_invoice_stock.company='_Test Company'
-		purchase_invoice_stock.supplier=supplier
-		purchase_invoice_stock.posting_date=nowdate()
+
+		purchase_invoice_stock = frappe.new_doc("Purchase Invoice")
+		purchase_invoice_stock.company = company
+		purchase_invoice_stock.supplier = supplier
+		purchase_invoice_stock.posting_date = nowdate()
 		purchase_invoice_stock.update_stock = 1
-		purchase_invoice_stock.set_warehouse = 'Stores - _TC'
-		purchase_invoice_stock.append("items",{
-			"item_code":'_Test Stock Reco Item',
-			"qty":1,
-			"rate":5000
+		purchase_invoice_stock.set_warehouse = "Stores - _TC"
+		purchase_invoice_stock.append("items", {
+			"item_code": "_Test Stock Reco Item",
+			"qty": 1,
+			"rate": 5000
 		})
 		purchase_invoice_stock.insert()
 		purchase_invoice_stock.submit()
-		repair_asset=create_asset_repair(grouped_asset.name, grouped_asset.asset_name)
+
+		repair_asset = create_asset_repair(grouped_asset.name, grouped_asset.asset_name)
 		repair_asset.asset_doc = frappe.get_doc("Asset", grouped_asset.name)  # Ensure asset_doc is set
-		repair_asset.company = '_Test Company'
-		repair_asset.cost_center = 'Main - _TC'
+		repair_asset.company = company
+		repair_asset.cost_center = "Main - _TC"
 		repair_asset.failure_date = nowdate()
-		repair_asset.repair_status = 'Completed'
-		repair_asset.append("invoices",{
-			"purchase_invoice":purchase_invoice.name,
-			"expense_account":'Cost of Goods Sold - _TC',
-			"repair_cost":5000
+		repair_asset.repair_status = "Completed"
+		repair_asset.append("invoices", {
+			"purchase_invoice": purchase_invoice.name,
+			"expense_account": warehouse,
+			"repair_cost": 5000
 		})
-		# repair_asset.capitalize_repair_cost = 1
+		
 		repair_asset.stock_consumption = 1
-		repair_asset.append('stock_items',{
-			'item_code':'_Test Stock Reco Item',
-			'warehouse':'Stores - _TC',
-			'valuation_rate':1000,
-			'consumed_quantity':1,
-			'total_value':1000
+		repair_asset.append("stock_items", {
+			"item_code": "_Test Stock Reco Item",
+			"warehouse": "Stores - _TC",
+			"valuation_rate": 1000,
+			"consumed_quantity": 1,
+			"total_value": 1000
 		})
-		# repair_asset.increase_in_asset_life = 12
+		
 		repair_asset.insert()
 		repair_asset.submit()
 	
@@ -5099,10 +5109,10 @@ class TestAsset(AssetSetup):
 			"asset_category": "Test_Category",
 			"location": location,
 			"is_existing_asset": 1,
-			"available_for_use_date": getdate("2024-01-01"),
+			"available_for_use_date": nowdate(),
 			"gross_purchase_amount": "12000",
 			"asset_quantity": 5,
-			"purchase_date": getdate("2024-01-01"),
+			"purchase_date": nowdate(),
 			"calculate_depreciation": 1,
 			"finance_books": [{
 				"finance_book": "Test Finance Book 1",
@@ -5110,7 +5120,7 @@ class TestAsset(AssetSetup):
 				"total_number_of_depreciations": 12,
 				"frequency_of_depreciation": 1,
 				"salvage_value_percentage": 10,
-				"depreciation_start_date": getdate("31-01-2024")
+				"depreciation_start_date": nowdate()
 			}]
 		}).insert()
 		grouped_asset.submit()
@@ -5150,6 +5160,7 @@ class TestAsset(AssetSetup):
 		# repair_asset.increase_in_asset_life = 12
 		repair_asset.insert()
 		repair_asset.submit()
+
 		
 	# TC_FA_146
 	def test_asset_and_asset_depreciation_schedule_TC_FA_146(self):
@@ -5178,10 +5189,10 @@ class TestAsset(AssetSetup):
 				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
 
 		# Get the current date
-		today = getdate()
+		today = nowdate()
 
 		# Dynamically determine financial year start and next year
-		financial_year_start = today.replace(month=4, day=1)
+		financial_year_start = getdate(today).replace(month=4, day=1)
 		available_for_use_date = add_days(financial_year_start, 1)  # April 2nd of the same year
 		financial_year = f"{financial_year_start.year}-{add_years(financial_year_start, 1).year}"
 		depreciation_start_date = add_years(financial_year_start, 1).replace(month=6, day=1)  # June 1st of next year
