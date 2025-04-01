@@ -146,14 +146,14 @@ def make_item_gl_entries(self, gl_entries, warehouse_account=None):
 					)
 
 	def make_rate_difference_entry(item):
-		if item.rate_difference_with_purchase_invoice and stock_asset_rbnb:
+		if item.amount_difference_with_purchase_invoice and stock_asset_rbnb:
 			account_currency = get_account_currency(stock_asset_rbnb)
 			self.add_gl_entry(
 				gl_entries=gl_entries,
 				account=stock_asset_rbnb,
 				cost_center=item.cost_center,
 				debit=0.0,
-				credit=flt(item.rate_difference_with_purchase_invoice),
+				credit=flt(item.amount_difference_with_purchase_invoice),
 				remarks=_("Adjustment based on Purchase Invoice rate"),
 				against_account=stock_asset_account_name,
 				account_currency=account_currency,
@@ -186,7 +186,7 @@ def make_item_gl_entries(self, gl_entries, warehouse_account=None):
 			+ flt(item.landed_cost_voucher_amount)
 			+ flt(item.rm_supp_cost)
 			+ flt(item.item_tax_amount)
-			+ flt(item.rate_difference_with_purchase_invoice)
+			+ flt(item.amount_difference_with_purchase_invoice)
 		)
 
 		divisional_loss = flt(
