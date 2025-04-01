@@ -14,6 +14,7 @@ from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
 from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
 	make_purchase_receipt,
 )
+from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 from erpnext.stock.doctype.material_request.material_request import make_purchase_order
 from erpnext.setup.doctype.company.test_company import create_child_company
 from erpnext.buying.doctype.purchase_order.test_purchase_order import create_purchase_order
@@ -3037,8 +3038,13 @@ class TestAsset(AssetSetup):
 		depreciation_method = "Staight Line"
 		total_depreciations = 12
 		depreciation_frequency_months = 1
+		
+		if not frappe.db.exists("Item", item_code):
+			item_create = make_test_item(item_code)
+			item_create.is_stock_item = 0
+			item_create.is_fixed_asset = 0
+			item_create.insert()
 
-		# Create the Purchase Receipt (PR)
 		pr = make_purchase_receipt(
 			company=company,
 			supplier=supplier,
@@ -3086,6 +3092,12 @@ class TestAsset(AssetSetup):
 		total_depreciations = 12
 		depreciation_frequency_months = 1
 
+		if not frappe.db.exists("Item", item_code):
+			item_create = make_test_item(item_code)
+			item_create.is_stock_item = 0
+			item_create.is_fixed_asset = 0
+			item_create.insert()
+
 		# Create the Purchase Receipt (PR)
 		pr = make_purchase_receipt(
 			company=company,
@@ -3098,7 +3110,7 @@ class TestAsset(AssetSetup):
 			location=location,
 			do_not_submit=False
 		)
-		pr.insert()
+		pr.submit()
 
 		# # Fetch the created Asset linked to the item in PR
 		asset = frappe.get_value("Asset", {"item_code": item_code, "location": location, "purchase_receipt": pr.name}, "name")
@@ -3134,6 +3146,13 @@ class TestAsset(AssetSetup):
 		total_depreciations = 12
 		depreciation_frequency_months = 1
 
+		# Ensure prerequisites exist
+		if not frappe.db.exists("Item", item_code):
+			item_create = make_test_item(item_code)
+			item_create.is_stock_item = 0
+			item_create.is_fixed_asset = 0
+			item_create.insert()
+
 		# Create the Purchase Receipt (PR)
 		pr = make_purchase_receipt(
 			company=company,
@@ -3146,7 +3165,7 @@ class TestAsset(AssetSetup):
 			location=location,
 			do_not_submit=False
 		)
-		pr.insert()
+		pr.submit()
 
 		# # Fetch the created Asset linked to the item in PR
 		asset = frappe.get_value("Asset", {"item_code": item_code, "location": location, "purchase_receipt": pr.name}, "name")
@@ -3182,6 +3201,13 @@ class TestAsset(AssetSetup):
 		total_depreciations = 12
 		depreciation_frequency_months = 1
 
+		# Ensure prerequisites exist
+		if not frappe.db.exists("Item", item_code):
+			item_create = make_test_item(item_code)
+			item_create.is_stock_item = 0
+			item_create.is_fixed_asset = 0
+			item_create.insert()
+
 		# Create the Purchase Receipt (PR)
 		pr = make_purchase_receipt(
 			company=company,
@@ -3194,7 +3220,7 @@ class TestAsset(AssetSetup):
 			location=location,
 			do_not_submit=False
 		)
-		pr.insert()
+		pr.submit()
 
 		# # Fetch the created Asset linked to the item in PR
 		asset = frappe.get_value("Asset", {"item_code": item_code, "location": location, "purchase_receipt": pr.name}, "name")
@@ -3231,6 +3257,13 @@ class TestAsset(AssetSetup):
 		total_depreciations = 12
 		depreciation_frequency_months = 1
 
+		# Ensure prerequisites exist
+		if not frappe.db.exists("Item", item_code):
+			item_create = make_test_item(item_code)
+			item_create.is_stock_item = 0
+			item_create.is_fixed_asset = 0
+			item_create.insert()
+
 		# Create the Purchase Invoice (PR)
 		pi = make_purchase_invoice(
 			company=company,
@@ -3244,7 +3277,7 @@ class TestAsset(AssetSetup):
 			location=location,
 			do_not_submit=False
 		)
-		pi.insert()
+		pi.submit()
 
 		# # Fetch the created Asset linked to the item in PR
 		asset = frappe.get_value("Asset", {"item_code": item_code, "location": location, "purchase_invoice": pi.name}, "name")
@@ -3280,6 +3313,13 @@ class TestAsset(AssetSetup):
 		total_depreciations = 12
 		depreciation_frequency_months = 1
 
+		# Ensure prerequisites exist
+		if not frappe.db.exists("Item", item_code):
+			item_create = make_test_item(item_code)
+			item_create.is_stock_item = 0
+			item_create.is_fixed_asset = 0
+			item_create.insert()
+
 		# Create the Purchase Invoice (PR)
 		pi = make_purchase_invoice(
 			company=company,
@@ -3293,7 +3333,6 @@ class TestAsset(AssetSetup):
 			location=location,
 			do_not_submit=False
 		)
-		pi.insert()
 		pi.submit()
 		
 
@@ -3331,6 +3370,13 @@ class TestAsset(AssetSetup):
 		total_depreciations = 12
 		depreciation_frequency_months = 1
 
+		# Ensure prerequisites exist
+		if not frappe.db.exists("Item", item_code):
+			item_create = make_test_item(item_code)
+			item_create.is_stock_item = 0
+			item_create.is_fixed_asset = 0
+			item_create.insert()
+
 		# Create the Purchase Invoice (PR)
 		pi = make_purchase_invoice(
 			company=company,
@@ -3344,7 +3390,6 @@ class TestAsset(AssetSetup):
 			location=location,
 			do_not_submit=False
 		)
-		pi.insert()
 		pi.submit()
 		
 
@@ -3383,6 +3428,13 @@ class TestAsset(AssetSetup):
 		total_depreciations = 12
 		depreciation_frequency_months = 1
 
+		# Ensure prerequisites exist
+		if not frappe.db.exists("Item", item_code):
+			item_create = make_test_item(item_code)
+			item_create.is_stock_item = 0
+			item_create.is_fixed_asset = 0
+			item_create.insert()
+
 		# Create the Purchase Invoice (PR)
 		pi = make_purchase_invoice(
 			company=company,
@@ -3396,7 +3448,6 @@ class TestAsset(AssetSetup):
 			location=location,
 			do_not_submit=False
 		)
-		pi.insert()
 		pi.submit()
 		
 
