@@ -524,8 +524,9 @@ def scrap_asset(asset_name, scrap_date=None):
 		get_link_to_form(asset.doctype, asset.name)
 	)
 
-	depreciate_asset(asset, date, notes)
-	asset.reload()
+	if asset.status != "Fully Depreciated":
+		depreciate_asset(asset, date, notes)
+		asset.reload()
 
 	depreciation_series = frappe.get_cached_value(
 		"Company", asset.company, "series_for_depreciation_entry"
