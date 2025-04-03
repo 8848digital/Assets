@@ -112,7 +112,7 @@ class AssetRepair(AccountsController):
 				)
 
 	def update_status(self):
-		if self.repair_status == "Pending" and self.asset_doc.status != "Out of Order":
+		if self.repair_status == "Pending" and self.status != "Out of Order":
 			frappe.db.set_value("Asset", self.asset, "status", "Out of Order")
 			add_asset_activity(
 				self.asset,
@@ -121,7 +121,7 @@ class AssetRepair(AccountsController):
 				),
 			)
 		else:
-			self.asset_doc.set_status()
+			self.set_status()
 
 	def set_stock_items_cost(self):
 		for item in self.get("stock_items"):
