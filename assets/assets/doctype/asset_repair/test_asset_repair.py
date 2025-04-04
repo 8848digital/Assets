@@ -108,6 +108,82 @@ class TestAssetRepair(unittest.TestCase):
 		}).insert()
 		asset_repair.submit()
 
+	# TC_FA_044
+	def test_pending_asset_repair_submit_on_pending_status_TC_FA_044(self):
+		company = "_Test Company"
+		item_code = "Test_asset_repair_item1"
+		asset_name = "Test_asset_maintainance"
+
+		# Ensure the company exists
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+
+		# Create the item if it doesn't exist
+		if not frappe.db.exists("Item", item_code):
+			item_data = {
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"is_stock_item": 0,
+				"is_fixed_asset": 1,  # Marking as fixed asset
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
+				"asset_category": "Test_Category",
+				"item_group": "Raw Material",
+				"stock_uom": "Nos",
+			}
+
+			# Check if 'gst_hsn_code' exists in Item doctype
+			if frappe.db.has_column("Item", "gst_hsn_code"):
+				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
+			frappe.get_doc(item_data).insert()
+
+		target_asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item_code,
+			"asset_name": item_code,
+			"asset_category": "Test_Category",
+			"location": "Test Location",
+			"is_existing_asset": 1,
+			"available_for_use_date": nowdate(),  # Current date
+			"gross_purchase_amount": 8000,
+			"total_asset": 8000,
+			"asset_quantity": 2,
+			"purchase_date": add_days(nowdate(), -1),  # 1 day before current date
+			"calculate_depreciation": 0,
+			"opening_accumulated_depreciation": 8000,
+			"opening_number_of_booked_depreciations": 8,
+			"is_fully_depreciated": 1,
+			"maintenance_required": 1,
+			"finance_books": [{
+				"finance_book": "2024-2025",
+				"frequency_of_depreciation": 1,
+				"depreciation_method": "Straight Line",
+				"depreciation_start_date": add_days(nowdate(), 60),  # 60 days ahead
+				"total_number_of_depreciations": 12,
+				"total_number_of_booked_depreciations": 7,
+				"value_after_depreciation": 5000
+			}]
+		}).insert()
+		target_asset.submit()
+
+		self.assertEqual(target_asset.docstatus, 1)
+
+		supplier = "_Test Supplier"
+		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
+		required_by_date = nowdate()
+
+		asset_repair = frappe.get_doc({
+			"doctype": "Asset Repair",
+			"asset": target_asset.name,
+			"company": company,
+			"failure_date": now_datetime(),  # Current date & time
+			"completion_date": add_days(now_datetime(), 1),  # 1 day ahead
+			"repair_status": "Pending",
+		}).insert()
+
+		self.assertEqual(asset_repair.repair_status, "Pending")
+
 		
 	# TC_FA_046
 	def test_pending_asset_repair_submit_on_complete_status_TC_FA_046(self):
@@ -475,6 +551,119 @@ class TestAssetRepair(unittest.TestCase):
 		})
 		repair_asset.insert()
 		repair_asset.submit()
+
+	def test_capitalize_repair_cost_asset_repair_submit_on_complete_status_TC_FA_140(self):
+		item_code = "Test_asset1"
+		company = "_Test Company"
+		location = "Test"
+		supplier = "_Test Supplier"
+		warehouse = "Cost of Goods Sold - _TC"
+
+		# Ensure required Warehouse exists
+		if not frappe.db.exists("Warehouse", {"warehouse_name": "Cost of Goods Sold - _TIRC", "company": "_Test Indian Registered Company"}):
+			frappe.get_doc({
+				"doctype": "Warehouse",
+				"warehouse_name": "Cost of Goods Sold - _TIRC",
+				"company": "_Test Indian Registered Company"
+			}).insert()
+
+		# Ensure required Company and Location exist
+		if not frappe.db.exists("Company", company):
+			create_child_company()
+		if not frappe.db.exists("Location", "Test Location"):
+			frappe.get_doc({"doctype": "Location", "location_name": location}).insert()
+
+		# Ensure the Item exists or create it
+		if not frappe.db.exists("Item", item_code):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": item_code,
+				"item_name": item_code,
+				"item_group": "Products",
+				"is_fixed_asset": 1,
+				"is_stock_item": 0,
+				"gst_hsn_code": "01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
+				"asset_category": "Test_Category"
+			}).insert()
+
+		# Create Purchase Invoice
+		purchase_invoice = frappe.new_doc("Purchase Invoice")
+		purchase_invoice.company = company
+		purchase_invoice.supplier = supplier
+		purchase_invoice.posting_date = nowdate()  # Dynamic date
+		purchase_invoice.append("items", {
+			"item_code": "Test Service Item",
+			"qty": 1,
+			"rate": 5000
+		})
+		purchase_invoice.submit()
+
+		# Define dynamic dates
+		purchase_date = add_days(nowdate(), -30)  # Purchase date 30 days before today
+		depreciation_start_date = purchase_date  # Ensure it's not earlier than purchase_date
+
+		# Create Asset
+		grouped_asset = frappe.get_doc({
+			"doctype": "Asset",
+			"company": company,
+			"item_code": item_code,
+			"asset_name": item_code,
+			"asset_category": "Test_Category",
+			"location": location,
+			"is_existing_asset": 1,
+			"available_for_use_date": purchase_date,  # Same as purchase date
+			"gross_purchase_amount": "12000",
+			"asset_quantity": 5,
+			"purchase_date": purchase_date,  # Dynamic date
+			"calculate_depreciation": 1,
+			"finance_books": [{
+				"finance_book": "Test Finance Book 1",
+				"depreciation_method": "Straight Line",
+				"total_number_of_depreciations": 12,
+				"frequency_of_depreciation": 1,
+				"salvage_value_percentage": 10,
+				"depreciation_start_date": depreciation_start_date  # Same as purchase_date
+			}]
+		}).insert()
+		grouped_asset.submit()
+
+		# Assert Asset Creation
+		self.assertEqual(grouped_asset.company, company)
+		self.assertEqual(grouped_asset.item_code, item_code)
+		self.assertEqual(grouped_asset.asset_category, "Test_Category")
+
+		# Create Asset Repair
+		repair_asset = frappe.get_doc({
+			"doctype": "Asset Repair",
+			"asset": grouped_asset.name,
+			"company": company,
+			"cost_center": "Main - _TC",
+			"failure_date": nowdate(),  # Dynamic date
+			"repair_status": "Completed",
+			"capitalize_repair_cost": 1,
+			"increase_in_asset_life": 12
+		})
+
+		# Assign asset_doc before submission to avoid AttributeError
+		repair_asset.asset_doc = frappe.get_doc("Asset", repair_asset.asset)
+
+		repair_asset.append("invoices", {
+			"purchase_invoice": purchase_invoice.name,
+			"expense_account": warehouse,
+			"repair_cost": 5000
+		})
+		repair_asset.insert()
+		repair_asset.submit()
+
+		# Assert Asset Repair Creation
+		self.assertEqual(repair_asset.company, company)
+		self.assertEqual(repair_asset.repair_status, "Completed")
+		self.assertEqual(repair_asset.increase_in_asset_life, 12)
+
+		# Assert Invoice Link
+		self.assertEqual(repair_asset.invoices[0].purchase_invoice, purchase_invoice.name)
+		self.assertEqual(repair_asset.invoices[0].repair_cost, 5000)
 
 	# TC_FA_142
 	def test_stock_acapitalize_repair_and_consumption_cost_asset_repair_TC_FA_142(self):
