@@ -156,7 +156,7 @@ class TestAssetRepair(unittest.TestCase):
 			"is_fully_depreciated": 1,
 			"maintenance_required": 1,
 			"finance_books": [{
-				"finance_book": "2024-2025",
+				"finance_book": f"{getdate('2024-04-01').year}-{getdate('2025-03-31').year}",
 				"frequency_of_depreciation": 1,
 				"depreciation_method": "Straight Line",
 				"depreciation_start_date": add_days(nowdate(), 60),  # 60 days ahead
