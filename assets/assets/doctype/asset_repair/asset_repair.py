@@ -122,7 +122,7 @@ class AssetRepair(AccountsController):
 				),
 			)
 		else:
-			self.asset_doc.set_status()
+			self.set_status()
 
 	def set_stock_items_cost(self):
 		for item in self.get("stock_items"):
