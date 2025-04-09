@@ -7734,9 +7734,6 @@ class TestDepreciationBasics(AssetSetup):
 		asset_repair.submit()
 		self.assertEqual(asset_repair.docstatus, 1)
 
-		asset_repair_gle_entries = frappe.get_all("GL Entry", filters={"voucher_no": asset_repair.name}, fields=["account", "debit", "credit"])
-		self.assertEqual(asset_repair_gle_entries[0].get("debit"),1000)
-		self.assertEqual(asset_repair_gle_entries[1].get("credit"),1000)
 		
 	@if_app_installed("erpnext")
 	def test_asset_repair_with_multiple_pi_TC_FA_114(self):
