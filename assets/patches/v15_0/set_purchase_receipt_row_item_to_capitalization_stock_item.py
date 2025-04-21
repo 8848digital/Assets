@@ -1,22 +1,17 @@
 import frappe
 
-
 def execute():
     # nosemgrep
-    ACSI = frappe.qb.DocType('Asset Capitalization Stock Item')
-    AC = frappe.qb.DocType('Asset Capitalization')
-    PRI = frappe.qb.DocType('Purchase Receipt Item')
-
-    query = (
-        frappe.qb.update(ACSI)
-        .set(ACSI.purchase_receipt_item, PRI.name)
-        .where(
-            (ACSI.parent == AC.name) &
-            (PRI.item_code == ACSI.item_code) &
-            (PRI.wip_composite_asset == AC.target_asset) &
-            (ACSI.purchase_receipt_item.isnull()) &
-            (AC.docstatus == 1)
-        )
+    frappe.db.sql(
+        """
+        UPDATE "tabAsset Capitalization Stock Item" ACSI
+        SET purchase_receipt_item = PRI.name
+        FROM "tabAsset Capitalization" AC,
+             "tabPurchase Receipt Item" PRI
+        WHERE ACSI.parent = AC.name
+          AND PRI.item_code = ACSI.item_code
+          AND PRI.wip_composite_asset = AC.target_asset
+          AND ACSI.purchase_receipt_item IS NULL
+          AND AC.docstatus = 1
+        """
     )
-
-    query.run()

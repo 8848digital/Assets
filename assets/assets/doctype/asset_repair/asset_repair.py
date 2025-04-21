@@ -63,7 +63,7 @@ class AssetRepair(AccountsController):
 	# end: auto-generated types
 
 	def validate(self):
-		# self.asset_doc = frappe.get_doc("Asset", self.asset)
+		self.asset_doc = frappe.get_doc("Asset", self.asset)
 		self.validate_dates()
 		self.validate_purchase_invoice()
 		self.validate_purchase_invoice_repair_cost()
@@ -112,6 +112,7 @@ class AssetRepair(AccountsController):
 				)
 
 	def update_status(self):
+		self.asset_doc = frappe.get_doc("Asset", self.asset)
 		if self.repair_status == "Pending" and self.asset_doc.status != "Out of Order":
 			frappe.db.set_value("Asset", self.asset, "status", "Out of Order")
 			add_asset_activity(
@@ -121,7 +122,7 @@ class AssetRepair(AccountsController):
 				),
 			)
 		else:
-			self.asset_doc.set_status()
+			self.set_status()
 
 	def set_stock_items_cost(self):
 		for item in self.get("stock_items"):
@@ -137,6 +138,7 @@ class AssetRepair(AccountsController):
 		self.total_repair_cost += total_value_of_stock_consumed
 
 	def before_submit(self):
+		self.asset_doc = frappe.get_doc("Asset", self.asset)
 		self.check_repair_status()
 
 		self.asset_doc.flags.increase_in_asset_value_due_to_repair = False
@@ -230,6 +232,7 @@ class AssetRepair(AccountsController):
 			)
 
 	def increase_asset_value(self):
+		self.asset_doc = frappe.get_doc("Asset", self.asset)
 		total_value_of_stock_consumed = self.get_total_value_of_stock_consumed()
 
 		if self.asset_doc.calculate_depreciation:
@@ -419,6 +422,7 @@ class AssetRepair(AccountsController):
 				)
 
 	def modify_depreciation_schedule(self):
+		self.asset_doc = frappe.get_doc("Asset", self.asset)
 		for row in self.asset_doc.finance_books:
 			row.total_number_of_depreciations += (
 				self.increase_in_asset_life / row.frequency_of_depreciation
@@ -455,6 +459,7 @@ class AssetRepair(AccountsController):
 			row.total_number_of_depreciations += 1
 
 	def revert_depreciation_schedule_on_cancellation(self):
+		self.asset_doc = frappe.get_doc("Asset", self.asset)
 		for row in self.asset_doc.finance_books:
 			row.total_number_of_depreciations -= (
 				self.increase_in_asset_life / row.frequency_of_depreciation
