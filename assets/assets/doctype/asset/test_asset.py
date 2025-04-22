@@ -4641,7 +4641,9 @@ class TestAsset(AssetSetup):
 
 		pi_asset.save()
 		pi_asset.submit()
+		self.assertTrue(frappe.db.exists("Asset", pi_asset.name))
 		split_asset(pi_asset.name,split_qty=3)
+		self.assertEqual(frappe.db.get_value("Asset", pi_asset.name, "asset_quantity"), 2)
 		
 	
 	#TC_FA_066
@@ -4651,10 +4653,8 @@ class TestAsset(AssetSetup):
 		pi_asset.is_existing_asset = 1
 		pi_asset.item_code = "Test_(Grouped_Asset)"  # Assign item code
 		pi_asset.location = "Test"
-		pi_asset.gross_purchase_amount = 10000  # Assign correct purchase amount
-		# pi_asset.opening_accumulated_depreciation = 8000
-		# pi_asset.purchase_invoice = pi.name
-		pi_asset.asset_quantity=5
+		pi_asset.gross_purchase_amount = 10000
+		pi_asset.asset_quantity = 5
 		pi_asset.available_for_use_date = getdate("01-01-2024")
 		pi_asset.purchase_date = getdate("01-01-2024")
 		pi_asset.calculate_depreciation = 1
@@ -4670,8 +4670,30 @@ class TestAsset(AssetSetup):
 		})
 
 		pi_asset.save()
+
+		# Check asset is saved
+		self.assertTrue(frappe.db.exists("Asset", pi_asset.name))
+
 		pi_asset.submit()
-		split_asset(pi_asset.name,split_qty=3.5)
+
+		# Perform split
+		split_asset(pi_asset.name, split_qty=3.5)
+
+		# Check original asset quantity is now 2
+		self.assertEqual(frappe.db.get_value("Asset", pi_asset.name, "asset_quantity"), 2)
+
+		# Get the new asset (excluding original one)
+		new_asset = frappe.get_all("Asset",
+			filters={"item_code": "Test_(Grouped_Asset)", "name": ["!=", pi_asset.name]},
+			fields=["name", "asset_quantity"],
+			limit=1
+		)
+
+		self.assertTrue(new_asset)
+		self.assertEqual(new_asset[0].asset_quantity, 3)
+
+
+
 		
 
 	#TC_FA_080
@@ -4761,6 +4783,19 @@ class TestAsset(AssetSetup):
 			si.due_date = frappe.utils.nowdate()
 			si.save()
 			si.submit()
+
+		# Assert that the asset status is updated to 'Sold'
+		pi_asset.reload()
+		self.assertEqual(pi_asset.status, "Sold")
+
+		# Assert that the Sales Invoice has a discounted rate applied
+		self.assertTrue(len(si.items) > 0)
+		self.assertLess(si.items[0].rate, 5000)
+		self.assertEqual(si.items[0].rate, 2100)
+
+
+
+
 			
 
 	#TC_FA_081
@@ -5019,8 +5054,24 @@ class TestAsset(AssetSetup):
 		})
 		jv.insert()
 		jv.submit()
-		print(jv.name)
-		# pass
+				# Reload the Journal Entry to get updated data
+		jv.reload()
+
+		# Assert journal entry is submitted
+		self.assertEqual(jv.docstatus, 1)
+
+		# Assert there are 2 GL entries
+		self.assertEqual(len(jv.accounts), 2)
+
+		# Extract account-wise debit/credit for validation
+		gl_dict = {entry.account: (entry.debit_in_account_currency, entry.credit_in_account_currency) for entry in jv.accounts}
+
+		# Assert Revaluation Surplus debit
+		self.assertEqual(gl_dict.get(revaluation_account, (0, 0))[0], 1000)
+
+		# Assert Impairment Loss credit
+		self.assertEqual(gl_dict.get(account, (0, 0))[1], 1000)
+
 
 	#TC_FA_083
 	def test_case_revaluation_increases_TC_FA_083(self):
