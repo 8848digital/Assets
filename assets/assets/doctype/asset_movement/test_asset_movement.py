@@ -3183,6 +3183,45 @@ class TestAssetMovement(unittest.TestCase):
 			frappe.db.get_value("Asset", asset.name, "location"), "Test Location"
 		)
 
+	def test_last_movement_cancellation_validation(self):
+		pr = make_purchase_receipt(item_code="Macbook Pro", qty=1, rate=100000.0, location="Test Location")
+
+		asset_name = frappe.db.get_value("Asset", {"purchase_receipt": pr.name}, "name")
+		asset = frappe.get_doc("Asset", asset_name)
+		asset.calculate_depreciation = 1
+		asset.available_for_use_date = "2020-06-06"
+		asset.purchase_date = "2020-06-06"
+		asset.append(
+			"finance_books",
+			{
+				"expected_value_after_useful_life": 10000,
+				"next_depreciation_date": "2020-12-31",
+				"depreciation_method": "Straight Line",
+				"total_number_of_depreciations": 3,
+				"frequency_of_depreciation": 10,
+			},
+		)
+		if asset.docstatus == 0:
+			asset.submit()
+
+		AssetMovement = frappe.qb.DocType("Asset Movement")
+		AssetMovementItem = frappe.qb.DocType("Asset Movement Item")
+
+		asset_movement = (
+			frappe.qb.from_(AssetMovement)
+			.join(AssetMovementItem)
+			.on(AssetMovementItem.parent == AssetMovement.name)
+			.select(AssetMovement.name)
+			.where(
+				(AssetMovementItem.asset == asset.name)
+				& (AssetMovement.company == asset.company)
+				& (AssetMovement.docstatus == 1)
+			)
+		).run(as_dict=True)
+
+		asset_movement_doc = frappe.get_doc("Asset Movement", asset_movement[0].name)
+		self.assertRaises(frappe.ValidationError, asset_movement_doc.cancel)
+
 	def test_depriciation_schedule_entry(self):
 		pr = make_purchase_receipt(
 			item_code="Macbook Pro",
