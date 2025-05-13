@@ -211,6 +211,10 @@ def make_item_gl_entries(self, gl_entries):
 			self.get_provisional_accounts()
 
 		for item in self.get("items"):
+			if not frappe.db.has_column(self.doctype, "project"):
+				self.project = ""
+			if not frappe.db.has_column("Item", "project"):
+				item.project = ""
 			if flt(item.base_net_amount):
 				account_currency = get_account_currency(item.expense_account)
 				if item.item_code:
