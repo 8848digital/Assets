@@ -1657,7 +1657,7 @@ class TestAsset(AssetSetup):
 		asset_new_value_adjust.company = "_Test Company"
 		asset_new_value_adjust.item_code = "Test_asset1"
 		asset_new_value_adjust.is_existing_asset = 1
-		asset_new_value_adjust.location = "Test"
+		asset_new_value_adjust.location = "Test Location"
 		asset_new_value_adjust.available_for_use_date = nowdate()  # Using current date
 		asset_new_value_adjust.purchase_date = nowdate()  # Using current date
 		asset_new_value_adjust.calculate_depreciation = 1
@@ -3284,7 +3284,7 @@ class TestAsset(AssetSetup):
 		item_code = "Test Macbook Pro"
 		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
 		required_by_date = nowdate()
-		location = "Ahmedabad"
+		location = "Test Location"
 		finance_book = "2024-2025"
 		depreciation_method = "Staight Line"
 		total_depreciations = 12
@@ -3350,7 +3350,7 @@ class TestAsset(AssetSetup):
 		item_code = "Test Macbook Pro"
 		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
 		required_by_date = nowdate()
-		location = "Ahmedabad"
+		location = "Test Location"
 		finance_book = "2024-2025"
 		depreciation_method = "Written Down Value"
 		total_depreciations = 12
@@ -3416,7 +3416,7 @@ class TestAsset(AssetSetup):
 		item_code = "Test Macbook Pro"
 		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
 		required_by_date = nowdate()
-		location = "Ahmedabad"
+		location = "Test Location"
 		finance_book = "2024-2025"
 		depreciation_method = "Double Declining Balance"
 		total_depreciations = 12
@@ -3483,7 +3483,7 @@ class TestAsset(AssetSetup):
 		item_code = "Test Macbook Pro"
 		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
 		required_by_date = nowdate()
-		location = "Ahmedabad"
+		location = "Test Location"
 		finance_book = "2024-2025"
 		depreciation_method = "Manual"
 		total_depreciations = 12
@@ -3557,7 +3557,7 @@ class TestAsset(AssetSetup):
 		item_code = "Test Macbook Pro"
 		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
 		required_by_date = nowdate()
-		location = "Ahmedabad"
+		location = "Test Location"
 		finance_book = "2024-2025"
 		depreciation_method = "Staight Line"
 		total_depreciations = 12
@@ -3613,7 +3613,7 @@ class TestAsset(AssetSetup):
 		item_code = "Test Macbook Pro"
 		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
 		required_by_date = nowdate()
-		location = "Ahmedabad"
+		location = "Test Location"
 		finance_book = "2024-2025"
 		depreciation_method = "Written Down Value"
 		total_depreciations = 12
@@ -3676,7 +3676,7 @@ class TestAsset(AssetSetup):
 		item_code = "Test Macbook Pro"
 		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
 		required_by_date = nowdate()
-		location = "Ahmedabad"
+		location = "Test Location"
 		finance_book = "2024-2025"
 		depreciation_method = "Double Declining Balance"
 		total_depreciations = 12
@@ -3752,7 +3752,7 @@ class TestAsset(AssetSetup):
 		item_code = "Test Macbook Pro"
 		qty, rate, warehouse = 1, 500, "_Test Warehouse - _TC"
 		required_by_date = nowdate()
-		location = "Ahmedabad"
+		location = "Test Location"
 		finance_book = "2024-2025"
 		depreciation_method = "Manual"
 		total_depreciations = 12
@@ -3933,7 +3933,7 @@ class TestAsset(AssetSetup):
 		asset.company = "_Test Company"
 		asset.item_code = "Test Item"
 		asset.is_existing_asset = 1
-		asset.location  = "Test"
+		asset.location = "Test Location"
 		asset.available_for_use_date = getdate("01-04-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset.purchase_date = getdate("01-04-2024") #frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset.calculate_depreciation = 1
@@ -3956,7 +3956,7 @@ class TestAsset(AssetSetup):
 			asset.cancel()
 			amended_asset=frappe.copy_doc(asset)
 			amended_asset.amended_from = asset.name
-			amended_asset.location = "Test"
+			amended_asset.location = "Test Location"
 			amended_asset.docstatus = 0
 			amended_asset.opening_accumulated_depreciation = 900
 			amended_asset.insert()
@@ -4002,7 +4002,7 @@ class TestAsset(AssetSetup):
 			asset_pi.company = pi.company
 			asset_pi.item_code = "Test_asset1"
 			asset_pi.gross_purchase_amount = 25000
-			asset_pi.location  = "Test"
+			asset_pi.location = "Test Location"
 			asset_pi.available_for_use_date = getdate("01-09-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
 			asset_pi.purchase_date = getdate("01-08-2024")
 			asset_pi.purchase_amount = asset_pi.gross_purchase_amount
@@ -4055,7 +4055,7 @@ class TestAsset(AssetSetup):
 			asset_pi.company = pi.company
 			asset_pi.item_code = "Test_asset1"
 			asset_pi.gross_purchase_amount = 25000
-			asset_pi.location  = "Test"
+			asset_pi.location = "Test Location"
 			asset_pi.available_for_use_date = getdate("01-09-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
 			asset_pi.purchase_date = getdate("01-08-2024")
 			asset_pi.purchase_amount = asset_pi.gross_purchase_amount
@@ -4105,7 +4105,7 @@ class TestAsset(AssetSetup):
 			pi_asset.cancel()
 			amended_asset=frappe.copy_doc(pi_asset)
 			amended_asset.amended_from = pi_asset.name
-			amended_asset.location = "Test"
+			amended_asset.location = "Test Location"
 			for asset_item in amended_asset.finance_books:
 				asset_item.frequency_of_depreciation=5
 			amended_asset.docstatus = 0
@@ -4116,7 +4116,7 @@ class TestAsset(AssetSetup):
 			asset_pi.company = pi.company
 			asset_pi.item_code = "Test_asset1"
 			asset_pi.gross_purchase_amount = 25000
-			asset_pi.location  = "Test"
+			asset_pi.location = "Test Location"
 			asset_pi.available_for_use_date = getdate("01-09-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
 			asset_pi.purchase_date = getdate("01-08-2024")
 			asset_pi.purchase_amount = asset_pi.gross_purchase_amount
@@ -4134,7 +4134,7 @@ class TestAsset(AssetSetup):
 			asset_pi.cancel()
 			amended_asset=frappe.copy_doc(asset_pi)
 			amended_asset.amended_from = asset_pi.name
-			amended_asset.location = "Test"
+			amended_asset.location = "Test Location"
 			for asset_item in amended_asset.finance_books:
 				asset_item.frequency_of_depreciation=5
 			amended_asset.docstatus = 0
@@ -4330,7 +4330,7 @@ class TestAsset(AssetSetup):
 		asset_new_value_adjust.company = "_Test Company"
 		asset_new_value_adjust.item_code = "Test_asset1"
 		asset_new_value_adjust.is_existing_asset = 1
-		asset_new_value_adjust.location  = "Test"
+		asset_new_value_adjust.location = "Test Location"
 		asset_new_value_adjust.available_for_use_date = getdate("01-09-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset_new_value_adjust.purchase_date = getdate("01-08-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset_new_value_adjust.calculate_depreciation = 1
@@ -4360,7 +4360,7 @@ class TestAsset(AssetSetup):
 		asset_scrapped.company = "_Test Company"
 		asset_scrapped.item_code = "Test_asset1"
 		asset_scrapped.is_existing_asset = 1
-		asset_scrapped.location  = "Test"
+		asset_scrapped.location = "Test Location"
 		asset_scrapped.available_for_use_date = getdate("01-09-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset_scrapped.purchase_date = getdate("01-08-2024") #frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset_scrapped.calculate_depreciation = 1
@@ -4388,7 +4388,7 @@ class TestAsset(AssetSetup):
 		asset_scrapped.company = "_Test Company"
 		asset_scrapped.item_code = "Test_asset1"
 		asset_scrapped.is_existing_asset = 1
-		asset_scrapped.location  = "Test"
+		asset_scrapped.location = "Test Location"
 		asset_scrapped.available_for_use_date = getdate("01-09-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset_scrapped.purchase_date = getdate("01-08-2024") #frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset_scrapped.is_fully_depreciated = 1
@@ -4408,7 +4408,7 @@ class TestAsset(AssetSetup):
 		asset_scrapped.company = "_Test Company"
 		asset_scrapped.item_code = "Test_asset1"
 		asset_scrapped.is_existing_asset = 1
-		asset_scrapped.location  = "Test"
+		asset_scrapped.location = "Test Location"
 		asset_scrapped.available_for_use_date = getdate("01-09-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset_scrapped.purchase_date = getdate("01-08-2024") #frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset_scrapped.calculate_depreciation = 1
@@ -4436,7 +4436,7 @@ class TestAsset(AssetSetup):
 		asset_scrapped.company = "_Test Company"
 		asset_scrapped.item_code = "Test_asset1"
 		asset_scrapped.is_existing_asset = 1
-		asset_scrapped.location  = "Test"
+		asset_scrapped.location = "Test Location"
 		asset_scrapped.available_for_use_date = getdate("01-01-2025")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset_scrapped.purchase_date = getdate("01-01-2025") #frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset_scrapped.is_fully_depreciated = 1
@@ -4500,7 +4500,7 @@ class TestAsset(AssetSetup):
 			pi_asset = frappe.new_doc("Asset")
 			pi_asset.company = pi_doc.company
 			pi_asset.item_code = "Test_asset1"  # Assign item code
-			pi_asset.location = "Test"
+			pi_asset.location = "Test Location"
 			pi_asset.gross_purchase_amount = 25000  # Assign correct purchase amount
 			pi_asset.purchase_amount = pi_asset.gross_purchase_amount
 			pi_asset.purchase_invoice = pi.name
@@ -4582,7 +4582,7 @@ class TestAsset(AssetSetup):
 			pi_asset = frappe.new_doc("Asset")
 			pi_asset.company = pi_doc.company
 			pi_asset.item_code = "Test_(Grouped_Asset)"  # Assign item code
-			pi_asset.location = "Test"
+			pi_asset.location = "Test Location"
 			pi_asset.gross_purchase_amount = 25000  # Assign correct purchase amount
 			pi_asset.purchase_amount = pi_asset.gross_purchase_amount
 			pi_asset.purchase_invoice = pi.name
@@ -4622,7 +4622,7 @@ class TestAsset(AssetSetup):
 		asset.company = "_Test Company"
 		asset.item_code = "Test_asset1"
 		asset.is_existing_asset = 1
-		asset.location  = "Test"
+		asset.location = "Test Location"
 		asset.available_for_use_date = getdate("01-04-2024")#frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset.purchase_date = getdate("01-04-2024") #frappe.utils.add_days(frappe.utils.nowdate(),-30)
 		asset.gross_purchase_amount = 10000
@@ -4788,7 +4788,7 @@ class TestAsset(AssetSetup):
 			pi_asset = frappe.new_doc("Asset")
 			pi_asset.company = pi_doc.company
 			pi_asset.item_code = "Test_(Grouped_Asset)"  # Assign item code
-			pi_asset.location = "Test"
+			pi_asset.location = "Test Location"
 			pi_asset.gross_purchase_amount = 10000  # Assign correct purchase amount
 			# pi_asset.purchase_amount = pi_asset.gross_purchase_amount
 			pi_asset.purchase_invoice = pi.name
@@ -4839,7 +4839,7 @@ class TestAsset(AssetSetup):
 			pi_asset = frappe.new_doc("Asset")
 			pi_asset.company = pi_doc.company
 			pi_asset.item_code = "Test_(Grouped_Asset)"  # Assign item code
-			pi_asset.location = "Test"
+			pi_asset.location = "Test Location"
 			pi_asset.gross_purchase_amount = 10000  # Assign correct purchase amount
 			# pi_asset.purchase_amount = pi_asset.gross_purchase_amount
 			pi_asset.purchase_invoice = pi.name
@@ -4908,7 +4908,7 @@ class TestAsset(AssetSetup):
 			pi_asset = frappe.new_doc("Asset")
 			pi_asset.company = pi_doc.company
 			pi_asset.item_code = "Test_(Grouped_Asset)"  # Assign item code
-			pi_asset.location = "Test"
+			pi_asset.location = "Test Location"
 			pi_asset.gross_purchase_amount = 10000  # Assign correct purchase amount
 			pi_asset.opening_accumulated_depreciation = 8000
 			pi_asset.purchase_invoice = pi.name
@@ -4954,7 +4954,7 @@ class TestAsset(AssetSetup):
 		pi_asset.company = "_Test Company"
 		pi_asset.is_existing_asset = 1
 		pi_asset.item_code = "Test_(Grouped_Asset)"  # Assign item code
-		pi_asset.location = "Test"
+		pi_asset.location = "Test Location"
 		pi_asset.gross_purchase_amount = 10000  # Assign correct purchase amount
 		# pi_asset.opening_accumulated_depreciation = 8000
 		# pi_asset.purchase_invoice = pi.name
@@ -4993,7 +4993,7 @@ class TestAsset(AssetSetup):
 		pi_asset.company = "_Test Company"
 		pi_asset.is_existing_asset = 1
 		pi_asset.item_code = "Test_(Grouped_Asset)"  # Assign item code
-		pi_asset.location = "Test"
+		pi_asset.location = "Test Location"
 		pi_asset.gross_purchase_amount = 10000  # Assign correct purchase amount
 		# pi_asset.opening_accumulated_depreciation = 8000
 		# pi_asset.purchase_invoice = pi.name
@@ -5025,7 +5025,7 @@ class TestAsset(AssetSetup):
 		pi_asset.company = "_Test Company"
 		pi_asset.is_existing_asset = 1
 		pi_asset.item_code = "Test_(Grouped_Asset)"  # Assign item code
-		pi_asset.location = "Test"
+		pi_asset.location = "Test Location"
 		pi_asset.gross_purchase_amount = 10000
 		pi_asset.asset_quantity = 5
 		pi_asset.available_for_use_date = getdate("01-01-2024")
@@ -5488,7 +5488,7 @@ class TestAsset(AssetSetup):
 		pi_asset.company = "_Test Company"
 		pi_asset.is_existing_asset = 1
 		pi_asset.item_code = "Test_(Grouped_Asset)"  # Assign item code
-		pi_asset.location = "Test"
+		pi_asset.location = "Test Location"
 		pi_asset.gross_purchase_amount = 72000  # Assign correct purchase amount
 		pi_asset.available_for_use_date = getdate("01-01-2024")
 		pi_asset.purchase_date = getdate("01-01-2024")
@@ -5518,7 +5518,6 @@ class TestAsset(AssetSetup):
 		adjust_asset_value.difference_account = "_Test Bank - _TC"
 		adjust_asset_value.save()
 		adjust_asset_value.submit()
-		print(f"Asset:{pi_asset.name}")
 
 	#TC_FA_084
 	def test_case_revaluation_decreases_TC_FA_084(self):
@@ -5526,7 +5525,7 @@ class TestAsset(AssetSetup):
 		pi_asset.company = "_Test Company"
 		pi_asset.is_existing_asset = 1
 		pi_asset.item_code = "Test_(Grouped_Asset)"  # Assign item code
-		pi_asset.location = "Test"
+		pi_asset.location = "Test Location"
 		pi_asset.gross_purchase_amount = 72000  # Assign correct purchase amount
 		pi_asset.available_for_use_date = getdate("01-01-2024")
 		pi_asset.purchase_date = getdate("01-01-2024")
@@ -5564,7 +5563,7 @@ class TestAsset(AssetSetup):
 	def test_stock_consumption_cost_asset_repair_submit_on_complete_status_TC_FA_141(self):
 		item_code = "Test_asset1"
 		company = "_Test Company"
-		location = "Test"
+		location = "Test Location"
 		supplier = "_Test Supplier"
 		warehouse = "Cost of Goods Sold - _TC"
 
