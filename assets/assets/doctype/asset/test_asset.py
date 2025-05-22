@@ -1416,7 +1416,20 @@ class TestAsset(AssetSetup):
 	def test_create_decapitalization_new_composite_asset_TC_FA_012(self):
 		# Fetch target asset document
 		target_asset_name = "Test_Computer-01"
-
+		if not frappe.db.exists("Asset Category", "Computers"):
+			create_asset_category()
+		if not frappe.db.exists("Item", "Test_Computer-01"):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": "Test_Computer-01",
+				"item_name": "Test_Computer-01",
+				"item_group": "Products",
+				"is_fixed_asset": 1,
+				"is_stock_item": 0,
+				"gst_hsn_code": "01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
+				"asset_category": "Computers"
+			}).insert()
 		# Check if the asset exists
 		if not frappe.db.exists("Asset", target_asset_name):
 			target_asset = frappe.get_doc({
@@ -1437,7 +1450,8 @@ class TestAsset(AssetSetup):
 					"doctype": "Item",
 					"item_code": item,
 					"item_name": item,
-					"asset_category": "Test_Category",
+					"item_group": "Products",
+					"asset_category": "Computers",
 					"is_stock_item": 1  # Ensure these are marked as stock items
 				}).insert()
 
@@ -1534,7 +1548,7 @@ class TestAsset(AssetSetup):
 			"total_value": stock_items_total + asset_items_total + service_items_total,
 			"target_incoming_rate": stock_items_total + asset_items_total + service_items_total,
 			})
-
+		
 		# Override validate method temporarily for this test
 		def dummy_validate(self):
 			pass
@@ -1655,6 +1669,20 @@ class TestAsset(AssetSetup):
 	def test_change_in_asset_value_smaller_than_current_TC_FA_050(self):
 		asset_new_value_adjust = frappe.new_doc("Asset")
 		asset_new_value_adjust.company = "_Test Company"
+		if not frappe.db.exists("Asset Category", "Computers"):
+			create_asset_category()
+		if not frappe.db.exists("Item", "Test_asset1"):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": "Test_asset1",
+				"item_name": "Test_asset1",
+				"item_group": "Products",
+				"is_fixed_asset": 1,
+				"is_stock_item": 0,
+				"gst_hsn_code": "01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
+				"asset_category": "Computers"
+			}).insert()
 		asset_new_value_adjust.item_code = "Test_asset1"
 		asset_new_value_adjust.is_existing_asset = 1
 		asset_new_value_adjust.location = "Test Location"
@@ -1673,7 +1701,6 @@ class TestAsset(AssetSetup):
 		asset_new_value_adjust.insert()
 		asset_new_value_adjust.submit()
 		
-		company_abbr = frappe.db.get_value("Company", asset_new_value_adjust.company, "abbr")
 		asset_value_adjustment = create_asset_value_adjustment(asset_new_value_adjust.name, asset_new_value_adjust.asset_category, asset_new_value_adjust.company)
 		asset_value_adjustment.date = nowdate()  # Using current date
 		asset_value_adjustment.difference_account = "_Test Account Cost for Goods Sold - _TC"  # f"Accumulated Depreciations - {company_abbr}"
