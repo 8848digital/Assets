@@ -2639,6 +2639,14 @@ class TestAsset(AssetSetup):
 		self.assertRaises(frappe.ValidationError, asset.save)
 
 	def test_purchase_asset(self):
+		finance_book_name = "Test Finance Book 1"
+
+		if not frappe.db.exists("Finance Book", finance_book_name):
+			frappe.get_doc({
+				"doctype": "Finance Book",
+				"finance_book_name": finance_book_name
+			}).insert()
+
 		pr = make_purchase_receipt(
 			item_code="Macbook Pro", qty=1, rate=100000.0, location="Test Location"
 		)
@@ -2657,6 +2665,7 @@ class TestAsset(AssetSetup):
 			{
 				"expected_value_after_useful_life": 10000,
 				"depreciation_method": "Straight Line",
+				"finance_book" : finance_book_name,
 				"total_number_of_depreciations": 3,
 				"frequency_of_depreciation": 10,
 				"depreciation_start_date": month_end_date,
@@ -2690,6 +2699,14 @@ class TestAsset(AssetSetup):
 		self.assertEqual(asset.docstatus, 2)
 
 	def test_purchase_of_grouped_asset(self):
+		finance_book_name = "Test Finance Book 1"
+
+		if not frappe.db.exists("Finance Book", finance_book_name):
+			frappe.get_doc({
+				"doctype": "Finance Book",
+				"finance_book_name": finance_book_name
+			}).insert()
+
 		create_fixed_asset_item("Rack", is_grouped_asset=1)
 		pr = make_purchase_receipt(
 			item_code="Rack", qty=3, rate=100000.0, location="Test Location"
@@ -2709,6 +2726,7 @@ class TestAsset(AssetSetup):
 			"finance_books",
 			{
 				"expected_value_after_useful_life": 10000,
+				"finance_book" : finance_book_name,
 				"depreciation_method": "Straight Line",
 				"total_number_of_depreciations": 3,
 				"frequency_of_depreciation": 10,
@@ -2922,6 +2940,13 @@ class TestAsset(AssetSetup):
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import (
 			create_sales_invoice,
 		)
+		finance_book_name = "Test Finance Book 1"
+
+		if not frappe.db.exists("Finance Book", finance_book_name):
+			frappe.get_doc({
+				"doctype": "Finance Book",
+				"finance_book_name": finance_book_name
+			}).insert()
 
 		asset = create_asset(
 			calculate_depreciation=1,
@@ -2931,6 +2956,7 @@ class TestAsset(AssetSetup):
 			total_number_of_depreciations=5,
 			opening_number_of_booked_depreciations=2,
 			frequency_of_depreciation=12,
+			finance_book = finance_book_name,
 			depreciation_start_date="2023-03-31",
 			opening_accumulated_depreciation=24000,
 			gross_purchase_amount=60000,
@@ -2998,6 +3024,15 @@ class TestAsset(AssetSetup):
 		self.assertSequenceEqual(gle, expected_gle)
 
 	def test_asset_with_maintenance_required_status_after_sale(self):
+
+		finance_book_name = "Test Finance Book 1"
+
+		if not frappe.db.exists("Finance Book", finance_book_name):
+			frappe.get_doc({
+				"doctype": "Finance Book",
+				"finance_book_name": finance_book_name
+			}).insert()
+
 		asset = create_asset(
 			calculate_depreciation=1,
 			available_for_use_date="2020-06-06",
@@ -3005,6 +3040,7 @@ class TestAsset(AssetSetup):
 			expected_value_after_useful_life=10000,
 			total_number_of_depreciations=3,
 			frequency_of_depreciation=10,
+			finance_book = finance_book_name,
 			maintenance_required=1,
 			depreciation_start_date="2020-12-31",
 			submit=1,
@@ -6116,6 +6152,7 @@ class TestDepreciationMethods(AssetSetup):
 		self.assertEqual(schedules, expected_schedules)
 
 	def test_schedule_for_double_declining_method_for_existing_asset(self):
+		
 		asset = create_asset(
 			calculate_depreciation=1,
 			available_for_use_date="2030-01-01",
