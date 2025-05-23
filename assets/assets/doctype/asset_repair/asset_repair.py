@@ -148,9 +148,12 @@ class AssetRepair(AccountsController):
 
 			self.increase_asset_value()
 
+			total_repair_cost = self.get_total_value_of_stock_consumed()
+
 			if self.capitalize_repair_cost:
-				self.asset_doc.total_asset_cost += self.repair_cost
-				self.asset_doc.additional_asset_cost += self.repair_cost
+				total_repair_cost += self.repair_cost
+			self.asset_doc.total_asset_cost += total_repair_cost
+			self.asset_doc.additional_asset_cost += total_repair_cost
 
 			if self.get("stock_consumption"):
 				self.check_for_stock_items_and_warehouse()
@@ -189,9 +192,11 @@ class AssetRepair(AccountsController):
 
 			self.decrease_asset_value()
 
+			total_repair_cost = self.get_total_value_of_stock_consumed()
 			if self.capitalize_repair_cost:
-				self.asset_doc.total_asset_cost -= self.repair_cost
-				self.asset_doc.additional_asset_cost -= self.repair_cost
+				total_repair_cost += self.repair_cost
+			self.asset_doc.total_asset_cost -= total_repair_cost
+			self.asset_doc.additional_asset_cost -= total_repair_cost
 
 			if self.get("capitalize_repair_cost"):
 				self.ignore_linked_doctypes = ("GL Entry", "Stock Ledger Entry")

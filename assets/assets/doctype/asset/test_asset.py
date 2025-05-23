@@ -1416,7 +1416,20 @@ class TestAsset(AssetSetup):
 	def test_create_decapitalization_new_composite_asset_TC_FA_012(self):
 		# Fetch target asset document
 		target_asset_name = "Test_Computer-01"
-
+		if not frappe.db.exists("Asset Category", "Computers"):
+			create_asset_category()
+		if not frappe.db.exists("Item", "Test_Computer-01"):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": "Test_Computer-01",
+				"item_name": "Test_Computer-01",
+				"item_group": "Products",
+				"is_fixed_asset": 1,
+				"is_stock_item": 0,
+				"gst_hsn_code": "01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
+				"asset_category": "Computers"
+			}).insert()
 		# Check if the asset exists
 		if not frappe.db.exists("Asset", target_asset_name):
 			target_asset = frappe.get_doc({
@@ -1437,7 +1450,8 @@ class TestAsset(AssetSetup):
 					"doctype": "Item",
 					"item_code": item,
 					"item_name": item,
-					"asset_category": "Test_Category",
+					"item_group": "Products",
+					"asset_category": "Computers",
 					"is_stock_item": 1  # Ensure these are marked as stock items
 				}).insert()
 
@@ -1534,7 +1548,7 @@ class TestAsset(AssetSetup):
 			"total_value": stock_items_total + asset_items_total + service_items_total,
 			"target_incoming_rate": stock_items_total + asset_items_total + service_items_total,
 			})
-
+		
 		# Override validate method temporarily for this test
 		def dummy_validate(self):
 			pass
@@ -1655,6 +1669,20 @@ class TestAsset(AssetSetup):
 	def test_change_in_asset_value_smaller_than_current_TC_FA_050(self):
 		asset_new_value_adjust = frappe.new_doc("Asset")
 		asset_new_value_adjust.company = "_Test Company"
+		if not frappe.db.exists("Asset Category", "Computers"):
+			create_asset_category()
+		if not frappe.db.exists("Item", "Test_asset1"):
+			frappe.get_doc({
+				"doctype": "Item",
+				"item_code": "Test_asset1",
+				"item_name": "Test_asset1",
+				"item_group": "Products",
+				"is_fixed_asset": 1,
+				"is_stock_item": 0,
+				"gst_hsn_code": "01011010",
+				"asset_naming_series": "ACC-ASS-.YYYY.-",
+				"asset_category": "Computers"
+			}).insert()
 		asset_new_value_adjust.item_code = "Test_asset1"
 		asset_new_value_adjust.is_existing_asset = 1
 		asset_new_value_adjust.location = "Test Location"
@@ -1673,7 +1701,6 @@ class TestAsset(AssetSetup):
 		asset_new_value_adjust.insert()
 		asset_new_value_adjust.submit()
 		
-		company_abbr = frappe.db.get_value("Company", asset_new_value_adjust.company, "abbr")
 		asset_value_adjustment = create_asset_value_adjustment(asset_new_value_adjust.name, asset_new_value_adjust.asset_category, asset_new_value_adjust.company)
 		asset_value_adjustment.date = nowdate()  # Using current date
 		asset_value_adjustment.difference_account = "_Test Account Cost for Goods Sold - _TC"  # f"Accumulated Depreciations - {company_abbr}"
@@ -2612,6 +2639,14 @@ class TestAsset(AssetSetup):
 		self.assertRaises(frappe.ValidationError, asset.save)
 
 	def test_purchase_asset(self):
+		finance_book_name = "Test Finance Book 1"
+
+		if not frappe.db.exists("Finance Book", finance_book_name):
+			frappe.get_doc({
+				"doctype": "Finance Book",
+				"finance_book_name": finance_book_name
+			}).insert()
+
 		pr = make_purchase_receipt(
 			item_code="Macbook Pro", qty=1, rate=100000.0, location="Test Location"
 		)
@@ -2630,6 +2665,7 @@ class TestAsset(AssetSetup):
 			{
 				"expected_value_after_useful_life": 10000,
 				"depreciation_method": "Straight Line",
+				"finance_book" : finance_book_name,
 				"total_number_of_depreciations": 3,
 				"frequency_of_depreciation": 10,
 				"depreciation_start_date": month_end_date,
@@ -2663,6 +2699,14 @@ class TestAsset(AssetSetup):
 		self.assertEqual(asset.docstatus, 2)
 
 	def test_purchase_of_grouped_asset(self):
+		finance_book_name = "Test Finance Book 1"
+
+		if not frappe.db.exists("Finance Book", finance_book_name):
+			frappe.get_doc({
+				"doctype": "Finance Book",
+				"finance_book_name": finance_book_name
+			}).insert()
+
 		create_fixed_asset_item("Rack", is_grouped_asset=1)
 		pr = make_purchase_receipt(
 			item_code="Rack", qty=3, rate=100000.0, location="Test Location"
@@ -2682,6 +2726,7 @@ class TestAsset(AssetSetup):
 			"finance_books",
 			{
 				"expected_value_after_useful_life": 10000,
+				"finance_book" : finance_book_name,
 				"depreciation_method": "Straight Line",
 				"total_number_of_depreciations": 3,
 				"frequency_of_depreciation": 10,
@@ -2895,6 +2940,13 @@ class TestAsset(AssetSetup):
 		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import (
 			create_sales_invoice,
 		)
+		finance_book_name = "Test Finance Book 1"
+
+		if not frappe.db.exists("Finance Book", finance_book_name):
+			frappe.get_doc({
+				"doctype": "Finance Book",
+				"finance_book_name": finance_book_name
+			}).insert()
 
 		asset = create_asset(
 			calculate_depreciation=1,
@@ -2904,6 +2956,7 @@ class TestAsset(AssetSetup):
 			total_number_of_depreciations=5,
 			opening_number_of_booked_depreciations=2,
 			frequency_of_depreciation=12,
+			finance_book = finance_book_name,
 			depreciation_start_date="2023-03-31",
 			opening_accumulated_depreciation=24000,
 			gross_purchase_amount=60000,
@@ -2971,6 +3024,15 @@ class TestAsset(AssetSetup):
 		self.assertSequenceEqual(gle, expected_gle)
 
 	def test_asset_with_maintenance_required_status_after_sale(self):
+
+		finance_book_name = "Test Finance Book 1"
+
+		if not frappe.db.exists("Finance Book", finance_book_name):
+			frappe.get_doc({
+				"doctype": "Finance Book",
+				"finance_book_name": finance_book_name
+			}).insert()
+
 		asset = create_asset(
 			calculate_depreciation=1,
 			available_for_use_date="2020-06-06",
@@ -2978,6 +3040,7 @@ class TestAsset(AssetSetup):
 			expected_value_after_useful_life=10000,
 			total_number_of_depreciations=3,
 			frequency_of_depreciation=10,
+			finance_book = finance_book_name,
 			maintenance_required=1,
 			depreciation_start_date="2020-12-31",
 			submit=1,
@@ -6089,6 +6152,7 @@ class TestDepreciationMethods(AssetSetup):
 		self.assertEqual(schedules, expected_schedules)
 
 	def test_schedule_for_double_declining_method_for_existing_asset(self):
+		
 		asset = create_asset(
 			calculate_depreciation=1,
 			available_for_use_date="2030-01-01",

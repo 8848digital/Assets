@@ -211,6 +211,9 @@ class AssetMovement(Document):
 				args,
 				as_dict=True,
 			)
+
+			self.validate_movement_cancellation(d, latest_movement_entry)
+
 			if latest_movement_entry:
 				current_location = latest_movement_entry[0]["target_location"]
 				current_employee = latest_movement_entry[0]["to_employee"]
@@ -273,6 +276,15 @@ class AssetMovement(Document):
 						get_link_to_form("Employee", current_employee)
 					),
 				)
+
+	def validate_movement_cancellation(self, row, latest_movement_entry):
+		asset_doc = frappe.get_doc("Asset", row.asset)
+		if not latest_movement_entry and asset_doc.docstatus == 1:
+			frappe.throw(
+				_(
+					"Asset {0} has only one movement record. Please create another movement before deleting this one to maintain asset tracking."
+				).format(row.asset)
+			)
 
 	def on_cancel_reverse_depreciation_schedule(self):
 		transaction_date = getdate(self.transaction_date)
