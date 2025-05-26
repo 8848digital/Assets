@@ -8415,9 +8415,9 @@ def create_asset(**args):
 	return asset
 
 
-def create_asset_category():
+def create_asset_category(name):
 	asset_category = frappe.new_doc("Asset Category")
-	asset_category.asset_category_name = "Computers"
+	asset_category.asset_category_name = name
 	asset_category.total_number_of_depreciations = 3
 	asset_category.frequency_of_depreciation = 3
 	asset_category.enable_cwip_accounting = 1
@@ -8449,6 +8449,12 @@ def create_fixed_asset_item(item_code=None, auto_create_assets=1, is_grouped_ass
 	naming_series = (
 		meta.get_field("naming_series").options.splitlines()[0] or "ACC-ASS-.YYYY.-"
 	)
+
+	# Conditionally add GST HSN Code if India Compliance is installed
+	installed_apps = frappe.get_installed_apps()
+	if "india_compliance" in installed_apps or "erpnext_regional" in installed_apps:
+		gst_hsn_code = "01011010"  # HSN for laptops
+
 	try:
 		item = frappe.get_doc(
 			{

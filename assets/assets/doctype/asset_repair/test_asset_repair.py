@@ -24,6 +24,7 @@ from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedu
 	get_asset_depr_schedule_doc,
 )
 
+from assets.assets.doctype.asset.test_asset import create_asset_category
 
 class TestAssetRepair(unittest.TestCase):
 	@classmethod
@@ -35,6 +36,9 @@ class TestAssetRepair(unittest.TestCase):
 	
 	# TC_FA_045
 	def test_completed_asset_repair_submit_on_complete_status_TC_FA_045(self):
+		if not frappe.db.exists("Asset Category", "Test_Category"):
+			create_asset_category(name = "Test_Category")
+
 		company = "_Test Company"
 		item_code = "Test_asset_repair_item1"
 		asset_name = "Test_asset_maintainance"
@@ -82,7 +86,7 @@ class TestAssetRepair(unittest.TestCase):
 			"is_fully_depreciated": 1,
 			"maintenance_required": 1,
 			"finance_books": [{
-				"finance_book": f"{getdate('2024-04-01').year}-{getdate('2025-03-31').year}",  # Dynamic financial year
+				"finance_book": "Test Finance Book 1",  # Dynamic financial year
 				"frequency_of_depreciation": 1,
 				"depreciation_method": "Straight Line",
 				"depreciation_start_date": add_days(today, 365),  # One year later
@@ -156,7 +160,7 @@ class TestAssetRepair(unittest.TestCase):
 			"is_fully_depreciated": 1,
 			"maintenance_required": 1,
 			"finance_books": [{
-				"finance_book": f"{getdate('2024-04-01').year}-{getdate('2025-03-31').year}",
+				"finance_book":"Test Finance Book 1",
 				"frequency_of_depreciation": 1,
 				"depreciation_method": "Straight Line",
 				"depreciation_start_date": add_days(nowdate(), 60),  # 60 days ahead
@@ -236,7 +240,7 @@ class TestAssetRepair(unittest.TestCase):
 			"is_fully_depreciated": 1,
 			"maintenance_required": 1,
 			"finance_books": [{
-				"finance_book": f"{getdate('2024-04-01').year}-{getdate('2025-03-31').year}",
+				"finance_book":"Test Finance Book 1",
 				"frequency_of_depreciation": 1,
 				"depreciation_method": "Straight Line",
 				"depreciation_start_date": add_days(nowdate(), 60),
@@ -324,7 +328,7 @@ class TestAssetRepair(unittest.TestCase):
 			"is_fully_depreciated": 1,
 			"maintenance_required": 1,
 			"finance_books": [{
-				"finance_book": f"{getdate('2024-04-01').year}-{getdate('2025-03-31').year}",
+				"finance_book": "Test Finance Book 1",
 				"frequency_of_depreciation": 1,
 				"depreciation_method": "Straight Line",
 				"depreciation_start_date": add_days(nowdate(), 60),
@@ -412,7 +416,7 @@ class TestAssetRepair(unittest.TestCase):
 			"is_fully_depreciated": 1,
 			"maintenance_required": 1,
 			"finance_books": [{
-				"finance_book": f"{getdate('2024-04-01').year}-{getdate('2025-03-31').year}",				"frequency_of_depreciation": 1,
+				"finance_book": "Test Finance Book 1",				"frequency_of_depreciation": 1,
 				"depreciation_method": "Straight Line",
 				"depreciation_start_date": add_days(now_datetime(), 365),  # One year later
 				"total_number_of_depreciations": 12,
@@ -454,6 +458,10 @@ class TestAssetRepair(unittest.TestCase):
 	
 	# TC_FA_139
 	def test_service_item_asset_repair_submit_on_complete_status_TC_FA_139(self):
+		if not frappe.db.exists("Location", "Test"):
+			loc = frappe.new_doc("Location")
+			loc.location_name = "Test"
+			loc.save()
 		item_code = "Test_asset1"
 		company = "_Test Company"
 		location = "Test"
@@ -732,7 +740,7 @@ class TestAssetRepair(unittest.TestCase):
 			"maintenance_required": 1,
 			"finance_books": [
 				{
-					"finance_book": "2024-2025",
+					"finance_book": "Test Finance Book 1",
 					"frequency_of_depreciation": 1,
 					"depreciation_method": "Straight Line",
 					"depreciation_start_date": depreciation_start_date,
