@@ -725,7 +725,6 @@ class TestAssetRepair(unittest.TestCase):
 			"is_existing_asset": 1,
 			"available_for_use_date": nowdate(),
 			"gross_purchase_amount": 8000,
-			"total_asset": 8000,
 			"asset_quantity": 2,
 			"purchase_date": nowdate(),
 			"available_for_use_date": available_for_use_date,
