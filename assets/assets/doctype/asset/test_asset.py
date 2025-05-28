@@ -2970,7 +2970,6 @@ class TestAsset(AssetSetup):
 		]
 
 		first_asset_depr_schedule = get_depr_schedule(asset.name, "Active")
-
 		for i, schedule in enumerate(first_asset_depr_schedule):
 			self.assertEqual(getdate(expected_depr_values[i][0]), schedule.schedule_date)
 			self.assertEqual(expected_depr_values[i][1], schedule.depreciation_amount)
@@ -8466,6 +8465,9 @@ def create_fixed_asset_item(item_code=None, auto_create_assets=1, is_grouped_ass
 				"asset_naming_series": naming_series,
 			}
 		)
+		if "india_compliance" in frappe.get_installed_apps():
+			item.gst_hsn_code = "01011010"
+		item = frappe.get_doc(item)
 		item.insert(ignore_if_duplicate=True)
 	except frappe.DuplicateEntryError:
 		pass
