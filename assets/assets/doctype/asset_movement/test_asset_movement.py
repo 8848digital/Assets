@@ -2350,6 +2350,13 @@ class TestAssetMovement(unittest.TestCase):
 				"company": company
 			}).insert()
 
+		if not frappe.db.exists("Asset Category", "Test_Category"):
+			frappe.get_doc({
+				"doctype": "Asset Category",
+				"asset_category_name": "Test_Category",
+				"accounts": [{"company_name":company, "fixed_asset_account": "Capital Equipments - _TC"}]
+			}).insert()
+
 		# Create item if it doesn't exist
 		if not frappe.db.exists("Item", item_code):
 			frappe.get_doc({
