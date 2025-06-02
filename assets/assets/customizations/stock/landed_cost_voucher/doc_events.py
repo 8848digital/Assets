@@ -1,5 +1,7 @@
 import frappe
 from frappe import _
+from frappe.utils import cint
+
 
 def update_landed_cost(self):
     for d in self.get("purchase_receipts"):

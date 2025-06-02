@@ -631,6 +631,7 @@ def _check_is_pro_rata(asset_doc, row, wdv_or_dd_non_yearly=False):
 		total_days = get_total_days(
 			row.depreciation_start_date, row.frequency_of_depreciation
 		)
+	
 	if days <= 0:
 		frappe.throw(
 			_(
@@ -1244,10 +1245,10 @@ def get_temp_asset_depr_schedule_doc(
 
 @frappe.whitelist()
 def get_depr_schedule(asset_name, status, finance_book=None):
+	
 	asset_depr_schedule_doc = get_asset_depr_schedule_doc(asset_name, status, finance_book)
-
 	if not asset_depr_schedule_doc:
-		return
+		return []
 
 	return asset_depr_schedule_doc.get("depreciation_schedule")
 
@@ -1286,7 +1287,6 @@ def get_asset_depr_schedule_name(asset_name, status, finance_book=None):
 		filters=filters,
 		limit=1,
 	)
-
 
 def is_first_day_of_the_month(date):
 	first_day_of_the_month = get_first_day(date)

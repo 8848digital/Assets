@@ -23,7 +23,8 @@ from assets.assets.doctype.asset.test_asset import (
 from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_asset_depr_schedule_doc,
 )
-
+from erpnext.stock.doctype.item.test_item import make_item
+from assets.assets.doctype.asset.test_asset import create_asset_category, create_asset_category_as_test_category
 
 class TestAssetRepair(unittest.TestCase):
 	@classmethod
@@ -32,20 +33,25 @@ class TestAssetRepair(unittest.TestCase):
 		create_asset_data()
 		create_item("_Test Stock Item")
 		frappe.db.sql("delete from `tabTax Rule`")
-	
+		service_item_creation()
+		create_locatin_test()
+
 	# TC_FA_045
 	def test_completed_asset_repair_submit_on_complete_status_TC_FA_045(self):
+		if not frappe.db.exists("Asset Category", "Test_Category"):
+			create_asset_category_as_test_category(name = "Test_Category")
+
 		company = "_Test Company"
 		item_code = "Test_asset_repair_item1"
 		asset_name = "Test_asset_maintainance"
-		
+
 		# Ensure the company exists
 		if not frappe.db.exists("Company", company):
 			create_child_company()
 
 		# Create the item if it doesn't exist
 		if not frappe.db.exists("Item", item_code):
-			item_data = {
+			item_data = frappe.get_doc({
 				"doctype": "Item",
 				"item_code": item_code,
 				"item_name": item_code,
@@ -55,12 +61,7 @@ class TestAssetRepair(unittest.TestCase):
 				"asset_category": "Test_Category",
 				"item_group": "Raw Material",
 				"stock_uom": "Nos",
-			}
-
-			# Check if 'gst_hsn_code' exists in Item doctype
-			if frappe.db.has_column("Item", "gst_hsn_code"):
-				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
-			frappe.get_doc(item_data).insert()
+			}).insert()
 
 		today = nowdate()
 		target_asset = frappe.get_doc({
@@ -82,7 +83,7 @@ class TestAssetRepair(unittest.TestCase):
 			"is_fully_depreciated": 1,
 			"maintenance_required": 1,
 			"finance_books": [{
-				"finance_book": f"{getdate('2024-04-01').year}-{getdate('2025-03-31').year}",  # Dynamic financial year
+				"finance_book": "Test Finance Book 1",  # Dynamic financial year
 				"frequency_of_depreciation": 1,
 				"depreciation_method": "Straight Line",
 				"depreciation_start_date": add_days(today, 365),  # One year later
@@ -110,6 +111,9 @@ class TestAssetRepair(unittest.TestCase):
 
 	# TC_FA_044
 	def test_pending_asset_repair_submit_on_pending_status_TC_FA_044(self):
+		if not frappe.db.exists("Asset Category", "Test_Category"):
+			create_asset_category_as_test_category(name = "Test_Category")
+
 		company = "_Test Company"
 		item_code = "Test_asset_repair_item1"
 		asset_name = "Test_asset_maintainance"
@@ -184,14 +188,17 @@ class TestAssetRepair(unittest.TestCase):
 
 		self.assertEqual(asset_repair.repair_status, "Pending")
 
-		
+
 	# TC_FA_046
 	def test_pending_asset_repair_submit_on_complete_status_TC_FA_046(self):
+		if not frappe.db.exists("Asset Category", "Test_Category"):
+			create_asset_category_as_test_category(name = "Test_Category")
+
 
 		company = "_Test Company"
 		item_code = "Test_asset_repair_item1"
 		asset_name = "Test_asset_maintainance"
-		
+
 		# Ensure the company exists
 		if not frappe.db.exists("Company", company):
 			create_child_company()
@@ -209,13 +216,13 @@ class TestAssetRepair(unittest.TestCase):
 				"item_group": "Raw Material",
 				"stock_uom": "Nos",
 			}
-			
+
 			# Check if 'gst_hsn_code' exists in Item doctype
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"
-			
+
 			frappe.get_doc(item_data).insert()
-		
+
 		# Create asset
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -246,14 +253,14 @@ class TestAssetRepair(unittest.TestCase):
 			}]
 		}).insert()
 		target_asset.submit()
-		
+
 		# Fetch asset document before creating repair entry
 		asset_doc = frappe.get_doc("Asset", target_asset.name)
-		
+
 		# Create asset repair entry
 		failure_date = now_datetime()
 		completion_date = add_days(failure_date, 1)
-		
+
 		asset_repair = frappe.get_doc({
 			"doctype": "Asset Repair",
 			"asset": target_asset.name,
@@ -262,11 +269,11 @@ class TestAssetRepair(unittest.TestCase):
 			"completion_date": completion_date,
 			"repair_status": "Pending",
 		})
-		
+
 		# Assign asset_doc to asset_repair before insert
 		asset_repair.asset_doc = asset_doc
 		asset_repair.insert()
-		
+
 		# Assert values
 		self.assertEqual(asset_repair.asset, target_asset.name)
 		self.assertEqual(asset_repair.company, company)
@@ -276,10 +283,13 @@ class TestAssetRepair(unittest.TestCase):
 
 	# TC_FA_137
 	def test_pending_asset_repair_submit_on_complete_status_TC_FA_137(self):
+		if not frappe.db.exists("Asset Category", "Test_Category"):
+			create_asset_category_as_test_category(name = "Test_Category")
+
 		company = "_Test Company"
 		item_code = "Test_asset_repair_item1"
 		asset_name = "Test_asset_maintainance"
-		
+
 		# Ensure the company exists
 		if not frappe.db.exists("Company", company):
 			create_child_company()
@@ -297,13 +307,13 @@ class TestAssetRepair(unittest.TestCase):
 				"item_group": "Raw Material",
 				"stock_uom": "Nos",
 			}
-			
+
 			# Check if 'gst_hsn_code' exists in Item doctype
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"
-			
+
 			frappe.get_doc(item_data).insert()
-		
+
 		# Create asset
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
@@ -334,14 +344,14 @@ class TestAssetRepair(unittest.TestCase):
 			}]
 		}).insert()
 		target_asset.submit()
-		
+
 		# Fetch asset document before creating repair entry
 		asset_doc = frappe.get_doc("Asset", target_asset.name)
-		
+
 		# Create asset repair entry
 		failure_date = now_datetime()
 		completion_date = add_days(failure_date, 1)
-		
+
 		asset_repair = frappe.get_doc({
 			"doctype": "Asset Repair",
 			"asset": target_asset.name,
@@ -350,21 +360,24 @@ class TestAssetRepair(unittest.TestCase):
 			"completion_date": completion_date,
 			"repair_status": "Pending",
 		})
-		
+
 		# Assign asset_doc to asset_repair before insert
 		asset_repair.asset_doc = asset_doc
 		asset_repair.insert()
-		
+
 		# Assert values
 		self.assertEqual(asset_repair.asset, target_asset.name)
 		self.assertEqual(asset_repair.company, company)
 		self.assertEqual(asset_repair.repair_status, "Pending")
 		self.assertEqual(asset_repair.failure_date, failure_date)
 		self.assertEqual(asset_repair.completion_date, completion_date)
-	
+
 
 	# TC_FA_138
 	def test_completed_asset_repair_submit_on_complete_status_TC_FA_138(self):
+		if not frappe.db.exists("Asset Category", "Test_Category"):
+			create_asset_category_as_test_category(name = "Test_Category")
+
 		company = "_Test Company"
 		item_code = "Test_asset_repair_item1"
 
@@ -451,7 +464,7 @@ class TestAssetRepair(unittest.TestCase):
 		self.assertEqual(asset_repair.repair_status, "Completed")
 		self.assertEqual(str(asset_repair.failure_date), str(failure_date))  # Ensure dates match
 		self.assertEqual(str(asset_repair.completion_date), str(completion_date))
-	
+
 	# TC_FA_139
 	def test_service_item_asset_repair_submit_on_complete_status_TC_FA_139(self):
 		item_code = "Test_asset1"
@@ -459,7 +472,7 @@ class TestAssetRepair(unittest.TestCase):
 		location = "Test"
 		supplier = "_Test Supplier"
 		warehouse = "Cost of Goods Sold - _TC"
-		
+
 		# Ensure required Warehouse exists
 		if not frappe.db.exists("Warehouse", {"warehouse_name": "Cost of Goods Sold - _TIRC", "company": "_Test Indian Registered Company"}):
 			frappe.get_doc({
@@ -540,10 +553,10 @@ class TestAssetRepair(unittest.TestCase):
 			"capitalize_repair_cost": 1,
 			"increase_in_asset_life": 12
 		})
-		
+
 		# Assign asset_doc before submission to avoid AttributeError
 		repair_asset.asset_doc = frappe.get_doc("Asset", repair_asset.asset)
-		
+
 		repair_asset.append("invoices", {
 			"purchase_invoice": purchase_invoice.name,
 			"expense_account": warehouse,
@@ -570,8 +583,8 @@ class TestAssetRepair(unittest.TestCase):
 		# Ensure required Company and Location exist
 		if not frappe.db.exists("Company", company):
 			create_child_company()
-		if not frappe.db.exists("Location", "Test Location"):
-			frappe.get_doc({"doctype": "Location", "location_name": location}).insert()
+		# if not frappe.db.exists("Location", "Test Location"):
+		# 	frappe.get_doc({"doctype": "Location", "location_name": location}).insert()
 
 		# Ensure the Item exists or create it
 		if not frappe.db.exists("Item", item_code):
@@ -667,6 +680,9 @@ class TestAssetRepair(unittest.TestCase):
 
 	# TC_FA_142
 	def test_stock_acapitalize_repair_and_consumption_cost_asset_repair_TC_FA_142(self):
+		if not frappe.db.exists("Asset Category", "Test_Category"):
+			create_asset_category_as_test_category(name = "Test_Category")
+
 		company = "_Test Company"
 		item_code = "Test_asset_nostock_repair_item1"
 		asset_name = "Test_asset_maintainance"
@@ -689,7 +705,7 @@ class TestAssetRepair(unittest.TestCase):
 				"item_group": "Raw Material",
 				"stock_uom": "Nos",
 			}
-      
+
 			# Check if 'gst_hsn_code' exists in Item doctype
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"
@@ -772,7 +788,7 @@ class TestAssetRepair(unittest.TestCase):
 		})
 		pi.insert()
 		pi.submit()
-    
+
 		self.assertEqual(pi.items[0].item_code, item_code)
 		self.assertEqual(pi.items[0].qty, qty)
 		self.assertEqual(pi.items[0].rate, rate)
@@ -808,7 +824,7 @@ class TestAssetRepair(unittest.TestCase):
 		self.assertEqual(asset_repair.stock_consumption, 1)
 		self.assertEqual(asset_repair.invoices[0].repair_cost, 10000)
 
-		
+
 	def test_update_status(self):
 		asset = create_asset(submit=1)
 		initial_status = asset.status
@@ -1076,6 +1092,18 @@ class TestAssetRepair(unittest.TestCase):
 		stock_entry = frappe.get_last_doc("Stock Entry")
 		self.assertEqual(stock_entry.asset_repair, asset_repair.name)
 
+
+def service_item_creation():
+	if not frappe.db.exists("Item", "Test Service Item"):
+		service_item = make_item("Test Service Item", {
+			"is_stock_item": 0,
+
+		})
+		service_item.save()
+
+def create_locatin_test():
+	if not frappe.db.exists("Location", "Test"):
+		frappe.get_doc({"doctype": "Location", "location_name": "Test"}).insert()
 
 def num_of_depreciations(asset):
 	return asset.finance_books[0].total_number_of_depreciations
