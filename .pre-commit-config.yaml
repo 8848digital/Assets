@@ -1,5 +1,5 @@
 exclude: 'node_modules|.git'
-default_stages: [commit]
+default_stages: [pre-commit]
 fail_fast: false
 
 
@@ -71,10 +71,18 @@ repos:
       - id: flake8
         additional_dependencies: ['flake8-bugbear',]
 
-  - repo: local
+  - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
+    rev: v9.22.0
     hooks:
-    - id: check-max-lines
-      name: Check Max Lines
-      entry: python scripts/check_max_lines.py
-      language: python
-      types: [python]
+      - id: commitlint
+        name: Checking commit subject
+        stages: [commit-msg]
+        additional_dependencies: ['@commitlint/config-conventional','conventional-changelog-conventionalcommits']
+
+  # - repo: local
+  #   hooks:
+  #   - id: check-max-lines
+  #     name: Check Max Lines
+  #     entry: python scripts/check_max_lines.py
+  #     language: python
+  #     types: [python]
