@@ -678,10 +678,11 @@ class TestAssetRepair(unittest.TestCase):
 		self.assertEqual(repair_asset.invoices[0].purchase_invoice, purchase_invoice.name)
 		self.assertEqual(repair_asset.invoices[0].repair_cost, 5000)
 
-	# TC_FA_142
 	def test_stock_acapitalize_repair_and_consumption_cost_asset_repair_TC_FA_142(self):
+		from erpnext.accounts.doctype.account.test_account import create_account
+
 		if not frappe.db.exists("Asset Category", "Test_Category"):
-			create_asset_category_as_test_category(name = "Test_Category")
+			create_asset_category_as_test_category(name="Test_Category")
 
 		company = "_Test Company"
 		item_code = "Test_asset_nostock_repair_item1"
@@ -705,24 +706,29 @@ class TestAssetRepair(unittest.TestCase):
 				"item_group": "Raw Material",
 				"stock_uom": "Nos",
 			}
-
-			# Check if 'gst_hsn_code' exists in Item doctype
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"
 			frappe.get_doc(item_data).insert()
 
-		# Verify item exists
 		self.assertTrue(frappe.db.exists("Item", item_code))
 
-		# Generate dynamic dates
-		today = nowdate()
-		purchase_date = add_days(today, -5)  # 5 days before today
-		available_for_use_date = add_days(today, -3)  # 3 days before today
-		depreciation_start_date = add_days(today, 365)  # 1 year ahead
-		failure_date = now_datetime()  # Current timestamp
-		completion_date = add_days(failure_date, 1)  # 1 day after failure date
+		# Ensure "Service - _TC" expense account exists
+		expense_account = "Service - _TC"
+		if not frappe.db.exists("Account", {"name": expense_account, "company": company}):
+			create_account(
+				account_name="Service",
+				parent_account="Expenses - _TC",
+				company=company,
+				account_type="Expense Account"
+			)
 
-		# Create Asset (Non-Stock)
+		# Dates
+		today = nowdate()
+		purchase_date = add_days(today, -5)
+		available_for_use_date = add_days(today, -3)
+		depreciation_start_date = add_days(today, 365)
+
+		# Create Asset
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
 			"company": company,
@@ -731,11 +737,6 @@ class TestAssetRepair(unittest.TestCase):
 			"asset_category": "Test_Category",
 			"location": "Test Location",
 			"is_existing_asset": 1,
-			"available_for_use_date": nowdate(),
-			"gross_purchase_amount": 8000,
-			"total_asset": 8000,
-			"asset_quantity": 2,
-			"purchase_date": nowdate(),
 			"available_for_use_date": available_for_use_date,
 			"gross_purchase_amount": 8000,
 			"total_asset": 8000,
@@ -759,16 +760,15 @@ class TestAssetRepair(unittest.TestCase):
 			]
 		}).insert()
 		target_asset.submit()
-		# Assertions for Asset
+
 		self.assertEqual(target_asset.company, company)
 		self.assertEqual(target_asset.item_code, item_code)
 		self.assertEqual(target_asset.asset_quantity, 2)
 		self.assertEqual(target_asset.total_asset, 8000)
 
-		# Create Purchase Invoice (for Non-Stock Asset)
+		# Create Purchase Invoice
 		supplier = "_Test Supplier"
 		qty, rate = 1, 500
-
 		pi = frappe.get_doc({
 			"doctype": "Purchase Invoice",
 			"company": company,
@@ -782,7 +782,7 @@ class TestAssetRepair(unittest.TestCase):
 					"rate": rate,
 					"location": "Test Location",
 					"asset_location": "Test Location",
-					"expense_account": "_Test Account Cost for Goods Sold - _TC",
+					"expense_account": expense_account,
 				}
 			]
 		})
@@ -798,26 +798,21 @@ class TestAssetRepair(unittest.TestCase):
 			"doctype": "Asset Repair",
 			"asset": target_asset.name,
 			"company": company,
-			"failure_date": now_datetime().strftime("%d-%m-%Y %H:%M:%S"),
-			"completion_date": now_datetime().strftime("%d-%m-%Y %H:%M:%S"),
+			"failure_date": "17-01-2025 14:49:20",
+			"completion_date": "17-01-2025 14:52:22",
 			"repair_status": "Completed",
 			"capitalize_repair_cost": 1,
 			"stock_consumption": 1,
-			"failure_date": "17-01-2025 14:49:20",
-			"completion_date": "17-01-2025 14:52:22",
-      "capitalize_repair_cost": 1,
-			"repair_status": "Completed",
 			"invoices": [
 				{
 					"purchase_invoice": pi.name,
-					"expense_account": "Service - _TC",
+					"expense_account": expense_account,
 					"repair_cost": 10000,
 				}
 			]
 		}).insert()
 		asset_repair.submit()
 
-		# Assertions for Asset Repair
 		self.assertEqual(asset_repair.company, company)
 		self.assertEqual(asset_repair.repair_status, "Completed")
 		self.assertEqual(asset_repair.capitalize_repair_cost, 1)
