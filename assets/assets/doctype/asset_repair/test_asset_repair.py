@@ -4,6 +4,7 @@
 import unittest
 
 import frappe
+from frappe import _
 from erpnext.stock.doctype.item.test_item import create_item
 from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
 	get_serial_nos_from_bundle,
@@ -609,11 +610,11 @@ class TestAssetRepair(unittest.TestCase):
 			if asset_doc.docstatus == 0:
 				asset_doc.available_for_use_date = purchase_date
 				asset_doc.submit()
-				frappe.msgprint(f"Asset {asset_doc.name} has been submitted.")
+				frappe.msgprint(_("Asset {0} has been submitted.").format(asset_doc.name))
 			else:
-				frappe.msgprint(f"Asset {asset_doc.name} is already submitted.")
+				frappe.msgprint(_("Asset {0} is already submitted.").format(asset_doc.name))
 		else:
-			frappe.msgprint("No asset found for this purchase invoice.")
+			frappe.msgprint(_("No asset found for this purchase invoice."))
 
 
 		# Assert Asset Creation
