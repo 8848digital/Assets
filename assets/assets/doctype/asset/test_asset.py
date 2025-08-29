@@ -8388,7 +8388,7 @@ def create_asset(**args):
 		asset.append(
 			"finance_books",
 			{
-				"finance_book": args.finance_book,
+				"finance_book": args.finance_book or "_Test Finance Book",
 				"depreciation_method": args.depreciation_method or "Straight Line",
 				"frequency_of_depreciation": args.frequency_of_depreciation or 12,
 				"total_number_of_depreciations": args.total_number_of_depreciations or 5,
@@ -8630,6 +8630,7 @@ def create_purchase_receipt(item_1, company, supplier, item_2 = None):
 	return pr.name
 
 def create_assets(company, location, pr, item):
+	depreciation_start_date = add_days(nowdate(), -30)
 	asset = frappe.get_doc(
 		{
 			"doctype": "Asset",
@@ -8641,7 +8642,15 @@ def create_assets(company, location, pr, item):
 			"gross_purchase_amount": 2000,
 			"purchase_amount": 2000,
 			"purchase_date": today(),
-			"available_for_use_date": today()
+			"available_for_use_date": today(),
+			"finance_books": [{
+				"finance_book": "_Test Finance Book",
+				"depreciation_method": "Straight Line",
+				"total_number_of_depreciations": 12,
+				"frequency_of_depreciation": 1,
+				"salvage_value_percentage": 10,
+				"depreciation_start_date": depreciation_start_date  # Same as purchase_date
+			}]
 		}
 	)
 	asset.insert()
