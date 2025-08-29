@@ -12,6 +12,7 @@
   "column_break_3",
   "depreciation_options",
   "enable_cwip_accounting",
+  "non_depreciable_category",
   "finance_book_detail",
   "finance_books",
   "section_break_2",
@@ -63,8 +64,15 @@
    "fieldname": "enable_cwip_accounting",
    "fieldtype": "Check",
    "label": "Enable Capital Work in Progress Accounting"
+  },
+  {
+   "default": "0",
+   "fieldname": "non_depreciable_category",
+   "fieldtype": "Check",
+   "label": "Non Depreciable Category"
   }
  ],
+ "row_format": "Dynamic",
  "links": [],
  "modified": "2021-02-24 15:05:38.621803",
  "modified_by": "Administrator",

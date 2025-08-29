@@ -302,7 +302,6 @@ assets.assets.AssetCapitalization = class AssetCapitalization extends (
 		if (me.frm.doc.target_item_code) {
 			return me.frm.call({
 				method: "assets.assets.doctype.asset_capitalization.asset_capitalization.get_target_item_details",
-				child: me.frm.doc,
 				args: {
 					item_code: me.frm.doc.target_item_code,
 					company: me.frm.doc.company,
@@ -322,7 +321,6 @@ assets.assets.AssetCapitalization = class AssetCapitalization extends (
 		if (me.frm.doc.target_asset) {
 			return me.frm.call({
 				method: "assets.assets.doctype.asset_capitalization.asset_capitalization.get_target_asset_details",
-				child: me.frm.doc,
 				args: {
 					asset: me.frm.doc.target_asset,
 					company: me.frm.doc.company,
@@ -425,7 +423,7 @@ assets.assets.AssetCapitalization = class AssetCapitalization extends (
 					args: {
 						item_code: item.item_code,
 						warehouse: cstr(item.warehouse),
-						qty: flt(item.stock_qty),
+						qty: -1 * flt(item.stock_qty),
 						serial_no: item.serial_no,
 						posting_date: me.frm.doc.posting_date,
 						posting_time: me.frm.doc.posting_time,

@@ -159,6 +159,7 @@
   {
    "allow_on_submit": 1,
    "fetch_from": "item_code.image",
+   "fetch_if_empty": 1,
    "fieldname": "image",
    "fieldtype": "Attach Image",
    "hidden": 1,
@@ -616,7 +617,7 @@
    "link_fieldname": "target_asset"
   }
  ],
- "modified": "2025-04-24 15:31:47.373274",
+ "modified": "2025-05-20 00:44:06.229177",
  "modified_by": "Administrator",
  "module": "Assets",
  "name": "Asset",

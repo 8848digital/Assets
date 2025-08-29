@@ -280,11 +280,11 @@ class AssetDepreciationSchedule(Document):
 		value_after_depreciation,
 	):
 		asset_doc.validate_asset_finance_books(row)
-
-		if not value_after_depreciation:
-			value_after_depreciation = _get_value_after_depreciation_for_making_schedule(
-				asset_doc, row
-			)
+		if (
+			not value_after_depreciation
+			and not asset_doc.flags.decrease_in_asset_value_due_to_value_adjustment
+		):
+			value_after_depreciation = _get_value_after_depreciation_for_making_schedule(asset_doc, row)
 		row.value_after_depreciation = value_after_depreciation
 
 		if update_asset_finance_book_row:
@@ -631,7 +631,7 @@ def _check_is_pro_rata(asset_doc, row, wdv_or_dd_non_yearly=False):
 		total_days = get_total_days(
 			row.depreciation_start_date, row.frequency_of_depreciation
 		)
-	
+
 	if days <= 0:
 		frappe.throw(
 			_(
@@ -1161,11 +1161,6 @@ def make_new_active_asset_depr_schedules_and_cancel_current_ones(
 			)
 
 		new_asset_depr_schedule_doc = frappe.copy_doc(current_asset_depr_schedule_doc)
-		if (
-			asset_doc.flags.decrease_in_asset_value_due_to_value_adjustment
-			and not value_after_depreciation
-		):
-			value_after_depreciation = row.value_after_depreciation - difference_amount
 
 		if (
 			asset_doc.flags.increase_in_asset_value_due_to_repair
@@ -1245,7 +1240,7 @@ def get_temp_asset_depr_schedule_doc(
 
 @frappe.whitelist()
 def get_depr_schedule(asset_name, status, finance_book=None):
-	
+
 	asset_depr_schedule_doc = get_asset_depr_schedule_doc(asset_name, status, finance_book)
 	if not asset_depr_schedule_doc:
 		return []
