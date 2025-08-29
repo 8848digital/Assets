@@ -85,7 +85,7 @@ class AssetRepair(AccountsController):
 
 	def validate_purchase_invoice(self):
 		filters = {"company":self.company}
-		query = expense_item_pi_query(filters)
+		query = updated_expense_item_pi_query(company = self.company)
 		purchase_invoice_list = [item[0] for item in query.run()]
 		for pi in self.invoices:
 			if pi.purchase_invoice not in purchase_invoice_list:
@@ -516,12 +516,12 @@ def get_purchase_invoice(doctype, txt, searchfield, start, page_len, filters):
 
 
 def expense_item_pi_query(
-		filters, 
-		doctype = None , 
-		txt = None , 
-		searchfield = "name" , 
-		start = 0 , 
-		page_len = 10 , 
+		filters,
+		doctype = None ,
+		txt = None ,
+		searchfield = "name" ,
+		start = 0 ,
+		page_len = 10 ,
 	):
 	PurchaseInvoice = DocType("Purchase Invoice")
 	PurchaseInvoiceItem = DocType("Purchase Invoice Item")
@@ -544,13 +544,39 @@ def expense_item_pi_query(
 
 	if filters.get("company"):
 		query = query.where(PurchaseInvoice.company == filters.get("company"))
-	
+
 	if filters.get("docstatus"):
 		query = query.where(PurchaseInvoice.docstatus == filters.get("docstatus"))
 
 	if txt:
 		query = query.where(getattr(PurchaseInvoice, searchfield).like("%" + txt + "%"))
 
+	return query
+
+
+def updated_expense_item_pi_query(
+		# filters,
+		company,
+		doctype = None ,
+	):
+	PurchaseInvoice = DocType("Purchase Invoice")
+	PurchaseInvoiceItem = DocType("Purchase Invoice Item")
+	Item = DocType("Item")
+
+	query = (
+		frappe.qb.from_(PurchaseInvoice)
+		.join(PurchaseInvoiceItem)
+		.on(PurchaseInvoiceItem.parent == PurchaseInvoice.name)
+		.join(Item)
+		.on(Item.name == PurchaseInvoiceItem.item_code)
+		.select(PurchaseInvoice.name)
+		.where(
+			(Item.is_stock_item == 0)
+			& (Item.is_fixed_asset == 1)
+			& (PurchaseInvoice.company == company)
+			& (PurchaseInvoice.docstatus == 1)
+		)
+	)
 	return query
 
 @frappe.whitelist()

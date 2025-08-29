@@ -979,8 +979,8 @@ def get_items_tagged_to_wip_composite_asset(params):
 		"valuation_rate",
 		"amount",
 		"is_fixed_asset",
-		"parent",
-		"name",
+		"parent as purchase_receipt",
+		"name as purchase_receipt_item",
 	]
 
 	pr_items = frappe.get_all(
@@ -1007,7 +1007,7 @@ def process_stock_item(d):
 	stock_capitalized = frappe.db.exists(
 		"Asset Capitalization Stock Item",
 		{
-			"purchase_receipt_item": d.name,
+			"purchase_receipt_item": d.purchase_receipt_item,
 			"parentfield": "stock_items",
 			"parenttype": "Asset Capitalization",
 			"docstatus": 1,
@@ -1027,7 +1027,7 @@ def process_fixed_asset(d):
 		"Asset",
 		{
 			"item_code": d.item_code,
-			"purchase_receipt": d.parent,
+			"purchase_receipt": d.purchase_receipt,
 			"status": ("not in", ["Draft", "Scrapped", "Sold", "Capitalized"]),
 		},
 		["name as asset", "asset_name", "company"],

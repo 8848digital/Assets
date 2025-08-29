@@ -43,8 +43,6 @@ from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedu
 
 class Asset(AccountsController):
 	# begin: auto-generated types
-	# ruff: noqa
-
 	# This code is auto-generated. Do not modify anything in this block.
 
 	from typing import TYPE_CHECKING
@@ -122,10 +120,10 @@ class Asset(AccountsController):
 		total_asset_cost: DF.Currency
 		total_number_of_depreciations: DF.Int
 		value_after_depreciation: DF.Currency
-	# ruff: noqa
 	# end: auto-generated types
 
 	def validate(self):
+		self.validate_category()
 		self.validate_precision()
 		self.set_purchase_doc_row_item()
 		self.validate_asset_values()
@@ -370,6 +368,17 @@ class Asset(AccountsController):
 					),
 					title=_("Missing Finance Book"),
 				)
+
+	def validate_category(self):
+		non_depreciable_category = frappe.db.get_value(
+			"Asset Category", self.asset_category, "non_depreciable_category"
+		)
+		if self.calculate_depreciation and non_depreciable_category:
+			frappe.throw(
+				_(
+					"This asset category is marked as non-depreciable. Please disable depreciation calculation or choose a different category."
+				)
+			)
 
 	def validate_precision(self):
 		if self.gross_purchase_amount:
@@ -883,7 +892,7 @@ class Asset(AccountsController):
 
 			if args.get("rate_of_depreciation") and not flt(args.get("expected_value_after_useful_life")):
 				return args.get("rate_of_depreciation")
-				
+
 				value = flt(args.get("expected_value_after_useful_life")) / flt(
 					args.get("value_after_depreciation")
 				)
