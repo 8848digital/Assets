@@ -89,6 +89,7 @@
    "options": "ACC-ASS-.YYYY.-"
   },
   {
+   "allow_on_submit": 1,
    "depends_on": "item_code",
    "fetch_from": "item_code.item_name",
    "fetch_if_empty": 1,
@@ -516,6 +517,7 @@
    "fieldname": "total_asset_cost",
    "fieldtype": "Currency",
    "label": "Total Asset Cost",
+   "no_copy": 1,
    "options": "Company:company:default_currency",
    "read_only": 1
   },
@@ -524,6 +526,7 @@
    "fieldname": "additional_asset_cost",
    "fieldtype": "Currency",
    "label": "Additional Asset Cost",
+   "no_copy": 1,
    "options": "Company:company:default_currency",
    "read_only": 1
   },
@@ -613,7 +616,7 @@
    "link_fieldname": "target_asset"
   }
  ],
- "modified": "2024-11-21 14:59:07.456081",
+ "modified": "2025-04-24 15:31:47.373274",
  "modified_by": "Administrator",
  "module": "Assets",
  "name": "Asset",
@@ -651,6 +654,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "show_name_in_global_search": 1,
  "sort_field": "modified",
  "sort_order": "DESC",

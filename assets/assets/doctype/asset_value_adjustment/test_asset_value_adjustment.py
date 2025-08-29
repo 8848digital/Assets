@@ -270,6 +270,11 @@ class TestAssetValueAdjustment(unittest.TestCase):
 		self.assertEqual(schedules, expected_schedules)
 
 	def test_difference_amount(self):
+		finance_book = frappe.get_doc({
+			"doctype": "Finance Book",
+			"finance_book_name": "_Test Book"
+		}).insert(ignore_if_duplicate=True, ignore_permissions=True)
+
 		pr = make_purchase_receipt(item_code="Macbook Pro", qty=1, rate=120000.0, location="Test Location")
 
 		asset_name = frappe.db.get_value("Asset", {"purchase_receipt": pr.name}, "name")
@@ -281,6 +286,7 @@ class TestAssetValueAdjustment(unittest.TestCase):
 		asset_doc.append(
 			"finance_books",
 			{
+				"finance_book": finance_book.name,
 				"expected_value_after_useful_life": 200,
 				"depreciation_method": "Straight Line",
 				"total_number_of_depreciations": 12,
