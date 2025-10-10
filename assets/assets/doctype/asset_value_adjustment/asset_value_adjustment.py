@@ -212,6 +212,7 @@ class AssetValueAdjustment(Document):
 		)
 		asset.flags.ignore_validate_update_after_submit = True
 		asset.save()
+		asset.set_status()
 
 
 @frappe.whitelist()
