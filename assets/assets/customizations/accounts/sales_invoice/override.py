@@ -31,7 +31,9 @@ def make_item_gl_entries(self, gl_entries):
 				if item.is_fixed_asset:
 					asset = get_asset(self, item)
 
-					if self.is_return:
+					if (self.docstatus == 2 and not self.is_return) or (
+						self.docstatus == 1 and self.is_return
+					):
 						fixed_asset_gl_entries = get_gl_entries_on_asset_regain(
 							asset,
 							item.base_net_amount,
@@ -44,8 +46,10 @@ def make_item_gl_entries(self, gl_entries):
 						add_asset_activity(asset.name, _("Asset returned"))
 
 						if asset.calculate_depreciation:
-							posting_date = frappe.db.get_value(
-								"Sales Invoice", self.return_against, "posting_date"
+							posting_date = (
+								frappe.db.get_value("Sales Invoice", self.return_against, "posting_date")
+								if self.is_return
+								else self.posting_date
 							)
 							reverse_depreciation_entry_made_after_disposal(asset, posting_date)
 							notes = _(
@@ -131,8 +135,10 @@ def get_asset(doc, item):
     return asset
 
 def set_asset_status(doc, asset):
-    if doc.is_return:
+    if doc.is_return and not doc.docstatus == 2:
         asset.set_status()
+    elif doc.is_return and doc.docstatus == 2:
+        asset.set_status("Sold")
     else:
         asset.set_status("Sold" if doc.docstatus == 1 else None)
 
