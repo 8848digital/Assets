@@ -133,6 +133,10 @@ class Asset(AccountsController):
 		self.validate_gross_and_purchase_amount()
 		self.validate_finance_books()
 
+	def before_save(self):
+		self.total_asset_cost = self.net_purchase_amount + self.additional_asset_cost
+		self.status = self.get_status()
+
 		if not self.split_from:
 			self.prepare_depreciation_data()
 
