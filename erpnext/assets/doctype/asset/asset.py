@@ -69,6 +69,7 @@ class Asset(AccountsController):
 		default_finance_book: DF.Link | None
 		department: DF.Link | None
 		depr_entry_posting_status: DF.Literal["", "Successful", "Failed"]
+		depreciation_completed: DF.Check
 		depreciation_method: DF.Literal["", "Straight Line", "Double Declining Balance", "Manual"]
 		disposal_date: DF.Date | None
 		finance_books: DF.Table[AssetFinanceBook]
