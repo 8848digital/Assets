@@ -64,6 +64,7 @@ class AssetRepair(AccountsController):
 
 	def validate(self):
 		self.asset_doc = frappe.get_doc("Asset", self.asset)
+		self.validate_asset()
 		self.validate_dates()
 		self.validate_purchase_invoice()
 		self.validate_purchase_invoice_repair_cost()
@@ -74,6 +75,14 @@ class AssetRepair(AccountsController):
 			self.set_stock_items_cost()
 		self.calculate_repair_cost()
 		self.calculate_total_repair_cost()
+
+	def validate_asset(self):
+		if self.asset_doc.status in ("Sold", "Fully Depreciated", "Scrapped"):
+			frappe.throw(
+				_("Asset {0} is in {1} status and cannot be repaired.").format(
+					get_link_to_form("Asset", self.asset), self.asset_doc.status
+				)
+			)
 
 	def validate_dates(self):
 		if self.completion_date and (self.failure_date > self.completion_date):
@@ -182,6 +191,13 @@ class AssetRepair(AccountsController):
 					),
 				)
 
+	def cancel_sabb(self):
+		for row in self.stock_items:
+			if sabb := row.serial_and_batch_bundle:
+				row.db_set("serial_and_batch_bundle", None)
+				doc = frappe.get_doc("Serial and Batch Bundle", sabb)
+				doc.cancel()
+
 	def before_cancel(self):
 		self.asset_doc = frappe.get_doc("Asset", self.asset)
 
@@ -222,6 +238,8 @@ class AssetRepair(AccountsController):
 						get_link_to_form("Asset Repair", self.name)
 					),
 				)
+
+		self.cancel_sabb()
 
 	def after_delete(self):
 		frappe.get_doc("Asset", self.asset).set_status()
@@ -581,7 +599,7 @@ def updated_expense_item_pi_query(
 
 @frappe.whitelist()
 def get_expense_account(purchase_invoice):
-    expense_account = frappe.db.get_value("Purchase Invoice Item", {"parent": purchase_invoice}, "expense_account")
-    amount = frappe.db.get_value("Purchase Invoice Item", {"parent": purchase_invoice}, "amount")
+	expense_account = frappe.db.get_value("Purchase Invoice Item", {"parent": purchase_invoice}, "expense_account")
+	amount = frappe.db.get_value("Purchase Invoice Item", {"parent": purchase_invoice}, "amount")
 
-    return {"expense_account": expense_account,"amount":amount}
+	return {"expense_account": expense_account,"amount":amount}
