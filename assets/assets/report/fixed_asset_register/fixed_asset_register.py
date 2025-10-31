@@ -31,51 +31,6 @@ def execute(filters=None):
 	return columns, data, None, chart
 
 
-def get_conditions(filters):
-	conditions = {"docstatus": 1}
-	status = filters.status
-	date_field = frappe.scrub(filters.date_based_on or "Purchase Date")
-
-	if filters.get("company"):
-		conditions["company"] = filters.company
-
-	if filters.filter_based_on == "Date Range":
-		if not filters.from_date and not filters.to_date:
-			filters.from_date = add_months(nowdate(), -12)
-			filters.to_date = nowdate()
-
-		conditions[date_field] = ["between", [filters.from_date, filters.to_date]]
-	elif filters.filter_based_on == "Fiscal Year":
-		if not filters.from_fiscal_year and not filters.to_fiscal_year:
-			default_fiscal_year = get_fiscal_year(today())[0]
-			filters.from_fiscal_year = default_fiscal_year
-			filters.to_fiscal_year = default_fiscal_year
-
-		fiscal_year = get_fiscal_year_data(filters.from_fiscal_year, filters.to_fiscal_year)
-		validate_fiscal_year(fiscal_year, filters.from_fiscal_year, filters.to_fiscal_year)
-		filters.year_start_date = getdate(fiscal_year.year_start_date)
-		filters.year_end_date = getdate(fiscal_year.year_end_date)
-
-		conditions[date_field] = ["between", [filters.year_start_date, filters.year_end_date]]
-
-	if filters.get("only_existing_assets"):
-		conditions["is_existing_asset"] = filters.get("only_existing_assets")
-	if filters.get("asset_category"):
-		conditions["asset_category"] = filters.get("asset_category")
-	if filters.get("cost_center"):
-		conditions["cost_center"] = filters.get("cost_center")
-
-	if status:
-		# In Store assets are those that are not sold or scrapped or capitalized or decapitalized
-		operand = "not in"
-		if status not in "In Location":
-			operand = "in"
-
-		conditions["status"] = (operand, ["Sold", "Scrapped", "Capitalized", "Decapitalized"])
-
-	return conditions
-
-
 def get_data(filters):
 	data = []
 
@@ -97,12 +52,13 @@ def get_data(filters):
 		finance_book = None
 
 	depreciation_amount_map = get_asset_depreciation_amount_map(filters, finance_book)
+	revaluation_amount_map = get_asset_value_adjustment_map(filters, finance_book)
 
 	group_by = frappe.scrub(filters.get("group_by"))
 
 	if group_by in ("asset_category", "location"):
 		data = get_group_by_data(
-			group_by, conditions, assets_linked_to_fb, depreciation_amount_map
+			group_by, conditions, assets_linked_to_fb, depreciation_amount_map, revaluation_amount_map
 		)
 		return data
 
@@ -135,10 +91,12 @@ def get_data(filters):
 			continue
 
 		depreciation_amount = depreciation_amount_map.get(asset.asset_id) or 0.0
+		revaluation_amount = revaluation_amount_map.get(asset.asset_id, 0.0)
 		asset_value = (
 			asset.gross_purchase_amount
 			- asset.opening_accumulated_depreciation
 			- depreciation_amount
+			+ revaluation_amount
 		)
 
 		row = {
@@ -202,6 +160,50 @@ def get_data(filters):
 
 	return new_data
 
+
+def get_conditions(filters):
+	conditions = {"docstatus": 1}
+	status = filters.status
+	date_field = frappe.scrub(filters.date_based_on or "Purchase Date")
+
+	if filters.get("company"):
+		conditions["company"] = filters.company
+
+	if filters.filter_based_on == "Date Range":
+		if not filters.from_date and not filters.to_date:
+			filters.from_date = add_months(nowdate(), -12)
+			filters.to_date = nowdate()
+
+		conditions[date_field] = ["between", [filters.from_date, filters.to_date]]
+	elif filters.filter_based_on == "Fiscal Year":
+		if not filters.from_fiscal_year and not filters.to_fiscal_year:
+			default_fiscal_year = get_fiscal_year(today())[0]
+			filters.from_fiscal_year = default_fiscal_year
+			filters.to_fiscal_year = default_fiscal_year
+
+		fiscal_year = get_fiscal_year_data(filters.from_fiscal_year, filters.to_fiscal_year)
+		validate_fiscal_year(fiscal_year, filters.from_fiscal_year, filters.to_fiscal_year)
+		filters.year_start_date = getdate(fiscal_year.year_start_date)
+		filters.year_end_date = getdate(fiscal_year.year_end_date)
+
+		conditions[date_field] = ["between", [filters.year_start_date, filters.year_end_date]]
+
+	if filters.get("only_existing_assets"):
+		conditions["is_existing_asset"] = filters.get("only_existing_assets")
+	if filters.get("asset_category"):
+		conditions["asset_category"] = filters.get("asset_category")
+	if filters.get("cost_center"):
+		conditions["cost_center"] = filters.get("cost_center")
+
+	if status:
+		# In Store assets are those that are not sold or scrapped or capitalized
+		operand = "not in"
+		if status not in "In Location":
+			operand = "in"
+
+		conditions["status"] = (operand, ["Sold", "Scrapped", "Capitalized"])
+
+	return conditions
 
 def prepare_chart_data(data, filters):
 	if not data:
@@ -368,8 +370,58 @@ def get_asset_depreciation_amount_map(filters, finance_book):
 	return dict(asset_depr_amount_map)
 
 
+def get_asset_value_adjustment_map(filters, finance_book):
+	start_date = filters.from_date if filters.filter_based_on == "Date Range" else filters.year_start_date
+	end_date = filters.to_date if filters.filter_based_on == "Date Range" else filters.year_end_date
+
+	asset = frappe.qb.DocType("Asset")
+	gle = frappe.qb.DocType("GL Entry")
+	aca = frappe.qb.DocType("Asset Category Account")
+	company = frappe.qb.DocType("Company")
+
+	query = (
+		frappe.qb.from_(gle)
+		.join(asset)
+		.on(gle.against_voucher == asset.name)
+		.join(aca)
+		.on((aca.parent == asset.asset_category) & (aca.company_name == asset.company))
+		.join(company)
+		.on(company.name == asset.company)
+		.select(asset.name.as_("asset"), Sum(gle.debit - gle.credit).as_("adjustment_amount"))
+		.where(gle.account == aca.fixed_asset_account)
+		.where(gle.is_cancelled == 0)
+		.where(company.name == filters.company)
+		.where(asset.docstatus == 1)
+	)
+
+	if filters.only_existing_assets:
+		query = query.where(asset.is_existing_asset == 1)
+	if filters.asset_category:
+		query = query.where(asset.asset_category == filters.asset_category)
+	if filters.cost_center:
+		query = query.where(asset.cost_center == filters.cost_center)
+	if filters.status:
+		if filters.status == "In Location":
+			query = query.where(asset.status.notin(["Sold", "Scrapped", "Capitalized"]))
+		else:
+			query = query.where(asset.status.isin(["Sold", "Scrapped", "Capitalized"]))
+	if finance_book:
+		query = query.where((gle.finance_book.isin([cstr(finance_book), ""])) | (gle.finance_book.isnull()))
+	else:
+		query = query.where((gle.finance_book.isin([""])) | (gle.finance_book.isnull()))
+	if filters.filter_based_on in ("Date Range", "Fiscal Year"):
+		query = query.where(gle.posting_date >= start_date)
+		query = query.where(gle.posting_date <= end_date)
+
+	query = query.groupby(asset.name)
+
+	asset_adjustment_map = query.run()
+
+	return dict(asset_adjustment_map)
+
+
 def get_group_by_data(
-	group_by, conditions, assets_linked_to_fb, depreciation_amount_map
+	group_by, conditions, assets_linked_to_fb, depreciation_amount_map, revaluation_amount_map
 ):
 	fields = [
 		group_by,
@@ -383,18 +435,16 @@ def get_group_by_data(
 	data = []
 
 	for a in assets:
-		if (
-			assets_linked_to_fb
-			and a.calculate_depreciation
-			and a.name not in assets_linked_to_fb
-		):
+		if assets_linked_to_fb and a.calculate_depreciation and a.name not in assets_linked_to_fb:
 			continue
 
 		a["depreciated_amount"] = depreciation_amount_map.get(a["name"], 0.0)
+		a["revaluation_amount"] = revaluation_amount_map.get(a["name"], 0.0)
 		a["asset_value"] = (
 			a["gross_purchase_amount"]
 			- a["opening_accumulated_depreciation"]
 			- a["depreciated_amount"]
+			+ a["revaluation_amount"]
 		)
 
 		del a["name"]
@@ -599,17 +649,17 @@ def get_columns(filters):
 
 @frappe.whitelist()
 def asset_category_filter(doctype, txt, searchfield, start, page_len, filters):
-    company = filters.get("company")
-    ac = frappe.qb.DocType('Asset Category')
-    acc = frappe.qb.DocType('Asset Category Account')
-    query = (
-        frappe.qb.from_(ac)
-        .join(acc)
-        .on(acc.parent == ac.name)
-        .select(ac.name)
-        .where(
-            (acc.company_name == company) &
-            (ac.name.like(f"%{txt}%"))
-        )
-    )
-    return query.run()
+	company = filters.get("company")
+	ac = frappe.qb.DocType('Asset Category')
+	acc = frappe.qb.DocType('Asset Category Account')
+	query = (
+		frappe.qb.from_(ac)
+		.join(acc)
+		.on(acc.parent == ac.name)
+		.select(ac.name)
+		.where(
+			(acc.company_name == company) &
+			(ac.name.like(f"%{txt}%"))
+		)
+	)
+	return query.run()

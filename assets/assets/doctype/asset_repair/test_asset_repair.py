@@ -1170,6 +1170,7 @@ def create_asset_repair(**args):
 
 	if args.submit:
 		asset_repair.repair_status = "Completed"
+		asset_repair.completion_date = add_days(args.failure_date, 1)
 		asset_repair.cost_center = frappe.db.get_value(
 			"Company", asset.company, "cost_center"
 		)

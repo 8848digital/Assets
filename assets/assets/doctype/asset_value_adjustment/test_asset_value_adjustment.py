@@ -298,13 +298,13 @@ class TestAssetValueAdjustment(unittest.TestCase):
 
 		adj_doc = make_asset_value_adjustment(
 			asset=asset_doc.name,
-			current_asset_value=54000,
+			current_asset_value=120000,
 			new_asset_value=50000.0,
 			date="2023-08-21",
 		)
 		adj_doc.submit()
 		difference_amount = adj_doc.new_asset_value - adj_doc.current_asset_value
-		self.assertEqual(difference_amount, -4000)
+		self.assertEqual(difference_amount, -70000)
 		asset_doc.load_from_db()
 		self.assertEqual(asset_doc.value_after_depreciation, 50000.0)
 	
