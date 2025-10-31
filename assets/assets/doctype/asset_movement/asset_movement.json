@@ -34,7 +34,7 @@
    "fieldname": "purpose",
    "fieldtype": "Select",
    "label": "Purpose",
-   "options": "\nIssue\nReceipt\nTransfer",
+   "options":  "\nIssue\nReceipt\nTransfer\nTransfer and Issue",
    "reqd": 1
   },
   {
