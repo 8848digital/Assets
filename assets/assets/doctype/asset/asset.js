@@ -84,6 +84,12 @@ frappe.ui.form.on("Asset", {
 				},
 			};
 		});
+
+		if (frm.doc.docstatus == 1) {
+			frm.custom_make_buttons = {
+				"Asset Capitalization": "Asset Capitalization",
+			};
+		}
 	},
 
 	refresh: function (frm) {

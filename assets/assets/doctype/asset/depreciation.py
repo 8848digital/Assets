@@ -824,7 +824,7 @@ def get_value_after_depreciation_on_disposal_date(asset, disposal_date, finance_
 
 	idx = 1
 	if finance_book:
-		for d in asset.finance_books:
+		for d in asset_doc.finance_books:
 			if d.finance_book == finance_book:
 				idx = d.idx
 				break
