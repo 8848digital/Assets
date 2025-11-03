@@ -170,12 +170,8 @@ class AssetValueAdjustment(Document):
 		self.db_set("journal_entry", je.name)
 
 	def update_asset(self, asset_value=None):
-		asset = frappe.get_doc("Asset", self.asset)
-
-		if not asset.calculate_depreciation:
-			asset.value_after_depreciation = asset_value
-			asset.save()
-			return
+		difference_amount = self.difference_amount if self.docstatus == 1 else -1 * self.difference_amount
+		asset = self.update_asset_value_after_depreciation(difference_amount)
 
 		asset.flags.decrease_in_asset_value_due_to_value_adjustment = True
 
@@ -194,15 +190,6 @@ class AssetValueAdjustment(Document):
 				get_link_to_form(self.get("doctype"), self.get("name")),
 			)
 
-		difference_amount = self.difference_amount if self.docstatus == 1 else -1 * self.difference_amount
-		if asset.calculate_depreciation:
-			for row in asset.finance_books:
-				if cstr(row.finance_book) == cstr(self.finance_book):
-					row.value_after_depreciation += flt(difference_amount)
-					row.db_update()
-
-		asset.db_update()
-
 		make_new_active_asset_depr_schedules_and_cancel_current_ones(
 			asset,
 			notes,
@@ -212,6 +199,29 @@ class AssetValueAdjustment(Document):
 		)
 		asset.flags.ignore_validate_update_after_submit = True
 		asset.save()
+		asset.set_status()
+
+	def update_asset_value_after_depreciation(self, difference_amount):
+		asset = frappe.get_doc("Asset", self.asset)
+
+		if asset.calculate_depreciation:
+			for row in asset.finance_books:
+				if cstr(row.finance_book) == cstr(self.finance_book):
+					salvage_value_adjustment = (
+						self.get_adjusted_salvage_value_amount(row, difference_amount) or 0
+					)
+					row.expected_value_after_useful_life += salvage_value_adjustment
+					row.value_after_depreciation = row.value_after_depreciation + flt(difference_amount)
+					row.db_update()
+
+		asset.value_after_depreciation += flt(difference_amount)
+		asset.db_update()
+		return asset
+
+	def get_adjusted_salvage_value_amount(self, row, difference_amount):
+		if row.expected_value_after_useful_life:
+			salvage_value_adjustment = (difference_amount * row.salvage_value_percentage) / 100
+			return flt(salvage_value_adjustment if self.docstatus == 1 else -1 * salvage_value_adjustment)
 
 
 @frappe.whitelist()

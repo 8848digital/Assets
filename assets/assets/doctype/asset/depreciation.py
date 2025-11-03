@@ -299,7 +299,7 @@ def _make_journal_entry_for_depreciation(
 	je.posting_date = depr_schedule.schedule_date
 	je.company = asset.company
 	je.finance_book = asset_depr_schedule_doc.finance_book
-	je.remark = f"Depreciation Entry against {asset.name} worth {depr_schedule.depreciation_amount}"
+	je.remark = _("Depreciation Entry against {0} worth {1}".format(asset.name, depr_schedule.depreciation_amount))
 
 	credit_entry = {
 		"account": credit_account,
@@ -824,7 +824,7 @@ def get_value_after_depreciation_on_disposal_date(asset, disposal_date, finance_
 
 	idx = 1
 	if finance_book:
-		for d in asset.finance_books:
+		for d in asset_doc.finance_books:
 			if d.finance_book == finance_book:
 				idx = d.idx
 				break
