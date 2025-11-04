@@ -71,6 +71,7 @@ class Asset(AccountsController):
 		customer: DF.Link | None
 		default_finance_book: DF.Link | None
 		department: DF.Link | None
+		depreciation_completed: DF.Check
 		depr_entry_posting_status: DF.Literal["", "Successful", "Failed"]
 		depreciation_method: DF.Literal[
 			"", "Straight Line", "Double Declining Balance", "Manual"
@@ -155,6 +156,9 @@ class Asset(AccountsController):
 							).format(asset_depr_schedules_links)
 						)
 		self.set_total_booked_depreciations()
+	
+	def before_save(self):
+		self.total_asset_cost = self.gross_purchase_amount + self.additional_asset_cost
 		self.total_asset_cost = self.gross_purchase_amount
 		self.status = self.get_status()
 
