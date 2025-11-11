@@ -846,7 +846,7 @@ erpnext.asset.scrap_asset = function (frm) {
 					asset_name: frm.doc.name,
 					scrap_date: values.scrap_date,
 				},
-				method: "assets.assets.doctype.asset.depreciation.scrap_asset",
+				method: "erpnext.assets.doctype.asset.depreciation.scrap_asset",
 				callback: function (r) {
 					frm.reload_doc();
 					scrap_dialog.hide();

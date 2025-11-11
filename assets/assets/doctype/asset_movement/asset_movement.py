@@ -124,24 +124,24 @@ class AssetMovement(Document):
 					)
 
 	def validate_employee(self, d):
+		if self.purpose == "Transfer and Issue":
+			if not d.from_employee:
+				frappe.throw(_("From Employee is required while issuing Asset {0}").format(d.asset))
+
 		if d.from_employee:
 			current_custodian = frappe.db.get_value("Asset", d.asset, "custodian")
 
 			if current_custodian != d.from_employee:
 				frappe.throw(
-					_("Asset {0} does not belongs to the custodian {1}").format(
-						d.asset, d.from_employee
-					)
+					_("Asset {0} does not belong  to the custodian {1}").format(d.asset, d.from_employee)
 				)
 
-		if (
-			d.to_employee
-			and frappe.db.get_value("Employee", d.to_employee, "company") != self.company
-		):
+		if not d.to_employee:
+			frappe.throw(_("Employee is required while issuing Asset {0}").format(d.asset))
+
+		if d.to_employee and frappe.db.get_value("Employee", d.to_employee, "company") != self.company:
 			frappe.throw(
-				_("Employee {0} does not belongs to the company {1}").format(
-					d.to_employee, self.company
-				)
+				_("Employee {0} does not belong  to the company {1}").format(d.to_employee, self.company)
 			)
 
 	def on_submit(self):
@@ -187,8 +187,8 @@ class AssetMovement(Document):
 	def update_asset_location_and_custodian(self, asset_id, location, employee):
 		asset = frappe.get_doc("Asset", asset_id)
 
-		if employee and employee != asset.custodian:
-			frappe.db.set_value("Asset", asset_id, "custodian", employee)
+		if cstr(employee) != asset.custodian:
+			frappe.db.set_value("Asset", asset_id, "custodian", cstr(employee))
 		if location and location != asset.location:
 			frappe.db.set_value("Asset", asset_id, "location", location)
 
