@@ -495,6 +495,7 @@ class Asset(AccountsController):
 				"target_location": self.location,
 				"to_employee": self.custodian,
 				"target_cost_center": self.cost_center,
+				"company": self.company,
 			}
 		]
 		fields = frappe.get_list("Accounting Dimension", pluck="fieldname")
