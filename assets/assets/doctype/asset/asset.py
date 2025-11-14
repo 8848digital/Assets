@@ -495,6 +495,7 @@ class Asset(AccountsController):
 				"target_location": self.location,
 				"to_employee": self.custodian,
 				"target_cost_center": self.cost_center,
+				"company": self.company,
 			}
 		]
 		fields = frappe.get_list("Accounting Dimension", pluck="fieldname")
@@ -975,7 +976,7 @@ def make_post_gl_entry():
 			assets = frappe.db.sql_list(
 				""" select name from `tabAsset`
 				where asset_category = %s and ifnull(booked_fixed_asset, 0) = 0
-				and available_for_use_date = %s""",
+				and available_for_use_date = %s and docstatus = 1""",
 				(asset_category.name, nowdate()),
 			)
 
