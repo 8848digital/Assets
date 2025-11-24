@@ -209,7 +209,8 @@ frappe.ui.form.on("Asset", {
 						frm.has_active_capitalization = r.message;
 
 						if (!r.message) {
-							$(".form-message").text(__("Capitalize this asset before submitting."));
+							$(".primary-action").prop("hidden", true);
+							$(".form-message").text("Capitalize this asset to confirm");
 
 							frm.add_custom_button(__("Capitalize Asset"), function () {
 								frm.trigger("create_asset_capitalization");
