@@ -1275,8 +1275,13 @@ def get_values_from_purchase_doc(purchase_doc_name, item_code, doctype):
 
 	return {
 		"company": purchase_doc.company,
-		"purchase_date": purchase_doc.get("posting_date"),
+<<<<<<< HEAD
+		"purchase_date": purchase_doc.get("bill_date") or purchase_doc.get("posting_date"),
 		"gross_purchase_amount": flt(first_item.base_net_amount),
+=======
+		"purchase_date": purchase_doc.get("posting_date"),
+		"net_purchase_amount": flt(first_item.base_net_amount),
+>>>>>>> 145d40dec8 (fix: use posting_date instead of bill_date from purchase invoice)
 		"asset_quantity": first_item.qty,
 		"cost_center": first_item.cost_center or purchase_doc.get("cost_center"),
 		"asset_location": first_item.get("asset_location"),
