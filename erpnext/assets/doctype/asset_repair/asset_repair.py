@@ -324,7 +324,6 @@ class AssetRepair(AccountsController):
 					"cost_center": self.cost_center,
 					"posting_date": self.completion_date,
 					"against_voucher_type": "Purchase Invoice",
-					"against_voucher": self.purchase_invoice,
 					"company": self.company,
 				},
 				item=self,
