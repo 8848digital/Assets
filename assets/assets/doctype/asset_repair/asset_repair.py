@@ -2,7 +2,9 @@
 # For license information, please see license.txt
 
 import erpnext
-import frappe
+from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
+	get_accounting_dimensions,
+)
 from erpnext.accounts.general_ledger import make_gl_entries
 from erpnext.controllers.accounts_controller import AccountsController
 from frappe.query_builder.functions import Sum
