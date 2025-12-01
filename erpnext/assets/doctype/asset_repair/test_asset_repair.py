@@ -4,8 +4,12 @@
 import unittest
 
 import frappe
+<<<<<<< HEAD
+=======
 from frappe import qb
 from frappe.query_builder.functions import Sum
+from frappe.tests import IntegrationTestCase
+>>>>>>> bcf6deec9a (test: add unit test to validate capitalized asset repair gl entries being booked against the asset)
 from frappe.utils import add_days, add_months, flt, get_first_day, nowdate, nowtime, today
 
 from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
@@ -303,7 +307,6 @@ class TestAssetRepair(unittest.TestCase):
 		asset_repair = create_asset_repair(
 			asset=asset, capitalize_repair_cost=1, item="_Test Non Stock Item", submit=1
 		)
-		asset.reload()
 
 		GLEntry = qb.DocType("GL Entry")
 		res = (
@@ -322,54 +325,6 @@ class TestAssetRepair(unittest.TestCase):
 
 		self.assertEqual(asset.additional_asset_cost, asset_repair.repair_cost)
 		self.assertEqual(booked_value, asset_repair.repair_cost)
-
-	def test_repair_cost_fetches_only_service_item_amount(self):
-		"""Test that repair cost only includes service (non-stock) item amounts from purchase invoice."""
-
-		company = "_Test Company with perpetual inventory"
-		service_item = create_item(
-			"_Test Service Item for Repair",
-			is_stock_item=0,
-			company=company,
-		)
-
-		stock_item = create_item(
-			"_Test Stock Item for Repair",
-			is_stock_item=1,
-			company=company,
-		)
-
-		expense_account = frappe.db.get_value("Company", company, "default_expense_account")
-		cost_center = frappe.db.get_value("Company", company, "cost_center")
-
-		pi = make_purchase_invoice(
-			item_code=service_item.name,
-			qty=1,
-			rate=500,
-			expense_account=expense_account,
-			cost_center=cost_center,
-			update_stock=0,
-			do_not_submit=1,
-			company=company,
-		)
-
-		pi.update_stock = 1
-		pi.append(
-			"items",
-			{
-				"item_code": stock_item.name,
-				"qty": 2,
-				"rate": 300,
-				"warehouse": "Stores - TCP1",
-				"cost_center": cost_center,
-			},
-		)
-		pi.save()
-		pi.submit()
-
-		repair_cost = get_repair_cost_for_purchase_invoice(pi.name)
-
-		self.assertEqual(repair_cost, 500)
 
 
 def num_of_depreciations(asset):
