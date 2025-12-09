@@ -4,6 +4,8 @@
 import unittest
 
 import frappe
+from frappe import qb
+from frappe.query_builder.functions import Sum
 from frappe import _
 from erpnext.stock.doctype.item.test_item import create_item
 from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
@@ -1062,6 +1064,30 @@ class TestAssetRepair(unittest.TestCase):
 		stock_entry = frappe.get_last_doc("Stock Entry")
 		self.assertEqual(stock_entry.asset_repair, asset_repair.name)
 
+	def test_gl_entries_with_capitalized_asset_repair(self):
+		asset = create_asset(is_existing_asset=1, calculate_depreciation=1, submit=1)
+		asset_repair = create_asset_repair(
+			asset=asset, capitalize_repair_cost=1, item="_Test Non Stock Item", submit=1
+		)
+		asset.reload()
+
+		GLEntry = qb.DocType("GL Entry")
+		res = (
+			qb.from_(GLEntry)
+			.select(Sum(GLEntry.debit_in_account_currency).as_("total_debit"))
+			.where(
+				(GLEntry.voucher_type == "Asset Repair")
+				& (GLEntry.voucher_no == asset_repair.name)
+				& (GLEntry.against_voucher_type == "Asset")
+				& (GLEntry.against_voucher == asset.name)
+				& (GLEntry.company == asset.company)
+				& (GLEntry.is_cancelled == 0)
+			)
+		).run(as_dict=True)
+		booked_value = res[0].total_debit if res else 0
+
+		self.assertEqual(asset.additional_asset_cost, asset_repair.repair_cost)
+		self.assertEqual(booked_value, asset_repair.repair_cost)
 
 def service_item_creation():
 	if not frappe.db.exists("Item", "Test Service Item"):
