@@ -2,7 +2,6 @@
 # See license.txt
 
 import unittest
-
 import frappe
 from frappe import qb
 from frappe.query_builder.functions import Sum
