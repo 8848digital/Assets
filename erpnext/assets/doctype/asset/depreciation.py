@@ -530,7 +530,6 @@ def reset_depreciation_schedule(asset_doc, date, notes):
 
 
 def modify_depreciation_schedule_for_asset_repairs(asset, notes):
-	# test
 	asset_repairs = frappe.get_all(
 		"Asset Repair", filters={"asset": asset.name}, fields=["name", "increase_in_asset_life"]
 	)
