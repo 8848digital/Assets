@@ -11,11 +11,12 @@ from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle 
 	get_serial_nos_from_bundle,
 	make_serial_batch_bundle,
 )
-from frappe.utils import flt, nowdate, nowtime, today ,add_days,now_datetime,get_datetime, getdate
+from frappe.utils import flt, nowdate, nowtime, today ,add_days,now_datetime,get_datetime, getdate,add_months,get_first_day
 from erpnext.setup.doctype.company.test_company import create_child_company
 from assets.assets.doctype.asset.asset import (
 	get_asset_account,
 	get_asset_value_after_depreciation,
+	make_sales_invoice,
 )
 from assets.assets.doctype.asset.test_asset import (
 	create_asset,
@@ -37,6 +38,33 @@ class TestAssetRepair(unittest.TestCase):
 		frappe.db.sql("delete from `tabTax Rule`")
 		service_item_creation()
 		create_locatin_test()
+
+	def test_asset_status(self):
+		date = nowdate()
+		purchase_date = add_months(get_first_day(date), -2)
+
+		asset = create_asset(
+			calculate_depreciation=1,
+			available_for_use_date=purchase_date,
+			purchase_date=purchase_date,
+			expected_value_after_useful_life=10000,
+			total_number_of_depreciations=10,
+			frequency_of_depreciation=1,
+			submit=1,
+		)
+
+		si = make_sales_invoice(asset=asset.name, item_code="Macbook Pro", company="_Test Company")
+		si.customer = "_Test Customer"
+		si.due_date = date
+		si.get("items")[0].rate = 25000
+		si.insert()
+		si.submit()
+
+		asset.reload()
+		self.assertEqual(frappe.db.get_value("Asset", asset.name, "status"), "Sold")
+		asset_repair = frappe.new_doc("Asset Repair")
+		asset_repair.update({"company": "_Test Company", "asset": asset.name, "asset_name": asset.asset_name})
+		self.assertRaises(frappe.ValidationError, asset_repair.save)
 
 	# TC_FA_045
 	def test_completed_asset_repair_submit_on_complete_status_TC_FA_045(self):
@@ -1167,6 +1195,7 @@ def create_asset_repair(**args):
 
 	if args.submit:
 		asset_repair.repair_status = "Completed"
+		asset_repair.completion_date = add_days(args.failure_date, 1)
 		asset_repair.cost_center = frappe.db.get_value(
 			"Company", asset.company, "cost_center"
 		)

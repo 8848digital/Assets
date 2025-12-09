@@ -11,6 +11,8 @@
   "consumed_quantity",
   "total_value",
   "serial_no",
+  "column_break_xzfr",
+  "pick_serial_and_batch",
   "serial_and_batch_bundle"
  ],
  "fields": [
@@ -61,6 +63,15 @@
    "label": "Warehouse",
    "options": "Warehouse",
    "reqd": 1
+  },
+  {
+   "fieldname": "pick_serial_and_batch",
+   "fieldtype": "Button",
+   "label": "Pick Serial / Batch"
+  },
+  {
+   "fieldname": "column_break_xzfr",
+   "fieldtype": "Column Break"
   }
  ],
  "index_web_pages_for_search": 1,

@@ -84,6 +84,12 @@ frappe.ui.form.on("Asset", {
 				},
 			};
 		});
+
+		if (frm.doc.docstatus == 1) {
+			frm.custom_make_buttons = {
+				"Asset Capitalization": "Asset Capitalization",
+			};
+		}
 	},
 
 	refresh: function (frm) {
@@ -839,7 +845,7 @@ erpnext.asset.scrap_asset = function (frm) {
 					asset_name: frm.doc.name,
 					scrap_date: values.scrap_date,
 				},
-				method: "assets.assets.doctype.asset.depreciation.scrap_asset",
+				method: "erpnext.assets.doctype.asset.depreciation.scrap_asset",
 				callback: function (r) {
 					frm.reload_doc();
 					scrap_dialog.hide();

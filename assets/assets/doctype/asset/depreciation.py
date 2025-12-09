@@ -299,7 +299,7 @@ def _make_journal_entry_for_depreciation(
 	je.posting_date = depr_schedule.schedule_date
 	je.company = asset.company
 	je.finance_book = asset_depr_schedule_doc.finance_book
-	je.remark = f"Depreciation Entry against {asset.name} worth {depr_schedule.depreciation_amount}"
+	je.remark = _("Depreciation Entry against {0} worth {1}".format(asset.name, depr_schedule.depreciation_amount))
 
 	credit_entry = {
 		"account": credit_account,
@@ -416,7 +416,7 @@ def get_comma_separated_links(names, doctype):
 
 
 @frappe.whitelist()
-def scrap_asset(asset_name):
+def scrap_asset(asset_name, scrap_date=None):
 	asset = frappe.get_doc("Asset", asset_name)
 
 	if asset.docstatus != 1:
@@ -424,7 +424,11 @@ def scrap_asset(asset_name):
 	elif asset.status in ("Cancelled", "Sold", "Scrapped", "Capitalized"):
 		frappe.throw(_("Asset {0} cannot be scrapped, as it is already {1}").format(asset.name, asset.status))
 
-	date = today()
+	today_date = getdate(today())
+	date = getdate(scrap_date) or today_date
+	purchase_date = getdate(asset.purchase_date)
+
+	validate_scrap_date(date, today_date, purchase_date, asset.calculate_depreciation, asset_name)
 
 	notes = _("This schedule was created when Asset {0} was scrapped.").format(
 		get_link_to_form(asset.doctype, asset.name)
@@ -459,6 +463,34 @@ def scrap_asset(asset_name):
 
 	frappe.msgprint(_("Asset scrapped via Journal Entry {0}").format(je.name))
 
+def validate_scrap_date(scrap_date, today_date, purchase_date, calculate_depreciation, asset_name):
+	if scrap_date > today_date:
+		frappe.throw(_("Future date is not allowed"))
+	elif scrap_date < purchase_date:
+		frappe.throw(_("Scrap date cannot be before purchase date"))
+
+	if calculate_depreciation:
+		asset_depreciation_schedules = frappe.db.get_all(
+			"Asset Depreciation Schedule", filters={"asset": asset_name, "docstatus": 1}, fields=["name"]
+		)
+
+		for depreciation_schedule in asset_depreciation_schedules:
+			last_booked_depreciation_date = frappe.db.get_value(
+				"Depreciation Schedule",
+				{
+					"parent": depreciation_schedule["name"],
+					"docstatus": 1,
+					"journal_entry": ["!=", ""],
+				},
+				"schedule_date",
+				order_by="schedule_date desc",
+			)
+			if (
+				last_booked_depreciation_date
+				and scrap_date < last_booked_depreciation_date
+				and scrap_date > purchase_date
+			):
+				frappe.throw(_("Asset cannot be scrapped before the last depreciation entry."))
 
 @frappe.whitelist()
 def restore_asset(asset_name):
@@ -497,7 +529,8 @@ def depreciate_asset(asset_doc, date, notes):
 	make_depreciation_entry_for_all_asset_depr_schedules(asset_doc, date)
 
 	asset_doc.reload()
-	cancel_depreciation_entries(asset_doc, date)
+	if not frappe.flags.is_composite_component:
+		cancel_depreciation_entries(asset_doc, date)
 
 
 @erpnext.allow_regional
@@ -824,7 +857,7 @@ def get_value_after_depreciation_on_disposal_date(asset, disposal_date, finance_
 
 	idx = 1
 	if finance_book:
-		for d in asset.finance_books:
+		for d in asset_doc.finance_books:
 			if d.finance_book == finance_book:
 				idx = d.idx
 				break
