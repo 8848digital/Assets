@@ -872,7 +872,7 @@ def get_consumed_stock_item_details(args):
 				"company": args.company,
 				"serial_no": args.serial_no,
 				"batch_no": args.batch_no,
-				"serial_and_batch_bundle": args.serial_and_batch_bundle
+				"serial_and_batch_bundle": args.serial_and_batch_bundle,
 			}
 		)
 		out.update(get_warehouse_details(incoming_rate_args))

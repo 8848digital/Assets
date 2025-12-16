@@ -216,6 +216,13 @@ assets.assets.AssetCapitalization = class AssetCapitalization extends (
 		}
 	}
 
+	serial_and_batch_bundle(doc, cdt, cdn) {
+		var row = frappe.get_doc(cdt, cdn);
+		if (cdt === "Asset Capitalization Stock Item") {
+			this.get_warehouse_details(row);
+		}
+	}
+
 	asset(doc, cdt, cdn) {
 		var row = frappe.get_doc(cdt, cdn);
 		if (cdt === "Asset Capitalization Asset Item") {
