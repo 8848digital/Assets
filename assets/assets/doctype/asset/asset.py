@@ -552,7 +552,7 @@ class Asset(AccountsController):
 					title=_("Invalid Schedule"),
 				)
 			row.depreciation_start_date = get_last_day(self.available_for_use_date)
-
+		self.validate_depreciation_start_date(row)
 		self.validate_total_number_of_depreciations_and_frequency(row)
 
 		if not self.is_existing_asset:
@@ -618,34 +618,6 @@ class Asset(AccountsController):
 				).format(row.idx),
 				title=_("Invalid Schedule"),
 			)
-
-			frappe.throw(
-				_("Opening Accumulated Depreciation must be less than or equal to {0}").format(
-					depreciable_amount
-				)
-			)
-
-		if self.opening_accumulated_depreciation:
-			if not self.opening_number_of_booked_depreciations:
-				frappe.throw(_("Please set Opening Number of Booked Depreciations"))
-		else:
-			self.opening_number_of_booked_depreciations = 0
-
-		if flt(row.total_number_of_depreciations) <= cint(self.opening_number_of_booked_depreciations):
-			frappe.throw(
-				_(
-					"Depreciation Row {0}: Next Depreciation Date cannot be before Available-for-use Date"
-				).format(row.idx)
-			)
-
-	def validate_total_number_of_depreciations_and_frequency(self, row):
-		if row.total_number_of_depreciations <= 0:
-			frappe.throw(
-				_("Row #{0}: Total Number of Depreciations must be greater than zero").format(row.idx)
-			)
-
-		if row.frequency_of_depreciation <= 0:
-			frappe.throw(_("Row #{0}: Frequency of Depreciation must be greater than zero").format(row.idx))
 
 	def set_total_booked_depreciations(self):
 		# set value of total number of booked depreciations field
