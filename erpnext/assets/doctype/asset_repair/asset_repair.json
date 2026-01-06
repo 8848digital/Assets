@@ -251,11 +251,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
-<<<<<<< HEAD
- "modified": "2026-01-06 15:48:13.862505",
-=======
  "modified": "2025-11-17 18:35:54.575265",
->>>>>>> 623a0a932e (fix: add cancelled option in status field)
  "modified_by": "Administrator",
  "module": "Assets",
  "name": "Asset Repair",
