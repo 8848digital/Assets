@@ -195,17 +195,7 @@
    "fieldname": "target_qty",
    "fieldtype": "Float",
    "hidden": 1,
-   "label": "Target Qty",
-   "read_only_depends_on": "eval:doc.entry_type=='Capitalization'"
-  },
-  {
-   "depends_on": "eval:doc.entry_type=='Decapitalization'",
-   "fetch_from": "target_item_code.stock_uom",
-   "fieldname": "target_stock_uom",
-   "fieldtype": "Link",
-   "label": "Stock UOM",
-   "options": "UOM",
-   "read_only": 1
+   "label": "Target Qty"
   },
   {
    "default": "0",
