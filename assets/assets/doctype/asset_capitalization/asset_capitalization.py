@@ -57,10 +57,17 @@ class AssetCapitalization(StockController):
 	from typing import TYPE_CHECKING
 
 	if TYPE_CHECKING:
-		from erpnext.assets.doctype.asset_capitalization_asset_item.asset_capitalization_asset_item import AssetCapitalizationAssetItem
-		from erpnext.assets.doctype.asset_capitalization_service_item.asset_capitalization_service_item import AssetCapitalizationServiceItem
-		from erpnext.assets.doctype.asset_capitalization_stock_item.asset_capitalization_stock_item import AssetCapitalizationStockItem
 		from frappe.types import DF
+
+		from erpnext.assets.doctype.asset_capitalization_asset_item.asset_capitalization_asset_item import (
+			AssetCapitalizationAssetItem,
+		)
+		from erpnext.assets.doctype.asset_capitalization_service_item.asset_capitalization_service_item import (
+			AssetCapitalizationServiceItem,
+		)
+		from erpnext.assets.doctype.asset_capitalization_stock_item.asset_capitalization_stock_item import (
+			AssetCapitalizationStockItem,
+		)
 
 		amended_from: DF.Link | None
 		asset_items: DF.Table[AssetCapitalizationAssetItem]
