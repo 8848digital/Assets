@@ -58,14 +58,13 @@ class AssetCapitalization(StockController):
 
 	if TYPE_CHECKING:
 		from frappe.types import DF
-
-		from assets.assets.doctype.asset_capitalization_asset_item.asset_capitalization_asset_item import (
+		from erpnext.assets.doctype.asset_capitalization_asset_item.asset_capitalization_asset_item import (
 			AssetCapitalizationAssetItem,
 		)
-		from assets.assets.doctype.asset_capitalization_service_item.asset_capitalization_service_item import (
+		from erpnext.assets.doctype.asset_capitalization_service_item.asset_capitalization_service_item import (
 			AssetCapitalizationServiceItem,
 		)
-		from assets.assets.doctype.asset_capitalization_stock_item.asset_capitalization_stock_item import (
+		from erpnext.assets.doctype.asset_capitalization_stock_item.asset_capitalization_stock_item import (
 			AssetCapitalizationStockItem,
 		)
 
@@ -82,6 +81,7 @@ class AssetCapitalization(StockController):
 		naming_series: DF.Literal["ACC-ASC-.YYYY.-"]
 		posting_date: DF.Date
 		posting_time: DF.Time
+		project: DF.Link | None
 		service_items: DF.Table[AssetCapitalizationServiceItem]
 		service_items_total: DF.Currency
 		set_posting_time: DF.Check
@@ -391,6 +391,7 @@ class AssetCapitalization(StockController):
 				"voucher_no": self.name,
 				"company": self.company,
 				"allow_zero_valuation": cint(item.get("allow_zero_valuation_rate")),
+				"serial_and_batch_bundle": item.serial_and_batch_bundle,
 			}
 		)
 
@@ -857,6 +858,7 @@ def get_consumed_stock_item_details(args):
 				"company": args.company,
 				"serial_no": args.serial_no,
 				"batch_no": args.batch_no,
+				"serial_and_batch_bundle": args.serial_and_batch_bundle,
 			}
 		)
 		out.update(get_warehouse_details(incoming_rate_args))

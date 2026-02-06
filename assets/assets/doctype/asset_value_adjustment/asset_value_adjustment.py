@@ -58,7 +58,7 @@ class AssetValueAdjustment(Document):
 		)
 
 	def on_cancel(self):
-		frappe.get_doc("Journal Entry", self.journal_entry).cancel()
+		self.cancel_asset_revaluation_entry()
 		self.update_asset()
 		add_asset_activity(
 			self.asset,
@@ -168,10 +168,22 @@ class AssetValueAdjustment(Document):
 		je.submit()
 
 		self.db_set("journal_entry", je.name)
+	
+	def cancel_asset_revaluation_entry(self):
+		if not self.journal_entry:
+			return
+
+		revaluation_entry = frappe.get_doc("Journal Entry", self.journal_entry)
+		if revaluation_entry.docstatus == 1:
+			revaluation_entry.flags.ignore_permissions = True
+			revaluation_entry.flags.via_asset_value_adjustment = True
+			revaluation_entry.cancel()
 
 	def update_asset(self, asset_value=None):
 		difference_amount = self.difference_amount if self.docstatus == 1 else -1 * self.difference_amount
 		asset = self.update_asset_value_after_depreciation(difference_amount)
+		note = self.get_adjustment_note()
+		reschedule_depreciation(asset, note)
 
 		asset.flags.decrease_in_asset_value_due_to_value_adjustment = True
 
