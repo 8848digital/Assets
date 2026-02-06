@@ -15,7 +15,9 @@ from frappe.utils import (
 	getdate,
 	time_diff_in_hours,
 )
-
+from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
+	get_accounting_dimensions,
+)
 from assets.assets.doctype.asset.asset import get_asset_account
 from assets.assets.doctype.asset_activity.asset_activity import add_asset_activity
 from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
@@ -75,6 +77,17 @@ class AssetRepair(AccountsController):
 			self.set_stock_items_cost()
 		self.calculate_repair_cost()
 		self.calculate_total_repair_cost()
+		self.validate_purchase_invoice_status()
+
+	def validate_purchase_invoice_status(self):
+		if self.purchase_invoice:
+			docstatus = frappe.db.get_value("Purchase Invoice", self.purchase_invoice, "docstatus")
+			if docstatus == 0:
+				frappe.throw(
+					_("{0} is still in Draft. Please submit it before saving the Asset Repair.").format(
+						get_link_to_form("Purchase Invoice", self.purchase_invoice)
+					)
+				)
 
 	def validate_asset(self):
 		if self.asset_doc.status in ("Sold", "Fully Depreciated", "Scrapped"):
@@ -293,6 +306,12 @@ class AssetRepair(AccountsController):
 		)
 		stock_entry.asset_repair = self.name
 
+		accounting_dimensions = {
+			"cost_center": self.cost_center,
+			"project": self.project,
+			**{dimension: self.get(dimension) for dimension in get_accounting_dimensions()},
+		}
+
 		for stock_item in self.get("stock_items"):
 			self.validate_serial_no(stock_item)
 
@@ -304,8 +323,7 @@ class AssetRepair(AccountsController):
 					"qty": stock_item.consumed_quantity,
 					"basic_rate": stock_item.valuation_rate,
 					"serial_and_batch_bundle": stock_item.serial_and_batch_bundle,
-					"cost_center": self.cost_center,
-					"project": self.get("project") if "projects" in frappe.get_installed_apps() else "",
+					**accounting_dimensions,
 				},
 			)
 
@@ -349,27 +367,9 @@ class AssetRepair(AccountsController):
 		if flt(self.repair_cost) <= 0:
 			return
 
-		debit_against_account = set()
-
-		for pi in self.invoices:
-			debit_against_account.add(pi.expense_account)
-			gl_entries.append(
-				self.get_gl_dict(
-					{
-						"account": pi.expense_account,
-						"credit": pi.repair_cost,
-						"credit_in_account_currency": pi.repair_cost,
-						"against": fixed_asset_account,
-						"voucher_type": self.doctype,
-						"voucher_no": self.name,
-						"cost_center": self.cost_center,
-						"posting_date": self.completion_date,
-						"company": self.company,
-					},
-					item=self,
-				)
-			)
-		debit_against_account = ", ".join(debit_against_account)
+		pi_expense_account = (
+			frappe.get_doc("Purchase Invoice", self.purchase_invoice).items[0].expense_account
+		)
 
 		gl_entries.append(
 			self.get_gl_dict(
@@ -377,12 +377,30 @@ class AssetRepair(AccountsController):
 					"account": fixed_asset_account,
 					"debit": self.repair_cost,
 					"debit_in_account_currency": self.repair_cost,
-					"against": debit_against_account,
+					"against": pi_expense_account,
 					"voucher_type": self.doctype,
 					"voucher_no": self.name,
 					"cost_center": self.cost_center,
 					"posting_date": self.completion_date,
-					"against_voucher_type": "Purchase Invoice",
+					"against_voucher_type": "Asset",
+					"against_voucher": self.asset,
+					"company": self.company,
+				},
+				item=self,
+			)
+		)
+
+		gl_entries.append(
+			self.get_gl_dict(
+				{
+					"account": pi_expense_account,
+					"credit": self.repair_cost,
+					"credit_in_account_currency": self.repair_cost,
+					"against": fixed_asset_account,
+					"voucher_type": self.doctype,
+					"voucher_no": self.name,
+					"cost_center": self.cost_center,
+					"posting_date": self.completion_date,
 					"company": self.company,
 				},
 				item=self,
