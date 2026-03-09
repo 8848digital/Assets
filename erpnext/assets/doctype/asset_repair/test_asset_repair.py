@@ -326,20 +326,21 @@ class TestAssetRepair(unittest.TestCase):
 	def test_repair_cost_fetches_only_service_item_amount(self):
 		"""Test that repair cost only includes service (non-stock) item amounts from purchase invoice."""
 
+		company = "_Test Company with perpetual inventory"
 		service_item = create_item(
 			"_Test Service Item for Repair",
 			is_stock_item=0,
-			company="_Test Company",
+			company=company,
 		)
 
 		stock_item = create_item(
 			"_Test Stock Item for Repair",
 			is_stock_item=1,
-			company="_Test Company",
+			company=company,
 		)
 
-		expense_account = frappe.db.get_value("Company", "_Test Company", "default_expense_account")
-		cost_center = frappe.db.get_value("Company", "_Test Company", "cost_center")
+		expense_account = frappe.db.get_value("Company", company, "default_expense_account")
+		cost_center = frappe.db.get_value("Company", company, "cost_center")
 
 		pi = make_purchase_invoice(
 			item_code=service_item.name,
@@ -349,6 +350,7 @@ class TestAssetRepair(unittest.TestCase):
 			cost_center=cost_center,
 			update_stock=0,
 			do_not_submit=1,
+			company=company,
 		)
 
 		pi.update_stock = 1
@@ -358,7 +360,7 @@ class TestAssetRepair(unittest.TestCase):
 				"item_code": stock_item.name,
 				"qty": 2,
 				"rate": 300,
-				"warehouse": "_Test Warehouse - _TC",
+				"warehouse": "Stores - TCP1",
 				"cost_center": cost_center,
 			},
 		)

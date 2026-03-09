@@ -120,9 +120,7 @@ frappe.ui.form.on("Asset Repair", {
 					purchase_invoice: frm.doc.purchase_invoice,
 				},
 				callback: function (r) {
-					if (r.message) {
-						frm.set_value("repair_cost", r.message);
-					}
+					frm.set_value("repair_cost", r.message || 0);
 				},
 			});
 		} else {
