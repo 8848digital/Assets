@@ -202,6 +202,12 @@ assets.assets.AssetCapitalization = class AssetCapitalization extends (
 			this.get_warehouse_details(row);
 		}
 	}
+	serial_and_batch_bundle(doc, cdt, cdn) {
+		var row = frappe.get_doc(cdt, cdn);
+		if (cdt === "Asset Capitalization Stock Item") {
+			this.get_warehouse_details(row);
+		}
+	}
 
 	asset(doc, cdt, cdn) {
 		var row = frappe.get_doc(cdt, cdn);
@@ -431,6 +437,7 @@ assets.assets.AssetCapitalization = class AssetCapitalization extends (
 						voucher_type: me.frm.doc.doctype,
 						voucher_no: me.frm.doc.name,
 						allow_zero_valuation: 1,
+						serial_and_batch_bundle: item.serial_and_batch_bundle,
 					},
 				},
 				callback: function (r) {

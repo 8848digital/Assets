@@ -5,8 +5,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import get_link_to_form
-
+from frappe.utils import cstr, get_datetime, get_link_to_form
 from assets.assets.doctype.asset_activity.asset_activity import add_asset_activity
 
 
@@ -37,6 +36,7 @@ class AssetMovement(Document):
 		for d in self.assets:
 			self.validate_asset(d)
 			self.validate_movement(d)
+			self.validate_transaction_date(d)
 
 	def validate_asset(self, d):
 		status, company = frappe.db.get_value("Asset", d.asset, ["status", "company"])
@@ -50,7 +50,18 @@ class AssetMovement(Document):
 
 		if not (d.source_location or d.target_location or d.from_employee or d.to_employee):
 			frappe.throw(_("Either location or employee must be required"))
-	
+	def validate_transaction_date(self, d):
+		previous_movement_date = frappe.db.get_value(
+			"Asset Movement",
+			[["Asset Movement Item", "asset", "=", d.asset], ["docstatus", "=", 1]],
+			"transaction_date",
+			order_by="transaction_date desc",
+		)
+		if previous_movement_date and get_datetime(previous_movement_date) > get_datetime(
+			self.transaction_date
+		):
+			frappe.throw(_("Transaction date can't be earlier than previous movement date"))
+
 	def validate_movement(self, d):
 		if self.purpose == "Transfer and Issue":
 			self.validate_location_and_employee(d)
