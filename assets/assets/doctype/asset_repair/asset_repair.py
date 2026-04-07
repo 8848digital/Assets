@@ -3,8 +3,8 @@
 
 import erpnext
 import frappe
-from erpnext.accounts.general_ledger import make_gl_entries
-from erpnext.controllers.accounts_controller import AccountsController
+from erpnext.erpnext.accounts.general_ledger import make_gl_entries
+from erpnext.erpnext.controllers.accounts_controller import AccountsController
 from frappe.query_builder.functions import Sum
 from frappe import _
 from frappe.query_builder import DocType

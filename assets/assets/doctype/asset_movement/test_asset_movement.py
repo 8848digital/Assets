@@ -4,8 +4,8 @@
 import unittest
 
 import frappe
-from erpnext.setup.doctype.employee.test_employee import make_employee
-from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
+from erpnext.erpnext.setup.doctype.employee.test_employee import make_employee
+from erpnext.erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
 	make_purchase_receipt,
 )
 from frappe.utils import add_days, now
@@ -14,7 +14,7 @@ from assets.assets.doctype.asset.test_asset import create_asset, create_asset_da
 from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_depr_schedule,
 )
-from erpnext.setup.doctype.company.test_company import create_child_company
+from erpnext.erpnext.setup.doctype.company.test_company import create_child_company
 from frappe.utils import cstr, flt
 from frappe.query_builder import DocType
 from assets.assets.doctype.asset_movement.asset_movement import (

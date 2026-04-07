@@ -4,7 +4,7 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase
 from assets.assets.doctype.asset.test_asset import create_asset_data
-from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
+from erpnext.erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
 	make_purchase_receipt,
 )
 from frappe.query_builder import DocType

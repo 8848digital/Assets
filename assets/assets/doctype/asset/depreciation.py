@@ -20,10 +20,10 @@ from frappe.utils import (
 from frappe.utils.user import get_users_with_role
 
 import erpnext
-from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
+from erpnext.erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 	get_checks_for_pl_and_bs_accounts,
 )
-from erpnext.accounts.doctype.journal_entry.journal_entry import make_reverse_journal_entry
+from erpnext.erpnext.accounts.doctype.journal_entry.journal_entry import make_reverse_journal_entry
 from assets.assets.doctype.asset_activity.asset_activity import add_asset_activity
 from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_asset_depr_schedule_doc,

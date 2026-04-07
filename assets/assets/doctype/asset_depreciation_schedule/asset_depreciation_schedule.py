@@ -3,7 +3,7 @@
 
 import erpnext
 import frappe
-from erpnext.accounts.utils import get_fiscal_year
+from erpnext.erpnext.accounts.utils import get_fiscal_year
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import (

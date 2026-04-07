@@ -5,18 +5,18 @@ import json
 
 import erpnext
 import frappe
-from erpnext.controllers.stock_controller import StockController
-from erpnext.setup.doctype.brand.brand import get_brand_defaults
-from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
-from erpnext.stock import get_warehouse_account_map
-from erpnext.stock.doctype.item.item import get_item_defaults
-from erpnext.stock.get_item_details import (
+from erpnext.erpnext.controllers.stock_controller import StockController
+from erpnext.erpnext.setup.doctype.brand.brand import get_brand_defaults
+from erpnext.erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
+from erpnext.erpnext.stock import get_warehouse_account_map
+from erpnext.erpnext.stock.doctype.item.item import get_item_defaults
+from erpnext.erpnext.stock.get_item_details import (
 	get_default_cost_center,
 	get_default_expense_account,
 	get_item_warehouse,
 )
-from erpnext.stock.stock_ledger import get_previous_sle
-from erpnext.stock.utils import get_incoming_rate
+from erpnext.erpnext.stock.stock_ledger import get_previous_sle
+from erpnext.erpnext.stock.utils import get_incoming_rate
 
 # import erpnext
 from frappe import _
@@ -346,7 +346,7 @@ class AssetCapitalization(StockController):
 			)
 
 	def validate_item(self, item):
-		from erpnext.stock.doctype.item.item import validate_end_of_life
+		from erpnext.erpnext.stock.doctype.item.item import validate_end_of_life
 
 		validate_end_of_life(item.name, item.end_of_life, item.disabled)
 
@@ -464,7 +464,7 @@ class AssetCapitalization(StockController):
 			self.make_sl_entries(sl_entries)
 
 	def make_gl_entries(self, gl_entries=None, from_repost=False):
-		from erpnext.accounts.general_ledger import make_gl_entries, make_reverse_gl_entries
+		from erpnext.erpnext.accounts.general_ledger import make_gl_entries, make_reverse_gl_entries
 
 		if self.docstatus == 1:
 			if not gl_entries:

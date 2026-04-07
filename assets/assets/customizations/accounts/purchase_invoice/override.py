@@ -2,15 +2,15 @@ from assets.assets.doctype.asset.asset import is_cwip_accounting_enabled
 from assets.assets.doctype.asset_category.asset_category import get_asset_category_account
 import frappe
 import erpnext
-from erpnext.stock import get_warehouse_account_map
+from erpnext.erpnext.stock import get_warehouse_account_map
 from frappe import _
 from frappe.utils import cint, flt, get_link_to_form
 from frappe import throw
-from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
+from erpnext.erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
 	get_item_account_wise_additional_cost,
 )
-from erpnext.accounts.doctype.purchase_invoice.purchase_invoice import get_purchase_document_details
-from erpnext.accounts.utils import get_account_currency
+from erpnext.erpnext.accounts.doctype.purchase_invoice.purchase_invoice import get_purchase_document_details
+from erpnext.erpnext.accounts.utils import get_account_currency
 
 
 

@@ -4,29 +4,29 @@
 import unittest
 
 import frappe
-from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
-from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import (
+from erpnext.erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
+from erpnext.erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import (
 	make_purchase_invoice,check_gl_entries
 )
-from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
+from erpnext.erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
 	make_purchase_invoice as make_invoice,
 )
-from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
+from erpnext.erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
 	make_purchase_receipt,
 )
-from erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
-from erpnext.controllers.sales_and_purchase_return import make_return_doc
-from erpnext.accounts.doctype.pos_invoice.pos_invoice import make_sales_return
-from erpnext.buying.doctype.purchase_order.test_purchase_order import create_or_get_purchase_taxes_template
-from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier
-from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
-from erpnext.stock.doctype.material_request.material_request import make_purchase_order
-from erpnext.setup.doctype.company.test_company import create_child_company
-from erpnext.buying.doctype.purchase_order.test_purchase_order import create_purchase_order
-from erpnext.buying.doctype.supplier.test_supplier import create_supplier
+from erpnext.erpnext.accounts.doctype.payment_entry.test_payment_entry import create_customer
+from erpnext.erpnext.controllers.sales_and_purchase_return import make_return_doc
+from erpnext.erpnext.accounts.doctype.pos_invoice.pos_invoice import make_sales_return
+from erpnext.erpnext.buying.doctype.purchase_order.test_purchase_order import create_or_get_purchase_taxes_template
+from erpnext.erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_company_and_supplier
+from erpnext.erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+from erpnext.erpnext.stock.doctype.material_request.material_request import make_purchase_order
+from erpnext.erpnext.setup.doctype.company.test_company import create_child_company
+from erpnext.erpnext.buying.doctype.purchase_order.test_purchase_order import create_purchase_order
+from erpnext.erpnext.buying.doctype.supplier.test_supplier import create_supplier
 from frappe.tests.utils import if_app_installed
-from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
-from erpnext.accounts.doctype.pricing_rule.test_pricing_rule import make_pricing_rule
+from erpnext.erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+from erpnext.erpnext.accounts.doctype.pricing_rule.test_pricing_rule import make_pricing_rule
 from frappe.utils import (
 	add_days,
 	add_months,
@@ -2938,7 +2938,7 @@ class TestAsset(AssetSetup):
 		)
 
 	def test_asset_status_after_sales_invoice_cancel(self):
-		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
+		from erpnext.erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
 
 		asset = create_asset(
 			calculate_depreciation=1,
@@ -2965,7 +2965,7 @@ class TestAsset(AssetSetup):
 		self.assertEqual(frappe.db.get_value("Asset", asset.name, "status"), "Partially Depreciated")
 
 	def test_gle_made_by_asset_sale_for_existing_asset(self):
-		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import (
+		from erpnext.erpnext.accounts.doctype.sales_invoice.test_sales_invoice import (
 			create_sales_invoice,
 		)
 		finance_book_name = "Test Finance Book 1"
@@ -7097,7 +7097,7 @@ class TestDepreciationBasics(AssetSetup):
 
 	@if_app_installed("erpnext")
 	def test_multiple_asset_purchasing_single_invoice_TC_FA_102(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+		from erpnext.erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			make_test_item,
 			create_records,
 			create_company
@@ -7149,7 +7149,7 @@ class TestDepreciationBasics(AssetSetup):
 
 	@if_app_installed("erpnext")
 	def test_multiple_asset_purchasing_single_invoice_with_gst_TC_FA_103(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+		from erpnext.erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			make_test_item,
 			create_records,
 			create_company
@@ -7211,7 +7211,7 @@ class TestDepreciationBasics(AssetSetup):
 
 	@if_app_installed("erpnext")
 	def test_multiple_group_asset_purchasing_single_invoice_104(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+		from erpnext.erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			make_test_item,
 			create_records,
 			create_company
@@ -7262,7 +7262,7 @@ class TestDepreciationBasics(AssetSetup):
 
 	@if_app_installed("erpnext")
 	def test_multiple_group_asset_purchasing_single_invoice_with_gst_105(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+		from erpnext.erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			make_test_item,
 			create_records,
 			create_company
@@ -7323,12 +7323,12 @@ class TestDepreciationBasics(AssetSetup):
 		self.assertEqual(gross_purchase_amount,pi.total)
 	@if_app_installed("erpnext")
 	def test_create_subsidy_jv_for_fixed_assets_TC_FA_091(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+		from erpnext.erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			make_test_item,
 			create_records,
 			create_company,
 		)
-		from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
+		from erpnext.erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
 
 		create_records('_Test Supplier')
 		create_company()
@@ -7383,12 +7383,12 @@ class TestDepreciationBasics(AssetSetup):
 
 	@if_app_installed("erpnext")
 	def test_create_subsidy_jv_for_fixed_assets_partial_ammount_TC_FA_092(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+		from erpnext.erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			make_test_item,
 			create_records,
 			create_company,
 		)
-		from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
+		from erpnext.erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
 
 		create_records('_Test Supplier')
 		create_company()
@@ -7443,12 +7443,12 @@ class TestDepreciationBasics(AssetSetup):
 
 	@if_app_installed("erpnext")
 	def test_purchase_asset_with_partial_subsidy_grant_credited_to_pl_TC_FA_093(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+		from erpnext.erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			make_test_item,
 			create_records,
 			create_company,
 		)
-		from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
+		from erpnext.erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
 		create_records('_Test Supplier')
 		create_company()
 		if not frappe.db.exists("Location", "Test Location"):
@@ -7502,13 +7502,13 @@ class TestDepreciationBasics(AssetSetup):
 
 	@if_app_installed("erpnext")
 	def test_purchase_asset_with_partial_subsidy_grant_credited_to_pl_refund_TC_FA_094(self):
-		from erpnext.accounts.doctype.payment_entry.test_payment_entry import (
+		from erpnext.erpnext.accounts.doctype.payment_entry.test_payment_entry import (
 			make_test_item,
 			create_records,
 			create_company,
 		)
-		from erpnext.accounts.doctype.journal_entry.journal_entry import make_reverse_journal_entry
-		from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
+		from erpnext.erpnext.accounts.doctype.journal_entry.journal_entry import make_reverse_journal_entry
+		from erpnext.erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
 		create_records('_Test Supplier')
 		create_company()
 		if not frappe.db.exists("Location", "Test Location"):
@@ -8723,7 +8723,7 @@ def get_or_create_customer(customer):
 
 
 def create_pi(company, supplier,account = None):
-	from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+	from erpnext.erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
 	item_2 = make_test_item("test_asset_item_for_repair_2")
 	item_2.is_stock_item = 0
 	item_2.is_fixed_asset = 0
@@ -8753,8 +8753,8 @@ def create_pi(company, supplier,account = None):
 	return pi
 
 def create_assets_repairs(company, asset, pi_1, pi_2 = None,warehouse=None):
-	from erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
-	from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
+	from erpnext.erpnext.accounts.doctype.payment_entry.test_payment_entry import make_test_item
+	from erpnext.erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
 	item = make_test_item("service_item_for_asset_review")
 	make_stock_entry(company = company, target = warehouse or "Stores - TC-5", item_code = item.item_code, qty = 10, rate = 1000)
 	invoices = [

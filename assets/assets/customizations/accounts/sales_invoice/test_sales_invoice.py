@@ -9,7 +9,7 @@ from assets.assets.doctype.asset.test_asset import create_asset, create_asset_da
 from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_depr_schedule,
 )
-from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import TestSalesInvoice, create_sales_invoice
+from erpnext.erpnext.accounts.doctype.sales_invoice.test_sales_invoice import TestSalesInvoice, create_sales_invoice
 
 class AssetsTestSalesInvoice(TestSalesInvoice):
     def test_gle_made_when_asset_is_returned(self):
@@ -102,7 +102,7 @@ class AssetsTestSalesInvoice(TestSalesInvoice):
             self.assertTrue(schedule.journal_entry)
 
     def test_depreciation_on_return_of_sold_asset(self):
-        from erpnext.controllers.sales_and_purchase_return import make_return_doc
+        from erpnext.erpnext.controllers.sales_and_purchase_return import make_return_doc
 
         create_asset_data()
         asset = create_asset(item_code="Macbook Pro", calculate_depreciation=1, submit=1)

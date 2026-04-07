@@ -3,7 +3,7 @@
 
 
 import frappe
-from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
+from erpnext.erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 	get_checks_for_pl_and_bs_accounts,
 )
 from frappe import _

@@ -1,12 +1,12 @@
 import frappe
-from erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_invoice as make_pi_from_po
-from erpnext.buying.doctype.purchase_order.test_purchase_order import (
+from erpnext.erpnext.buying.doctype.purchase_order.purchase_order import make_purchase_invoice as make_pi_from_po
+from erpnext.erpnext.buying.doctype.purchase_order.test_purchase_order import (
 	create_pr_against_po,
 	create_purchase_order,
 )
-from erpnext.stock.doctype.item.test_item import create_item
+from erpnext.erpnext.stock.doctype.item.test_item import create_item
 
-from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import TestPurchaseInvoice
+from erpnext.erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import TestPurchaseInvoice
 
 class AssetsTestPurchaseInvoice(TestPurchaseInvoice):
 	def test_make_pr_and_pi_from_po(self):

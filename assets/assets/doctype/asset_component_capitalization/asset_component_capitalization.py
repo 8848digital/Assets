@@ -2,7 +2,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.query_builder import DocType
-from erpnext.accounts.utils import get_fiscal_year
+from erpnext.erpnext.accounts.utils import get_fiscal_year
 
 
 class AssetComponentCapitalization(Document):

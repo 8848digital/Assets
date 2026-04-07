@@ -1,7 +1,10 @@
 import frappe
-from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import TestPurchaseReceipt, make_purchase_receipt
+from erpnext.erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
+    TestPurchaseReceipt,
+    make_purchase_receipt,
+)
 
-from erpnext.stock.doctype.item.test_item import make_item
+from erpnext.erpnext.stock.doctype.item.test_item import make_item
 
 
 class AssetsTestPurchaseReceipt(TestPurchaseReceipt):
@@ -59,7 +62,9 @@ class AssetsTestPurchaseReceipt(TestPurchaseReceipt):
         pr.cancel()
 
     def test_purchase_return_with_submitted_asset(self):
-        from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_return
+        from erpnext.erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
+            make_purchase_return,
+        )
 
         pr = make_purchase_receipt(item_code="Test Asset Item", qty=1)
 

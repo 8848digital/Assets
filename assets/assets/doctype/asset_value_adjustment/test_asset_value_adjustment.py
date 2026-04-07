@@ -3,7 +3,7 @@
 import unittest
 
 import frappe
-from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
+from erpnext.erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
 	make_purchase_receipt,
 )
 from frappe.utils import add_days, cstr, get_last_day, getdate, nowdate

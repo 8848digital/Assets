@@ -5,14 +5,14 @@ import unittest
 
 import frappe
 from frappe import _
-from erpnext.stock.doctype.item.test_item import create_item
-from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
+from erpnext.erpnext.stock.doctype.item.test_item import create_item
+from erpnext.erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
 	get_serial_nos_from_bundle,
 	make_serial_batch_bundle,
 )
 from frappe.utils import flt, nowdate, nowtime, today ,add_days,now_datetime,get_datetime, getdate,add_months,get_first_day
-from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
-from erpnext.setup.doctype.company.test_company import create_child_company
+from erpnext.erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
+from erpnext.erpnext.setup.doctype.company.test_company import create_child_company
 from assets.assets.doctype.asset.asset import (
 	get_asset_account,
 	get_asset_value_after_depreciation,
@@ -23,11 +23,11 @@ from assets.assets.doctype.asset.test_asset import (
 	create_asset_data,
 	set_depreciation_settings_in_company,
 )
-from erpnext.assets.doctype.asset_repair.asset_repair import get_repair_cost_for_purchase_invoice
+from erpnext.erpnext.assets.doctype.asset_repair.asset_repair import get_repair_cost_for_purchase_invoice
 from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_asset_depr_schedule_doc,
 )
-from erpnext.stock.doctype.item.test_item import make_item
+from erpnext.erpnext.stock.doctype.item.test_item import make_item
 from assets.assets.doctype.asset.test_asset import create_asset_category, create_asset_category_as_test_category
 
 class TestAssetRepair(unittest.TestCase):
@@ -598,7 +598,7 @@ class TestAssetRepair(unittest.TestCase):
 
 	def test_capitalize_repair_cost_asset_repair_submit_on_complete_status_TC_FA_140(self):
 		from assets.assets.doctype.asset.test_asset import create_fixed_asset_item , create_asset_category_as_test_category
-		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+		from erpnext.erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
 		create_asset_category_as_test_category("Computers")
 		item_code = create_fixed_asset_item(item_code=None, auto_create_assets=1, is_grouped_asset=0)
@@ -685,7 +685,7 @@ class TestAssetRepair(unittest.TestCase):
 		self.assertEqual(repair_asset.invoices[0].repair_cost, 5000)
 
 	def test_stock_acapitalize_repair_and_consumption_cost_asset_repair_TC_FA_142(self):
-		from erpnext.accounts.doctype.account.test_account import create_account
+		from erpnext.erpnext.accounts.doctype.account.test_account import create_account
 
 		if not frappe.db.exists("Asset Category", "Test_Category"):
 			create_asset_category_as_test_category(name="Test_Category")
@@ -887,7 +887,7 @@ class TestAssetRepair(unittest.TestCase):
 		)
 
 	def test_serialized_item_consumption(self):
-		from erpnext.stock.doctype.stock_entry.test_stock_entry import make_serialized_item
+		from erpnext.erpnext.stock.doctype.stock_entry.test_stock_entry import make_serialized_item
 
 		stock_entry = make_serialized_item()
 		bundle_id = stock_entry.get("items")[0].serial_and_batch_bundle
@@ -1164,10 +1164,10 @@ def num_of_depreciations(asset):
 
 
 def create_asset_repair(**args):
-	from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import (
+	from erpnext.erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import (
 		make_purchase_invoice,
 	)
-	from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+	from erpnext.erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
 	args = frappe._dict(args)
 

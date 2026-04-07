@@ -10,8 +10,8 @@ from assets.assets.doctype.asset.depreciation import (
 )
 from assets.assets.doctype.asset_activity.asset_activity import add_asset_activity
 import erpnext
-from erpnext.accounts.utils import get_account_currency
-from erpnext.controllers.selling_controller import SellingController
+from erpnext.erpnext.accounts.utils import get_account_currency
+from erpnext.erpnext.controllers.selling_controller import SellingController
 
 
 

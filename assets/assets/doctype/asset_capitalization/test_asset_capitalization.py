@@ -4,8 +4,8 @@
 import unittest
 
 import frappe
-from erpnext.stock.doctype.item.test_item import create_item
-from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
+from erpnext.erpnext.stock.doctype.item.test_item import create_item
+from erpnext.erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
 	make_serial_batch_bundle,
 )
 from frappe.utils import cint, flt, getdate, now_datetime
@@ -896,7 +896,7 @@ def create_asset_capitalization_data():
 
 
 def create_asset_capitalization(**args):
-	from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+	from erpnext.erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
 	args = frappe._dict(args)
 
@@ -993,7 +993,7 @@ def create_asset_capitalization(**args):
 
 
 def create_stock_reconciliation(asset_capitalization, stock_rate=0):
-	from erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import (
+	from erpnext.erpnext.stock.doctype.stock_reconciliation.test_stock_reconciliation import (
 		EmptyStockReconciliationItemsError,
 		create_stock_reconciliation,
 	)
