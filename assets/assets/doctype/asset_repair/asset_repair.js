@@ -67,6 +67,7 @@ frappe.ui.form.on("Asset Repair", {
 	},
 
 	refresh: function (frm) {
+		frm.events.show_general_ledger(frm);
 		if (frm.doc.docstatus) {
 			frm.add_custom_button(__("View General Ledger"), function () {
 				frappe.route_options = {
@@ -122,20 +123,35 @@ frappe.ui.form.on("Asset Repair", {
 	purchase_invoice: function (frm) {
 		if (frm.doc.purchase_invoice) {
 			frappe.call({
-				method: "frappe.client.get_value",
+				method: "erpnext.assets.doctype.asset_repair.asset_repair.get_repair_cost_for_purchase_invoice",
 				args: {
-					doctype: "Purchase Invoice",
-					fieldname: "base_net_total",
-					filters: { name: frm.doc.purchase_invoice },
+					purchase_invoice: frm.doc.purchase_invoice,
 				},
 				callback: function (r) {
-					if (r.message) {
-						frm.set_value("repair_cost", r.message.base_net_total);
-					}
+					frm.set_value("repair_cost", r.message || 0);
 				},
 			});
 		} else {
 			frm.set_value("repair_cost", 0);
+		}
+	},
+	show_general_ledger: (frm) => {
+		if (frm.doc.docstatus > 0) {
+			frm.add_custom_button(
+				__("Accounting Ledger"),
+				function () {
+					frappe.route_options = {
+						voucher_no: frm.doc.name,
+						from_date: moment(frm.doc.completion_date).format("YYYY-MM-DD"),
+						to_date: moment(frm.doc.modified).format("YYYY-MM-DD"),
+						company: frm.doc.company,
+						categorize_by: "",
+						show_cancelled_entries: frm.doc.docstatus === 2,
+					};
+					frappe.set_route("query-report", "General Ledger");
+				},
+				__("View")
+			);
 		}
 	},
 });

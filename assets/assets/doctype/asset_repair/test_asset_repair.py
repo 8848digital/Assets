@@ -2,8 +2,9 @@
 # See license.txt
 
 import unittest
-
 import frappe
+from frappe import qb
+from frappe.query_builder.functions import Sum
 from frappe import _
 from erpnext.stock.doctype.item.test_item import create_item
 from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
@@ -11,6 +12,7 @@ from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle 
 	make_serial_batch_bundle,
 )
 from frappe.utils import flt, nowdate, nowtime, today ,add_days,now_datetime,get_datetime, getdate,add_months,get_first_day
+from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
 from erpnext.setup.doctype.company.test_company import create_child_company
 from assets.assets.doctype.asset.asset import (
 	get_asset_account,
@@ -22,6 +24,7 @@ from assets.assets.doctype.asset.test_asset import (
 	create_asset_data,
 	set_depreciation_settings_in_company,
 )
+from erpnext.assets.doctype.asset_repair.asset_repair import get_repair_cost_for_purchase_invoice
 from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_asset_depr_schedule_doc,
 )
@@ -1090,6 +1093,30 @@ class TestAssetRepair(unittest.TestCase):
 		stock_entry = frappe.get_last_doc("Stock Entry")
 		self.assertEqual(stock_entry.asset_repair, asset_repair.name)
 
+	def test_gl_entries_with_capitalized_asset_repair(self):
+		asset = create_asset(is_existing_asset=1, calculate_depreciation=1, submit=1)
+		asset_repair = create_asset_repair(
+			asset=asset, capitalize_repair_cost=1, item="_Test Non Stock Item", submit=1
+		)
+		asset.reload()
+
+		GLEntry = qb.DocType("GL Entry")
+		res = (
+			qb.from_(GLEntry)
+			.select(Sum(GLEntry.debit_in_account_currency).as_("total_debit"))
+			.where(
+				(GLEntry.voucher_type == "Asset Repair")
+				& (GLEntry.voucher_no == asset_repair.name)
+				& (GLEntry.against_voucher_type == "Asset")
+				& (GLEntry.against_voucher == asset.name)
+				& (GLEntry.company == asset.company)
+				& (GLEntry.is_cancelled == 0)
+			)
+		).run(as_dict=True)
+		booked_value = res[0].total_debit if res else 0
+
+		self.assertEqual(asset.additional_asset_cost, asset_repair.repair_cost)
+		self.assertEqual(booked_value, asset_repair.repair_cost)
 
 def service_item_creation():
 	if not frappe.db.exists("Item", "Test Service Item"):
@@ -1102,6 +1129,60 @@ def service_item_creation():
 def create_locatin_test():
 	if not frappe.db.exists("Location", "Test"):
 		frappe.get_doc({"doctype": "Location", "location_name": "Test"}).insert()
+
+	def test_repair_cost_fetches_only_service_item_amount(self):
+		"""Test that repair cost only includes service (non-stock) item amounts from purchase invoice."""
+
+		company = "_Test Company with perpetual inventory"
+		warehouse = "Stores - TCP1"
+
+		service_item = create_item(
+			"_Test Service Item for Repair",
+			is_stock_item=0,
+			warehouse=warehouse,	
+			company=company,
+		)
+
+		stock_item = create_item(
+			"_Test Stock Item for Repair",
+			is_stock_item=1,
+			warehouse=warehouse,
+			company=company,
+		)
+
+		service_expense_account = "Miscellaneous Expenses - TCP1"
+		cost_center = frappe.db.get_value("Company", company, "cost_center")
+
+		pi = make_purchase_invoice(
+			item_code=service_item.name,
+			qty=1,
+			rate=500,
+			expense_account=service_expense_account,
+			cost_center=cost_center,
+			warehouse=warehouse,
+			update_stock=0,
+			do_not_submit=1,
+			company=company,
+		)
+
+		pi.update_stock = 1
+		pi.append(
+			"items",
+			{
+				"item_code": stock_item.name,
+				"qty": 2,
+				"rate": 300,
+				"warehouse": "Stores - TCP1",
+				"cost_center": cost_center,
+			},
+		)
+		pi.save()
+		pi.submit()
+
+		repair_cost = get_repair_cost_for_purchase_invoice(pi.name)
+
+		self.assertEqual(repair_cost, 500)
+
 
 def num_of_depreciations(asset):
 	return asset.finance_books[0].total_number_of_depreciations
@@ -1200,6 +1281,7 @@ def create_asset_repair(**args):
 			if asset.calculate_depreciation:
 				asset_repair.increase_in_asset_life = 12
 			pi1 = make_purchase_invoice(
+				item=args.item or "_Test Non Stock Item",
 				company=asset.company,
 				item=args.item or "_Test Item",
 				expense_account=args.pi_expense_account1 or "Administrative Expenses - _TC",

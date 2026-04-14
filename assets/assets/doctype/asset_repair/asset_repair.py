@@ -5,6 +5,7 @@ import erpnext
 import frappe
 from erpnext.accounts.general_ledger import make_gl_entries
 from erpnext.controllers.accounts_controller import AccountsController
+from frappe.query_builder.functions import Sum
 from frappe import _
 from frappe.query_builder import DocType
 from frappe.utils import (
@@ -15,7 +16,9 @@ from frappe.utils import (
 	getdate,
 	time_diff_in_hours,
 )
-
+from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
+	get_accounting_dimensions,
+)
 from assets.assets.doctype.asset.asset import get_asset_account
 from assets.assets.doctype.asset_activity.asset_activity import add_asset_activity
 from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
@@ -75,6 +78,17 @@ class AssetRepair(AccountsController):
 			self.set_stock_items_cost()
 		self.calculate_repair_cost()
 		self.calculate_total_repair_cost()
+		self.validate_purchase_invoice_status()
+
+	def validate_purchase_invoice_status(self):
+		if self.purchase_invoice:
+			docstatus = frappe.db.get_value("Purchase Invoice", self.purchase_invoice, "docstatus")
+			if docstatus == 0:
+				frappe.throw(
+					_("{0} is still in Draft. Please submit it before saving the Asset Repair.").format(
+						get_link_to_form("Purchase Invoice", self.purchase_invoice)
+					)
+				)
 
 	def validate_asset(self):
 		if self.asset_doc.status in ("Sold", "Fully Depreciated", "Scrapped"):
@@ -293,6 +307,12 @@ class AssetRepair(AccountsController):
 		)
 		stock_entry.asset_repair = self.name
 
+		accounting_dimensions = {
+			"cost_center": self.cost_center,
+			"project": self.project,
+			**{dimension: self.get(dimension) for dimension in get_accounting_dimensions()},
+		}
+
 		for stock_item in self.get("stock_items"):
 			self.validate_serial_no(stock_item)
 
@@ -304,8 +324,7 @@ class AssetRepair(AccountsController):
 					"qty": stock_item.consumed_quantity,
 					"basic_rate": stock_item.valuation_rate,
 					"serial_and_batch_bundle": stock_item.serial_and_batch_bundle,
-					"cost_center": self.cost_center,
-					"project": self.get("project") if "projects" in frappe.get_installed_apps() else "",
+					**accounting_dimensions,
 				},
 			)
 
@@ -349,6 +368,15 @@ class AssetRepair(AccountsController):
 		if flt(self.repair_cost) <= 0:
 			return
 
+		expense_accounts = _get_expense_accounts_for_purchase_invoice(self.purchase_invoice)
+
+		if not expense_accounts:
+			frappe.throw(
+				_("No expense accounts found for Purchase Invoice {0}").format(self.purchase_invoice)
+			)
+
+		pi_expense_account = expense_accounts[0]
+
 		debit_against_account = set()
 
 		for pi in self.invoices:
@@ -377,12 +405,30 @@ class AssetRepair(AccountsController):
 					"account": fixed_asset_account,
 					"debit": self.repair_cost,
 					"debit_in_account_currency": self.repair_cost,
-					"against": debit_against_account,
+					"against": pi_expense_account,
 					"voucher_type": self.doctype,
 					"voucher_no": self.name,
 					"cost_center": self.cost_center,
 					"posting_date": self.completion_date,
-					"against_voucher_type": "Purchase Invoice",
+					"against_voucher_type": "Asset",
+					"against_voucher": self.asset,
+					"company": self.company,
+				},
+				item=self,
+			)
+		)
+
+		gl_entries.append(
+			self.get_gl_dict(
+				{
+					"account": pi_expense_account,
+					"credit": self.repair_cost,
+					"credit_in_account_currency": self.repair_cost,
+					"against": fixed_asset_account,
+					"voucher_type": self.doctype,
+					"voucher_no": self.name,
+					"cost_center": self.cost_center,
+					"posting_date": self.completion_date,
 					"company": self.company,
 				},
 				item=self,
@@ -603,3 +649,83 @@ def get_expense_account(purchase_invoice):
 	amount = frappe.db.get_value("Purchase Invoice Item", {"parent": purchase_invoice}, "amount")
 
 	return {"expense_account": expense_account,"amount":amount}
+
+@frappe.whitelist()
+def get_repair_cost_for_purchase_invoice(purchase_invoice: str) -> float:
+	"""
+	Get the total repair cost from GL entries for a purchase invoice.
+	Only considers expense accounts for non-stock, non-fixed-asset items.
+	"""
+	if not purchase_invoice:
+		return 0.0
+
+	frappe.has_permission("Purchase Invoice", "read", purchase_invoice, throw=True)
+
+	expense_accounts = _get_expense_accounts_for_purchase_invoice(purchase_invoice)
+
+	if not expense_accounts:
+		return 0.0
+
+	return _get_total_expense_amount(purchase_invoice, expense_accounts)
+
+
+def _get_expense_accounts_for_purchase_invoice(purchase_invoice: str) -> list[str]:
+	"""
+	Get expense accounts for non-stock items from the purchase invoice.
+	"""
+	pi_items = frappe.get_all(
+		"Purchase Invoice Item",
+		filters={"parent": purchase_invoice},
+		fields=["item_code", "expense_account", "is_fixed_asset"],
+	)
+
+	if not pi_items:
+		return []
+
+	# Get list of stock item codes from the invoice
+	item_codes = {item.item_code for item in pi_items if item.item_code}
+	stock_items = set()
+	if item_codes:
+		stock_items = set(
+			frappe.db.get_all(
+				"Item", filters={"name": ["in", list(item_codes)], "is_stock_item": 1}, pluck="name"
+			)
+		)
+
+	expense_accounts = set()
+
+	for item in pi_items:
+		# Skip stock items - they use warehouse accounts
+		if item.item_code and item.item_code in stock_items:
+			continue
+
+		# Skip fixed assets - they use asset accounts
+		if item.is_fixed_asset:
+			continue
+
+		# Use expense account from Purchase Invoice Item
+		if item.expense_account:
+			expense_accounts.add(item.expense_account)
+
+	return list(expense_accounts)
+
+
+def _get_total_expense_amount(purchase_invoice: str, expense_accounts: list[str]) -> float:
+	"""Get the total expense amount from GL entries for a purchase invoice and accounts."""
+	if not expense_accounts:
+		return 0.0
+
+	gl_entry = frappe.qb.DocType("GL Entry")
+
+	result = (
+		frappe.qb.from_(gl_entry)
+		.select((Sum(gl_entry.debit) - Sum(gl_entry.credit)).as_("total"))
+		.where(
+			(gl_entry.voucher_type == "Purchase Invoice")
+			& (gl_entry.voucher_no == purchase_invoice)
+			& (gl_entry.account.isin(expense_accounts))
+			& (gl_entry.is_cancelled == 0)
+		)
+	).run(as_dict=True)
+
+	return flt(result[0].total) if result else 0.0

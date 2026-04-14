@@ -8,9 +8,9 @@ from erpnext.setup.doctype.employee.test_employee import make_employee
 from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
 	make_purchase_receipt,
 )
-from frappe.utils import now
+from frappe.utils import add_days, now
 
-from assets.assets.doctype.asset.test_asset import create_asset_data
+from assets.assets.doctype.asset.test_asset import create_asset, create_asset_data
 from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_depr_schedule,
 )
@@ -163,7 +163,32 @@ class TestAssetMovement(unittest.TestCase):
 			})
 			asset_movement.insert()
 			asset_movement.submit()
+	def test_movement_transaction_date(self):
+		asset = create_asset(item_code="Macbook Pro", do_not_save=1)
+		asset.save().submit()
 
+		if not frappe.db.exists("Location", "Test Location 2"):
+			frappe.get_doc({"doctype": "Location", "location_name": "Test Location 2"}).insert()
+
+		asset_creation_date = frappe.db.get_value(
+			"Asset Movement",
+			[["Asset Movement Item", "asset", "=", asset.name], ["docstatus", "=", 1]],
+			"transaction_date",
+		)
+		asset_movement = create_asset_movement(
+			purpose="Transfer",
+			company=asset.company,
+			assets=[
+				{
+					"asset": asset.name,
+					"source_location": "Test Location",
+					"target_location": "Test Location 2",
+				}
+			],
+			transaction_date=add_days(asset_creation_date, -1),
+			do_not_save=True,
+		)
+		self.assertRaises(frappe.ValidationError, asset_movement.save)
 	#TC_FA_117
 	def test_asset_movement_issue_from_employee_to_employee_TC_FA_117(self):
 		company = "_Test Company"
@@ -3454,8 +3479,10 @@ def create_asset_movement(**args):
 		}
 	)
 
-	movement.insert()
-	movement.submit()
+	if not args.do_not_save:
+		movement.insert(ignore_if_duplicate=True)
+		if not args.do_not_submit:
+			movement.submit()
 
 	return movement
 
