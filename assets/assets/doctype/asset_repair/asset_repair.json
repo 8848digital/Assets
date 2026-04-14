@@ -143,6 +143,7 @@
    "label": "Asset",
    "link_filters": "[[\"Asset\",\"status\",\"not in\",[\"Work In Progress\",\"Capitalized\",\"Fully Depreciated\",\"Sold\",\"Scrapped\",\"Cancelled\",null]]]",
    "options": "Asset",
+   "link_filters": "[[\"Asset\",\"status\",\"not in\",[\"Work In Progress\",\"Capitalized\",\"Fully Depreciated\",\"Sold\",\"Scrapped\",\"Cancelled\",null]]]",
    "reqd": 1
   },
   {

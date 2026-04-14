@@ -58,14 +58,13 @@ class AssetCapitalization(StockController):
 
 	if TYPE_CHECKING:
 		from frappe.types import DF
-
-		from assets.assets.doctype.asset_capitalization_asset_item.asset_capitalization_asset_item import (
+		from erpnext.assets.doctype.asset_capitalization_asset_item.asset_capitalization_asset_item import (
 			AssetCapitalizationAssetItem,
 		)
-		from assets.assets.doctype.asset_capitalization_service_item.asset_capitalization_service_item import (
+		from erpnext.assets.doctype.asset_capitalization_service_item.asset_capitalization_service_item import (
 			AssetCapitalizationServiceItem,
 		)
-		from assets.assets.doctype.asset_capitalization_stock_item.asset_capitalization_stock_item import (
+		from erpnext.assets.doctype.asset_capitalization_stock_item.asset_capitalization_stock_item import (
 			AssetCapitalizationStockItem,
 		)
 
@@ -82,6 +81,7 @@ class AssetCapitalization(StockController):
 		naming_series: DF.Literal["ACC-ASC-.YYYY.-"]
 		posting_date: DF.Date
 		posting_time: DF.Time
+		project: DF.Link | None
 		service_items: DF.Table[AssetCapitalizationServiceItem]
 		service_items_total: DF.Currency
 		set_posting_time: DF.Check

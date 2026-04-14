@@ -97,6 +97,7 @@ frappe.ui.form.on("Asset", {
 			frappe.throw(__("Please capitalize this asset before submitting."));
 		}
 	},
+
 	refresh: function (frm) {
 		frappe.ui.form.trigger("Asset", "is_existing_asset");
 		frm.toggle_display("next_depreciation_date", frm.doc.docstatus < 1);
@@ -226,7 +227,6 @@ frappe.ui.form.on("Asset", {
 						frm.has_active_capitalization = r.message;
 						if (!r.message) {
 							$(".form-message").text(__("Capitalize this asset before submitting."));
-
 							frm.add_custom_button(__("Capitalize Asset"), function () {
 								frm.trigger("create_asset_capitalization");
 							});
@@ -306,6 +306,7 @@ frappe.ui.form.on("Asset", {
 			});
 			return;
 		}
+
 		frm.toggle_reqd("purchase_receipt", 1);
 		frm.toggle_reqd("purchase_invoice", 1);
 	},
