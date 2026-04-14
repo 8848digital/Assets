@@ -618,6 +618,24 @@ class Asset(AccountsController):
 					"Row {0}: Total Number of Depreciations cannot be less than or equal to Opening Number of Booked Depreciations"
 				).format(row.idx),
 				title=_("Invalid Schedule"),
+			frappe.throw(
+				_("Opening Accumulated Depreciation must be less than or equal to {0}").format(
+					depreciable_amount
+				)
+			)
+
+		if self.opening_accumulated_depreciation:
+			if not self.opening_number_of_booked_depreciations:
+				frappe.throw(_("Please set Opening Number of Booked Depreciations"))
+		else:
+			self.opening_number_of_booked_depreciations = 0
+
+		if flt(row.total_number_of_depreciations) <= cint(self.opening_number_of_booked_depreciations):
+			frappe.throw(
+				_(
+					"Row {0}: Total Number of Depreciations cannot be less than or equal to Opening Number of Booked Depreciations"
+				).format(row.idx),
+				title=_("Invalid Schedule"),
 			)		
 	
 	def set_total_booked_depreciations(self):

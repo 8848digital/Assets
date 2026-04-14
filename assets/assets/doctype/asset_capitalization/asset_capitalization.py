@@ -147,6 +147,7 @@ class AssetCapitalization(StockController):
 		self.make_gl_entries()
 		self.repost_future_sle_and_gle()
 		self.restore_consumed_asset_items()
+		self.update_target_asset()
 
 	def set_title(self):
 		self.title = self.target_asset_name or self.target_item_name or self.target_item_code
@@ -689,10 +690,23 @@ class AssetCapitalization(StockController):
 		total_target_asset_value = flt(self.total_value, self.precision("total_value"))
 
 		asset_doc = frappe.get_doc("Asset", self.target_asset)
-		asset_doc.gross_purchase_amount = total_target_asset_value
-		asset_doc.purchase_amount = total_target_asset_value
-		asset_doc.flags.ignore_validate = True
-		asset_doc.save()
+		if self.docstatus == 2:
+			gross_purchase_amount = asset_doc.gross_purchase_amount - total_target_asset_value
+			purchase_amount = asset_doc.purchase_amount - total_target_asset_value
+			total_asset_cost = asset_doc.total_asset_cost - total_target_asset_value
+		else:
+			gross_purchase_amount = asset_doc.gross_purchase_amount + total_target_asset_value
+			purchase_amount = asset_doc.purchase_amount + total_target_asset_value
+			total_asset_cost = asset_doc.total_asset_cost + total_target_asset_value
+
+		asset_doc.db_set(
+			{
+				"gross_purchase_amount": gross_purchase_amount,
+				"purchase_amount": purchase_amount,
+				"total_asset_cost": total_asset_cost,
+			}
+		)
+
 
 		frappe.msgprint(
 			_(
@@ -858,7 +872,7 @@ def get_consumed_stock_item_details(args):
 				"company": args.company,
 				"serial_no": args.serial_no,
 				"batch_no": args.batch_no,
-				"serial_and_batch_bundle": args.serial_and_batch_bundle,
+				"serial_and_batch_bundle": args.serial_and_batch_bundle
 			}
 		)
 		out.update(get_warehouse_details(incoming_rate_args))
