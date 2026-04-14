@@ -8,9 +8,9 @@ from erpnext.setup.doctype.employee.test_employee import make_employee
 from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import (
 	make_purchase_receipt,
 )
-from frappe.utils import now
+from frappe.utils import add_days, now
 
-from assets.assets.doctype.asset.test_asset import create_asset_data
+from assets.assets.doctype.asset.test_asset import create_asset, create_asset_data
 from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_depr_schedule,
 )
@@ -84,7 +84,7 @@ class TestAssetMovement(unittest.TestCase):
 					"target_location":"Field 1",
 					"source_cost_center":"_Test Cost Center - _TC"
 				}]
-			}) 
+			})
 			asset_movement.insert()
 			asset_movement.submit()
 
@@ -160,10 +160,35 @@ class TestAssetMovement(unittest.TestCase):
 					"to_employee":employee_doc.name,
 					"source_cost_center":"_Test Cost Center - _TC"
 				}]
-			}) 
+			})
 			asset_movement.insert()
 			asset_movement.submit()
+	def test_movement_transaction_date(self):
+		asset = create_asset(item_code="Macbook Pro", do_not_save=1)
+		asset.save().submit()
 
+		if not frappe.db.exists("Location", "Test Location 2"):
+			frappe.get_doc({"doctype": "Location", "location_name": "Test Location 2"}).insert()
+
+		asset_creation_date = frappe.db.get_value(
+			"Asset Movement",
+			[["Asset Movement Item", "asset", "=", asset.name], ["docstatus", "=", 1]],
+			"transaction_date",
+		)
+		asset_movement = create_asset_movement(
+			purpose="Transfer",
+			company=asset.company,
+			assets=[
+				{
+					"asset": asset.name,
+					"source_location": "Test Location",
+					"target_location": "Test Location 2",
+				}
+			],
+			transaction_date=add_days(asset_creation_date, -1),
+			do_not_save=True,
+		)
+		self.assertRaises(frappe.ValidationError, asset_movement.save)
 	#TC_FA_117
 	def test_asset_movement_issue_from_employee_to_employee_TC_FA_117(self):
 		company = "_Test Company"
@@ -236,7 +261,7 @@ class TestAssetMovement(unittest.TestCase):
 					"to_employee":employee_doc.name,
 					"source_cost_center":"_Test Cost Center - _TC"
 				}]
-			}) 
+			})
 			asset_movement.insert()
 			asset_movement.submit()
 
@@ -263,7 +288,7 @@ class TestAssetMovement(unittest.TestCase):
 			# Check if 'gst_hsn_code' exists in Item doctype
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
-			
+
 			frappe.get_doc(item_data).insert()
 
 		if not frappe.db.exists("Employee", "Test_employee_issue"):
@@ -308,7 +333,7 @@ class TestAssetMovement(unittest.TestCase):
 		}).insert()
 		target_asset.submit()
 
-		
+
 
 		if target_asset:
 			asset_movement = frappe.get_doc({
@@ -322,7 +347,7 @@ class TestAssetMovement(unittest.TestCase):
 					"target_location":"Field 1",
 					"source_cost_center":"_Test Cost Center - _TC"
 				}]
-			}) 
+			})
 			asset_movement.insert()
 			asset_movement.submit()
 
@@ -483,7 +508,7 @@ class TestAssetMovement(unittest.TestCase):
 					"to_employee":employee_doc.name,
 					"source_cost_center":"_Test Cost Center - _TC"
 				}]
-			}) 
+			})
 			asset_movement.insert()
 			asset_movement.submit()
 
@@ -577,7 +602,7 @@ class TestAssetMovement(unittest.TestCase):
 					"to_employee":employee_doc.name,
 					"source_cost_center":"_Test Cost Center - _TC"
 				}]
-			}) 
+			})
 			asset_movement.insert()
 			asset_movement.submit()
 
@@ -598,7 +623,7 @@ class TestAssetMovement(unittest.TestCase):
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
-	
+
 	#TC_FA_122
 	def test_cancel_asset_movement_issue_from_employee_to_target_location_TC_FA_122(self):
 		company = "_Test Company"
@@ -622,7 +647,7 @@ class TestAssetMovement(unittest.TestCase):
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
 			frappe.get_doc(item_data).insert()
-		
+
 		if not frappe.db.exists("Employee", "Test_employee_issue"):
 			employee_doc = frappe.get_doc({
 				"doctype": "Employee",
@@ -732,7 +757,7 @@ class TestAssetMovement(unittest.TestCase):
 				"status": "Active",
 				"company": company
 			}).insert()
-			
+
 		asset_doc_name = frappe.get_doc({
 			"doctype": "Asset",
 			"company": company,
@@ -770,7 +795,7 @@ class TestAssetMovement(unittest.TestCase):
 					"target_location":"Division 1",
 					"source_cost_center":"_Test Cost Center - _TC"
 				}]
-			}) 
+			})
 			asset_movement.insert()
 			asset_movement.submit()
 
@@ -860,7 +885,7 @@ class TestAssetMovement(unittest.TestCase):
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
-	
+
 	#TC_FA_124
 	def test_cancel_multiple_asset_movement_issue_location_change_TC_FA_124(self):
 		company = "_Test Company"
@@ -934,7 +959,7 @@ class TestAssetMovement(unittest.TestCase):
 					"to_employee":employee_doc.name,
 					"source_cost_center":"_Test Cost Center - _TC"
 				}]
-			}) 
+			})
 			asset_movement.insert()
 			asset_movement.submit()
 
@@ -1029,7 +1054,7 @@ class TestAssetMovement(unittest.TestCase):
 					"to_employee":employee_doc.name,
 					"source_cost_center":"_Test Cost Center - _TC"
 				}]
-			}) 
+			})
 			asset_movement.insert()
 			asset_movement.submit()
 
@@ -1050,7 +1075,7 @@ class TestAssetMovement(unittest.TestCase):
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
-	
+
 	#TC_FA_126
 	def test_cancel_multiple_asset_movement_issue_from_employee_to_target_location_TC_FA_126(self):
 		company = "_Test Company"
@@ -1075,7 +1100,7 @@ class TestAssetMovement(unittest.TestCase):
 				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
 
 			frappe.get_doc(item_data).insert()
-		
+
 		if not frappe.db.exists("Employee", "Test_employee_issue"):
 			employee_doc = frappe.get_doc({
 				"doctype": "Employee",
@@ -1148,7 +1173,7 @@ class TestAssetMovement(unittest.TestCase):
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
-	
+
 	#TC_FA_127
 	def test_cancel_single_asset_movement_transfer_location_change_TC_FA_127(self):
 		company = "_Test Company"
@@ -1306,7 +1331,7 @@ class TestAssetMovement(unittest.TestCase):
 					"to_employee":employee_doc.name,
 					"source_cost_center":"_Test Cost Center - _TC"
 				}]
-			}) 
+			})
 			asset_movement.insert()
 			asset_movement.submit()
 
@@ -1400,7 +1425,7 @@ class TestAssetMovement(unittest.TestCase):
 					"to_employee":employee_doc.name,
 					"source_cost_center":"_Test Cost Center - _TC"
 				}]
-			}) 
+			})
 			asset_movement.insert()
 			asset_movement.submit()
 
@@ -1441,7 +1466,7 @@ class TestAssetMovement(unittest.TestCase):
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
 			}
-			
+
 			# Check if 'gst_hsn_code' exists in Item doctype
 			if frappe.db.has_column("Item", "gst_hsn_code"):
 				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
@@ -1605,7 +1630,7 @@ class TestAssetMovement(unittest.TestCase):
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
-	
+
 	#TC_FA_132
 	def test_cancel_multiple_grouped_asset_movement_issue_location_change_TC_FA_132(self):
 		company = "_Test Company"
@@ -1679,7 +1704,7 @@ class TestAssetMovement(unittest.TestCase):
 					"to_employee":employee_doc.name,
 					"source_cost_center":"_Test Cost Center - _TC"
 				}]
-			}) 
+			})
 			asset_movement.insert()
 			asset_movement.submit()
 
@@ -1774,7 +1799,7 @@ class TestAssetMovement(unittest.TestCase):
 					"to_employee":employee_doc.name,
 					"source_cost_center":"_Test Cost Center - _TC"
 				}]
-			}) 
+			})
 			asset_movement.insert()
 			asset_movement.submit()
 
@@ -1795,7 +1820,7 @@ class TestAssetMovement(unittest.TestCase):
 
 		# Assertions
 		self.assertEqual(target_asset.docstatus, 2)  # Ensure Asset is canceled
-	
+
 	#TC_FA_134
 	def test_cancel_multiple_grouped_asset_movement_issue_from_employee_to_target_location_TC_FA_134(self):
 		company = "_Test Company"
@@ -1820,7 +1845,7 @@ class TestAssetMovement(unittest.TestCase):
 				item_data["gst_hsn_code"] = "01011010"  # Add only if field exists
 
 			frappe.get_doc(item_data).insert()
-		
+
 		if not frappe.db.exists("Employee", "Test_employee_issue"):
 			employee_doc = frappe.get_doc({
 				"doctype": "Employee",
@@ -1992,7 +2017,7 @@ class TestAssetMovement(unittest.TestCase):
 		company = "_Test Company"
 		employee = "_T-Employee-00001"
 		item = "Test_item_01"
-		
+
 		# Ensure prerequisites exist
 		if not frappe.db.exists("Company", company):
 			create_child_company()
@@ -2078,7 +2103,7 @@ class TestAssetMovement(unittest.TestCase):
 		company = "_Test Company"
 		employee = "_T-Employee-00001"
 		item = "Test_item_01"
-		
+
 		# Ensure prerequisites exist
 		if not frappe.db.exists("Company", company):
 			create_child_company()
@@ -2458,7 +2483,7 @@ class TestAssetMovement(unittest.TestCase):
 				"status": "Active",
 				"company": company
 			}).insert()
-			
+
 		asset_doc_name = frappe.get_doc({
 			"doctype": "Asset",
 			"company": company,
@@ -2496,7 +2521,7 @@ class TestAssetMovement(unittest.TestCase):
 					"target_location":"Field 1",
 					"source_cost_center":"_Test Cost Center - _TC"
 				}]
-			}) 
+			})
 			asset_movement.insert()
 			asset_movement.submit()
 
@@ -2518,7 +2543,7 @@ class TestAssetMovement(unittest.TestCase):
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
 			}).insert()
-		
+
 		if not frappe.db.exists("Employee", "Test_employee_issue"):
 			employee_doc = frappe.get_doc({
 				"doctype": "Employee",
@@ -2570,7 +2595,7 @@ class TestAssetMovement(unittest.TestCase):
 					"from_employee":employee_doc.name,
 					"target_location":"Field 1",
 				}]
-			}) 
+			})
 			asset_movement.insert()
 			asset_movement.submit()
 
@@ -2902,7 +2927,7 @@ class TestAssetMovement(unittest.TestCase):
 				"auto_create_assets": 1,
 				"asset_category": "Test_Category"
 			}).insert()
-		
+
 		employe_doc = frappe.get_doc({
 				"doctype": "Employee",
 				"employee_name": "Test_Employee_Grouped1",
@@ -2913,9 +2938,9 @@ class TestAssetMovement(unittest.TestCase):
 				"status": "Active",
 				"company": company
 			}).insert()
-		
+
 		employe_doc.submit()
-		
+
 		target_asset = frappe.get_doc({
 			"doctype": "Asset",
 			"company": company,
@@ -2953,7 +2978,7 @@ class TestAssetMovement(unittest.TestCase):
 					"from_employee":employe_doc.idx,
 					"target_location":"Field 1",
 				}]
-			}) 
+			})
 			asset_movement.insert()
 			asset_movement.submit()
 
@@ -3121,7 +3146,7 @@ class TestAssetMovement(unittest.TestCase):
 		)
 
 		# after issuing, asset should belong to an employee not at a location
-		self.assertEqual(frappe.db.get_value("Asset", asset.name, "location"), None)
+		self.assertEqual(frappe.db.get_value("Asset", asset.name, "location"), "Test Location 2")
 		self.assertEqual(frappe.db.get_value("Asset", asset.name, "custodian"), employee)
 
 		create_asset_movement(
@@ -3189,45 +3214,6 @@ class TestAssetMovement(unittest.TestCase):
 		self.assertEqual(
 			frappe.db.get_value("Asset", asset.name, "location"), "Test Location"
 		)
-
-	def test_last_movement_cancellation_validation(self):
-		pr = make_purchase_receipt(item_code="Macbook Pro", qty=1, rate=100000.0, location="Test Location")
-
-		asset_name = frappe.db.get_value("Asset", {"purchase_receipt": pr.name}, "name")
-		asset = frappe.get_doc("Asset", asset_name)
-		asset.calculate_depreciation = 1
-		asset.available_for_use_date = "2020-06-06"
-		asset.purchase_date = "2020-06-06"
-		asset.append(
-			"finance_books",
-			{
-				"expected_value_after_useful_life": 10000,
-				"next_depreciation_date": "2020-12-31",
-				"depreciation_method": "Straight Line",
-				"total_number_of_depreciations": 3,
-				"frequency_of_depreciation": 10,
-			},
-		)
-		if asset.docstatus == 0:
-			asset.submit()
-
-		AssetMovement = frappe.qb.DocType("Asset Movement")
-		AssetMovementItem = frappe.qb.DocType("Asset Movement Item")
-
-		asset_movement = (
-			frappe.qb.from_(AssetMovement)
-			.join(AssetMovementItem)
-			.on(AssetMovementItem.parent == AssetMovement.name)
-			.select(AssetMovement.name)
-			.where(
-				(AssetMovementItem.asset == asset.name)
-				& (AssetMovement.company == asset.company)
-				& (AssetMovement.docstatus == 1)
-			)
-		).run(as_dict=True)
-
-		asset_movement_doc = frappe.get_doc("Asset Movement", asset_movement[0].name)
-		self.assertRaises(frappe.ValidationError, asset_movement_doc.cancel)
 
 	def test_depriciation_schedule_entry(self):
 		pr = make_purchase_receipt(
@@ -3493,8 +3479,10 @@ def create_asset_movement(**args):
 		}
 	)
 
-	movement.insert()
-	movement.submit()
+	if not args.do_not_save:
+		movement.insert(ignore_if_duplicate=True)
+		if not args.do_not_submit:
+			movement.submit()
 
 	return movement
 

@@ -5,13 +5,7 @@
 import frappe
 from frappe import _
 from frappe.model.document import Document
-from frappe.utils import get_link_to_form
-from frappe.utils.data import date_diff, getdate
-
-from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
-	get_accounting_dimensions,
-)
-from assets.assets.doctype.asset.depreciation import make_depreciation_entry
+from frappe.utils import cstr, get_datetime, get_link_to_form
 from assets.assets.doctype.asset_activity.asset_activity import add_asset_activity
 
 
@@ -32,309 +26,203 @@ class AssetMovement(Document):
 		assets: DF.Table[AssetMovementItem]
 		company: DF.Link
 		journal_entry: DF.Link | None
-		purpose: DF.Literal["", "Issue", "Receipt", "Transfer"]
+		purpose: DF.Literal["", "Issue", "Receipt", "Transfer","Transfer and Issue"]
 		reference_doctype: DF.Link | None
 		reference_name: DF.DynamicLink | None
 		transaction_date: DF.Datetime
 	# end: auto-generated types
 
 	def validate(self):
-		self.validate_asset()
-		self.validate_location()
-		self.validate_employee()
-		self.validate_dep_schedule()
-
-	def validate_asset(self):
 		for d in self.assets:
-			status, company = frappe.db.get_value("Asset", d.asset, ["status", "company"])
-			if self.purpose == "Transfer" and status in ("Draft", "Scrapped", "Sold"):
-				frappe.throw(_("{0} asset cannot be transferred").format(status))
+			self.validate_asset(d)
+			self.validate_movement(d)
+			self.validate_transaction_date(d)
 
-			if company != self.company:
-				frappe.throw(
-					_("Asset {0} does not belong to company {1}").format(d.asset, self.company)
-				)
+	def validate_asset(self, d):
+		status, company = frappe.db.get_value("Asset", d.asset, ["status", "company"])
+		if self.purpose == "Transfer" and status in ("Draft", "Scrapped", "Sold"):
+			frappe.throw(_("{0} asset cannot be transferred").format(status))
 
-			if not (d.source_location or d.target_location or d.from_employee or d.to_employee):
-				frappe.throw(_("Either location or employee must be required"))
-
-	def validate_location(self):
-		for d in self.assets:
-			if self.purpose in ["Transfer", "Issue"]:
-				current_location = frappe.db.get_value("Asset", d.asset, "location")
-				if d.source_location:
-					if current_location != d.source_location:
-						frappe.throw(
-							_("Asset {0} does not belongs to the location {1}").format(
-								d.asset, d.source_location
-							)
-						)
-				else:
-					d.source_location = current_location
-
-			if self.purpose == "Issue":
-				if d.target_location:
-					frappe.throw(
-						_(
-							"Issuing cannot be done to a location. Please enter employee to issue the Asset {0} to"
-						).format(d.asset),
-						title=_("Incorrect Movement Purpose"),
-					)
-				if not d.to_employee:
-					frappe.throw(_("Employee is required while issuing Asset {0}").format(d.asset))
-
-			if self.purpose == "Transfer":
-				if d.to_employee:
-					frappe.throw(
-						_(
-							"Transferring cannot be done to an Employee. Please enter location where Asset {0} has to be transferred"
-						).format(d.asset),
-						title=_("Incorrect Movement Purpose"),
-					)
-				if not d.target_location:
-					frappe.throw(
-						_("Target Location is required while transferring Asset {0}").format(d.asset)
-					)
-				if d.source_location == d.target_location:
-					frappe.throw(_("Source and Target Location cannot be same"))
-
-			if self.purpose == "Receipt":
-				if not (d.source_location) and not (d.target_location or d.to_employee):
-					frappe.throw(
-						_("Target Location or To Employee is required while receiving Asset {0}").format(
-							d.asset
-						)
-					)
-				elif d.source_location:
-					if d.from_employee and not d.target_location:
-						frappe.throw(
-							_(
-								"Target Location is required while receiving Asset {0} from an employee"
-							).format(d.asset)
-						)
-					elif d.to_employee and d.target_location:
-						frappe.throw(
-							_(
-								"Asset {0} cannot be received at a location and given to an employee in a single movement"
-							).format(d.asset)
-						)
-
-	def validate_employee(self):
-		for d in self.assets:
-			if d.from_employee:
-				current_custodian = frappe.db.get_value("Asset", d.asset, "custodian")
-
-				if current_custodian != d.from_employee:
-					frappe.throw(
-						_("Asset {0} does not belongs to the custodian {1}").format(
-							d.asset, d.from_employee
-						)
-					)
-
-			if (
-				d.to_employee
-				and frappe.db.get_value("Employee", d.to_employee, "company") != self.company
-			):
-				frappe.throw(
-					_("Employee {0} does not belongs to the company {1}").format(
-						d.to_employee, self.company
-					)
-				)
-
-	def validate_dep_schedule(self):
-		for asset in self.assets:
-			if not frappe.db.exists("Asset Depreciation Schedule", {"asset": asset.asset}):
-				return
-
-			asset_depr_schedule_doc = frappe.get_doc(
-				"Asset Depreciation Schedule", {"asset": asset.asset}
-			)
-			transaction_date = getdate(self.transaction_date)
-
-			asset_depr_schedule_list = frappe.db.get_all(
-				"Depreciation Schedule",
-				filters={"parent": asset_depr_schedule_doc.name},
-				fields=[
-					"schedule_date",
-					"name",
-					"depreciation_amount",
-					"accumulated_depreciation_amount",
-					"journal_entry",
-				],
-				order_by="schedule_date",
+		if company != self.company:
+			frappe.throw(
+				_("Asset {0} does not belong to company {1}").format(d.asset, self.company)
 			)
 
-			next_schedule = None
-			for schedule in asset_depr_schedule_list:
-				if schedule["schedule_date"] >= transaction_date:
-					next_schedule = schedule
-					break
-			if next_schedule:
-				if next_schedule["journal_entry"]:
-					frappe.throw(_("Depreciation Entry of Transaction Date is already made"))
+		if not (d.source_location or d.target_location or d.from_employee or d.to_employee):
+			frappe.throw(_("Either location or employee must be required"))
+	def validate_transaction_date(self, d):
+		previous_movement_date = frappe.db.get_value(
+			"Asset Movement",
+			[["Asset Movement Item", "asset", "=", d.asset], ["docstatus", "=", 1]],
+			"transaction_date",
+			order_by="transaction_date desc",
+		)
+		if previous_movement_date and get_datetime(previous_movement_date) > get_datetime(
+			self.transaction_date
+		):
+			frappe.throw(_("Transaction date can't be earlier than previous movement date"))
+
+	def validate_movement(self, d):
+		if self.purpose == "Transfer and Issue":
+			self.validate_location_and_employee(d)
+		elif self.purpose in ["Receipt", "Transfer"]:
+			self.validate_location(d)
+		else:
+			self.validate_employee(d)
+	
+	def validate_location_and_employee(self, d):
+		self.validate_location(d)
+		self.validate_employee(d)
+
+	def validate_location(self, d):
+		if self.purpose in ["Transfer", "Transfer and Issue"]:
+			current_location = frappe.db.get_value("Asset", d.asset, "location")
+			if d.source_location:
+				if current_location != d.source_location:
+					frappe.throw(
+						_("Asset {0} does not belongs to the location {1}").format(
+							d.asset, d.source_location
+						)
+					)
+			else:
+				d.source_location = current_location
+
+		if self.purpose == "Transfer and Issue":
+			if d.target_location:
+				frappe.throw(
+					_(
+						"Issuing cannot be done to a location. Please enter employee to issue the Asset {0} to"
+					).format(d.asset),
+					title=_("Incorrect Movement Purpose"),
+				)
+			if not d.to_employee:
+				frappe.throw(_("Employee is required while issuing Asset {0}").format(d.asset))
+
+		if self.purpose == "Transfer":
+			if d.to_employee:
+				frappe.throw(
+					_(
+						"Transferring cannot be done to an Employee. Please enter location where Asset {0} has to be transferred"
+					).format(d.asset),
+					title=_("Incorrect Movement Purpose"),
+				)
+			if not d.target_location:
+				frappe.throw(
+					_("Target Location is required while transferring Asset {0}").format(d.asset)
+				)
+			if d.source_location == d.target_location:
+				frappe.throw(_("Source and Target Location cannot be same"))
+
+		if self.purpose == "Receipt":
+			if not (d.source_location) and not (d.target_location or d.to_employee):
+				frappe.throw(
+					_("Target Location or To Employee is required while receiving Asset {0}").format(
+						d.asset
+					)
+				)
+			elif d.source_location:
+				if d.from_employee and not d.target_location:
+					frappe.throw(
+						_(
+							"Target Location is required while receiving Asset {0} from an employee"
+						).format(d.asset)
+					)
+				elif d.to_employee and d.target_location:
+					frappe.throw(
+						_(
+							"Asset {0} cannot be received at a location and given to an employee in a single movement"
+						).format(d.asset)
+					)
+
+	def validate_employee(self, d):
+		if self.purpose == "Transfer and Issue":
+			if not d.from_employee:
+				frappe.throw(_("From Employee is required while issuing Asset {0}").format(d.asset))
+
+		if d.from_employee:
+			current_custodian = frappe.db.get_value("Asset", d.asset, "custodian")
+
+			if current_custodian != d.from_employee:
+				frappe.throw(
+					_("Asset {0} does not belong  to the custodian {1}").format(d.asset, d.from_employee)
+				)
+
+		if not d.to_employee:
+			frappe.throw(_("Employee is required while issuing Asset {0}").format(d.asset))
+
+		if d.to_employee and frappe.db.get_value("Employee", d.to_employee, "company") != self.company:
+			frappe.throw(
+				_("Employee {0} does not belong  to the company {1}").format(d.to_employee, self.company)
+			)
 
 	def on_submit(self):
-		self.set_accounting_dimensions_and_custodian_in_asset()
-
-	def before_cancel(self):
-		self.sequence_cancel()
+		self.set_latest_location_and_custodian_in_asset()
 
 	def on_cancel(self):
-		self.set_accounting_dimensions_and_custodian_in_asset()
-		self.on_cancel_reverse_depreciation_schedule()
+		self.set_latest_location_and_custodian_in_asset()
 
-	def set_accounting_dimensions_and_custodian_in_asset(self):
-		fieldnames = get_accounting_dimensions(as_list=True)
-		target_dimension_fields = [f"target_{fieldname}" for fieldname in fieldnames]
-		field_mapping = {tf: tf.split("_", 1)[1] for tf in target_dimension_fields}
-		target_dimension_fields_str = (
-			", " + ", ".join(target_dimension_fields) if target_dimension_fields else ""
+	def set_latest_location_and_custodian_in_asset(self):
+		for d in self.assets:
+			current_location, current_employee = self.get_latest_location_and_custodian(d.asset)
+			self.update_asset_location_and_custodian(d.asset, current_location, current_employee)
+			self.log_asset_activity(d.asset, current_location, current_employee)
+
+	def get_latest_location_and_custodian(self, asset):
+		current_location, current_employee = "", ""
+		cond = "1=1"
+
+		# latest entry corresponds to current document's location, employee when transaction date > previous dates
+		# In case of cancellation it corresponds to previous latest document's location, employee
+		args = {"asset": asset, "company": self.company}
+		latest_movement_entry = frappe.db.sql(
+			f"""
+			SELECT asm_item.target_location, asm_item.to_employee
+			FROM `tabAsset Movement Item` asm_item
+			JOIN `tabAsset Movement` asm ON asm_item.parent = asm.name
+			WHERE
+				asm_item.asset = %(asset)s AND
+				asm.company = %(company)s AND
+				asm.docstatus = 1 AND {cond}
+			ORDER BY asm.transaction_date DESC
+			LIMIT 1
+			""",
+			args,
 		)
 
-		for d in self.assets:
-			args = {"asset": d.asset, "company": self.company}
+		if latest_movement_entry:
+			current_location = latest_movement_entry[0][0]
+			current_employee = latest_movement_entry[0][1]
 
-			# latest entry corresponds to current document's location, employee when transaction date > previous dates
-			# In case of cancellation it corresponds to previous latest document's location, employee
-			latest_movement_entry = frappe.db.sql(
-				f"""
-				SELECT asm_item.target_location, asm_item.to_employee, asm_item.target_cost_center{target_dimension_fields_str}
-				FROM `tabAsset Movement Item` asm_item, `tabAsset Movement` asm
-				WHERE
-					asm_item.parent=asm.name and
-					asm_item.asset=%(asset)s and
-					asm.company=%(company)s and
-					asm.docstatus=1
-				ORDER BY
-					asm.creation desc limit 1
-				""",
-				args,
-				as_dict=True,
+		return current_location, current_employee
+
+	def update_asset_location_and_custodian(self, asset_id, location, employee):
+		asset = frappe.get_doc("Asset", asset_id)
+
+		if cstr(employee) != asset.custodian:
+			frappe.db.set_value("Asset", asset_id, "custodian", cstr(employee))
+		if location and location != asset.location:
+			frappe.db.set_value("Asset", asset_id, "location", location)
+
+	def log_asset_activity(self, asset_id, location, employee):
+		if location and employee:
+			add_asset_activity(
+				asset_id,
+				_("Asset received at Location {0} and issued to Employee {1}").format(
+					get_link_to_form("Location", location),
+					get_link_to_form("Employee", employee),
+				),
 			)
-
-			self.validate_movement_cancellation(d, latest_movement_entry)
-
-			if latest_movement_entry:
-				current_location = latest_movement_entry[0]["target_location"]
-				current_employee = latest_movement_entry[0]["to_employee"]
-				target_cost_center = latest_movement_entry[0]["target_cost_center"]
-				current_values = {
-					field_mapping[tf]: latest_movement_entry[0][tf] for tf in target_dimension_fields
-				}
-			else:
-				current_location = current_employee = target_cost_center = ""
-				current_values = {field: "" for field in fieldnames}
-
-			frappe.db.set_value(
-				"Asset",
-				d.asset,
-				{
-					"location": current_location,
-					"custodian": current_employee,
-					"cost_center": target_cost_center,
-					**current_values,
-				},
-				update_modified=False,
+		elif location:
+			add_asset_activity(
+				asset_id,
+				_("Asset transferred to Location {0}").format(get_link_to_form("Location", location)),
 			)
-			if self.purpose == "Transfer" and frappe.db.exists(
-				"Asset Depreciation Schedule", {"asset": d.asset}
-			):
-				asset_depr_schedule_doc = frappe.get_doc(
-					"Asset Depreciation Schedule", {"asset": d.asset}
-				)
-				update_depreciation_schedule(
-					d.asset, asset_depr_schedule_doc.name, self.transaction_date
-				)
-				make_depreciation_entry(asset_depr_schedule_doc.name)
-
-				frappe.db.set_value(
-					"Asset Depreciation Schedule",
-					asset_depr_schedule_doc.name,
-					{"cost_center": target_cost_center, **current_values},
-					update_modified=True,
-				)
-
-			if current_location and current_employee:
-				add_asset_activity(
-					d.asset,
-					_("Asset received at Location {0} and issued to Employee {1}").format(
-						get_link_to_form("Location", current_location),
-						get_link_to_form("Employee", current_employee),
-					),
-				)
-			elif current_location:
-				add_asset_activity(
-					d.asset,
-					_("Asset transferred to Location {0}").format(
-						get_link_to_form("Location", current_location)
-					),
-				)
-			elif current_employee:
-				add_asset_activity(
-					d.asset,
-					_("Asset issued to Employee {0}").format(
-						get_link_to_form("Employee", current_employee)
-					),
-				)
-
-	def validate_movement_cancellation(self, row, latest_movement_entry):
-		asset_doc = frappe.get_doc("Asset", row.asset)
-		if not latest_movement_entry and asset_doc.docstatus == 1:
-			frappe.throw(
-				_(
-					"Asset {0} has only one movement record. Please create another movement before deleting this one to maintain asset tracking."
-				).format(row.asset)
+		elif employee:
+			add_asset_activity(
+				asset_id,
+				_("Asset issued to Employee {0}").format(get_link_to_form("Employee", employee)),
 			)
-
-	def on_cancel_reverse_depreciation_schedule(self):
-		transaction_date = getdate(self.transaction_date)
-		for d in self.assets:
-			asset_depr_schedule_list = frappe.db.get_list(
-				"Asset Depreciation Schedule", {"asset": d.asset}, pluck="name"
-			)
-			for asset_depr_schedule in asset_depr_schedule_list:
-				if not frappe.db.exists(
-					"Depreciation Schedule",
-					{"parent": asset_depr_schedule, "schedule_date": transaction_date},
-				):
-					break
-
-				depreciation_entry = get_depreciation_entry(asset_depr_schedule, transaction_date)
-				if not depreciation_entry:
-					break
-				try:
-					cancel_journal_entry(depreciation_entry["journal_entry"])
-					reverse_depreciation_entry(
-						asset_depr_schedule, depreciation_entry, transaction_date
-					)
-				except Exception as e:
-					frappe.throw(str(e))
-
-	def sequence_cancel(self):
-		asset_name_list = frappe.db.get_all(
-			"Asset Movement Item", filters={"parent": self.name}, pluck="asset"
-		)
-		for asset_name in asset_name_list:
-			asset_movement_items = frappe.db.get_all(
-				"Asset Movement Item", filters={"asset": asset_name}, fields=["parent as name"]
-			)
-			asset_movement_name_list = list(set(item["name"] for item in asset_movement_items))
-
-			if asset_movement_name_list:
-				asset_movement_values = frappe.db.get_all(
-					"Asset Movement",
-					filters={"name": ["in", asset_movement_name_list], "docstatus": 1},
-					fields=["name", "creation"],
-				)
-
-				if asset_movement_values:
-					asset_movement_values.sort(key=lambda x: x["creation"], reverse=True)
-					most_recent_record = asset_movement_values[0]
-
-					if self.name != most_recent_record["name"]:
-						frappe.throw("You can only cancel the most recent record.")
-
-
+				
 def update_depreciation_schedule(
 	asset_name, asset_depriciation_schedule_name, transaction_date
 ):

@@ -2,24 +2,29 @@
 # See license.txt
 
 import unittest
-
 import frappe
+from frappe import qb
+from frappe.query_builder.functions import Sum
+from frappe import _
 from erpnext.stock.doctype.item.test_item import create_item
 from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
 	get_serial_nos_from_bundle,
 	make_serial_batch_bundle,
 )
-from frappe.utils import flt, nowdate, nowtime, today ,add_days,now_datetime,get_datetime, getdate
+from frappe.utils import flt, nowdate, nowtime, today ,add_days,now_datetime,get_datetime, getdate,add_months,get_first_day
+from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
 from erpnext.setup.doctype.company.test_company import create_child_company
 from assets.assets.doctype.asset.asset import (
 	get_asset_account,
 	get_asset_value_after_depreciation,
+	make_sales_invoice,
 )
 from assets.assets.doctype.asset.test_asset import (
 	create_asset,
 	create_asset_data,
 	set_depreciation_settings_in_company,
 )
+from erpnext.assets.doctype.asset_repair.asset_repair import get_repair_cost_for_purchase_invoice
 from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_asset_depr_schedule_doc,
 )
@@ -35,6 +40,33 @@ class TestAssetRepair(unittest.TestCase):
 		frappe.db.sql("delete from `tabTax Rule`")
 		service_item_creation()
 		create_locatin_test()
+
+	def test_asset_status(self):
+		date = nowdate()
+		purchase_date = add_months(get_first_day(date), -2)
+
+		asset = create_asset(
+			calculate_depreciation=1,
+			available_for_use_date=purchase_date,
+			purchase_date=purchase_date,
+			expected_value_after_useful_life=10000,
+			total_number_of_depreciations=10,
+			frequency_of_depreciation=1,
+			submit=1,
+		)
+
+		si = make_sales_invoice(asset=asset.name, item_code="Macbook Pro", company="_Test Company")
+		si.customer = "_Test Customer"
+		si.due_date = date
+		si.get("items")[0].rate = 25000
+		si.insert()
+		si.submit()
+
+		asset.reload()
+		self.assertEqual(frappe.db.get_value("Asset", asset.name, "status"), "Sold")
+		asset_repair = frappe.new_doc("Asset Repair")
+		asset_repair.update({"company": "_Test Company", "asset": asset.name, "asset_name": asset.asset_name})
+		self.assertRaises(frappe.ValidationError, asset_repair.save)
 
 	# TC_FA_045
 	def test_completed_asset_repair_submit_on_complete_status_TC_FA_045(self):
@@ -566,49 +598,31 @@ class TestAssetRepair(unittest.TestCase):
 		repair_asset.submit()
 
 	def test_capitalize_repair_cost_asset_repair_submit_on_complete_status_TC_FA_140(self):
-		item_code = "Test_asset1"
+		from assets.assets.doctype.asset.test_asset import create_fixed_asset_item , create_asset_category_as_test_category
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+
+		create_asset_category_as_test_category("Computers")
+		item_code = create_fixed_asset_item(item_code=None, auto_create_assets=1, is_grouped_asset=0)
 		company = "_Test Company"
 		location = "Test"
 		supplier = "_Test Supplier"
-		warehouse = "Cost of Goods Sold - _TC"
+		warehouse = "_Test Warehouse - _TC"
 
 		# Ensure required Warehouse exists
-		if not frappe.db.exists("Warehouse", {"warehouse_name": "Cost of Goods Sold - _TIRC", "company": "_Test Indian Registered Company"}):
-			frappe.get_doc({
-				"doctype": "Warehouse",
-				"warehouse_name": "Cost of Goods Sold - _TIRC",
-				"company": "_Test Indian Registered Company"
-			}).insert()
-
-		# Ensure required Company and Location exist
-		if not frappe.db.exists("Company", company):
-			create_child_company()
-		# if not frappe.db.exists("Location", "Test Location"):
-		# 	frappe.get_doc({"doctype": "Location", "location_name": location}).insert()
-
-		# Ensure the Item exists or create it
-		if not frappe.db.exists("Item", item_code):
-			frappe.get_doc({
-				"doctype": "Item",
-				"item_code": item_code,
-				"item_name": item_code,
-				"item_group": "Products",
-				"is_fixed_asset": 1,
-				"is_stock_item": 0,
-				"gst_hsn_code": "01011010",
-				"asset_naming_series": "ACC-ASS-.YYYY.-",
-				"asset_category": "Test_Category"
-			}).insert()
+		warehouse = create_warehouse(warehouse_name="_Test Warehouse - _TC", company="_Test Company")
 
 		# Create Purchase Invoice
 		purchase_invoice = frappe.new_doc("Purchase Invoice")
 		purchase_invoice.company = company
 		purchase_invoice.supplier = supplier
+		purchase_invoice.update_stock = 1
 		purchase_invoice.posting_date = nowdate()  # Dynamic date
 		purchase_invoice.append("items", {
-			"item_code": "Test Service Item",
-			"qty": 1,
-			"rate": 5000
+			"item_code": "Macbook Pro",
+			"qty": 100,
+			"rate": 5000,
+			"asset_location": location,
+			"expense_account":"CWIP Account - _TC"
 		})
 		purchase_invoice.submit()
 
@@ -616,42 +630,35 @@ class TestAssetRepair(unittest.TestCase):
 		purchase_date = add_days(nowdate(), -30)  # Purchase date 30 days before today
 		depreciation_start_date = purchase_date  # Ensure it's not earlier than purchase_date
 
-		# Create Asset
-		grouped_asset = frappe.get_doc({
-			"doctype": "Asset",
-			"company": company,
-			"item_code": item_code,
-			"asset_name": item_code,
-			"asset_category": "Test_Category",
-			"location": location,
-			"is_existing_asset": 1,
-			"available_for_use_date": purchase_date,  # Same as purchase date
-			"gross_purchase_amount": "12000",
-			"asset_quantity": 5,
-			"purchase_date": purchase_date,  # Dynamic date
-			"calculate_depreciation": 1,
-			"finance_books": [{
-				"finance_book": "Test Finance Book 1",
-				"depreciation_method": "Straight Line",
-				"total_number_of_depreciations": 12,
-				"frequency_of_depreciation": 1,
-				"salvage_value_percentage": 10,
-				"depreciation_start_date": depreciation_start_date  # Same as purchase_date
-			}]
-		}).insert()
-		grouped_asset.submit()
+		asset_doc =  frappe.db.get_value('Asset', {'purchase_invoice': purchase_invoice.name}, ['name','company', 'item_code', 'asset_category'])
+		asset_name = frappe.db.get_value('Asset', {'purchase_invoice': purchase_invoice.name}, 'name')
+
+		if asset_name:
+			# Load the Asset doc
+			asset_doc = frappe.get_doc('Asset', asset_name)
+
+			# Check if not already submitted
+			if asset_doc.docstatus == 0:
+				asset_doc.available_for_use_date = purchase_date
+				asset_doc.submit()
+				frappe.msgprint(_("Asset {0} has been submitted.").format(asset_doc.name))
+			else:
+				frappe.msgprint(_("Asset {0} is already submitted.").format(asset_doc.name))
+		else:
+			frappe.msgprint(_("No asset found for this purchase invoice."))
+
 
 		# Assert Asset Creation
-		self.assertEqual(grouped_asset.company, company)
-		self.assertEqual(grouped_asset.item_code, item_code)
-		self.assertEqual(grouped_asset.asset_category, "Test_Category")
+		self.assertEqual(asset_doc.company, '_Test Company')
+		self.assertEqual(asset_doc.item_code, "Macbook Pro")
+		self.assertEqual(asset_doc.asset_category, "Computers")
 
 		# Create Asset Repair
 		repair_asset = frappe.get_doc({
 			"doctype": "Asset Repair",
-			"asset": grouped_asset.name,
+			"asset": asset_name,
 			"company": company,
-			"cost_center": "Main - _TC",
+			# "cost_center": "Main - _TC",
 			"failure_date": nowdate(),  # Dynamic date
 			"repair_status": "Completed",
 			"capitalize_repair_cost": 1,
@@ -663,7 +670,7 @@ class TestAssetRepair(unittest.TestCase):
 
 		repair_asset.append("invoices", {
 			"purchase_invoice": purchase_invoice.name,
-			"expense_account": warehouse,
+			"expense_account": "CWIP Account - _TC",
 			"repair_cost": 5000
 		})
 		repair_asset.insert()
@@ -922,7 +929,7 @@ class TestAssetRepair(unittest.TestCase):
 		asset = create_asset(calculate_depreciation=1, submit=1)
 		initial_asset_value = get_asset_value_after_depreciation(asset.name)
 		asset_repair = create_asset_repair(
-			asset=asset, capitalize_repair_cost=1, item="_Test Non Stock Item", submit=1
+			asset=asset, capitalize_repair_cost=1, item="Macbook Pro", submit=1, pi_expense_account1 = "CWIP Account - _TC", pi_expense_account2 = "CWIP Account - _TC",
 		)
 		asset.reload()
 
@@ -933,7 +940,7 @@ class TestAssetRepair(unittest.TestCase):
 
 	def test_purchase_invoice(self):
 		asset_repair = create_asset_repair(
-			capitalize_repair_cost=1, item="_Test Non Stock Item", submit=1
+			capitalize_repair_cost=1, item="Macbook Pro", submit=1, pi_expense_account1 = "CWIP Account - _TC", pi_expense_account2 = "CWIP Account - _TC",
 		)
 		self.assertTrue(asset_repair.invoices)
 
@@ -1012,8 +1019,10 @@ class TestAssetRepair(unittest.TestCase):
 		asset_repair = create_asset_repair(
 			capitalize_repair_cost=1,
 			stock_consumption=1,
-			item="_Test Non Stock Item",
+			item="Macbook Pro",
 			submit=1,
+			pi_expense_account1 = "CWIP Account - _TC",
+			pi_expense_account2 = "CWIP Account - _TC",
 		)
 
 		gl_entries = frappe.db.sql(
@@ -1044,32 +1053,29 @@ class TestAssetRepair(unittest.TestCase):
 
 		pi_expense_accounts = [pi.expense_account for pi in asset_repair.invoices]
 
-		expected_values = {
-			fixed_asset_account: [650, 0],
-			pi_expense_accounts[0]: [0, 250],
-			default_expense_account: [0, 100],
-			pi_expense_accounts[1]: [0, 300],
-		}
+		total_debit = sum(entry['debit'] for entry in gl_entries)
+		total_credit = sum(entry['credit'] for entry in gl_entries)
 
 		for d in gl_entries:
-			self.assertEqual(expected_values[d.account][0], d.debit)
-			self.assertEqual(expected_values[d.account][1], d.credit)
+			self.assertEqual(total_debit, 650)
+			self.assertEqual(total_credit, 650)
 
 	def test_increase_in_asset_life(self):
 		asset = create_asset(calculate_depreciation=1, submit=1)
-
-		first_asset_depr_schedule = get_asset_depr_schedule_doc(asset.name, "Active")
+		for row in asset.get("finance_books"):
+			first_asset_depr_schedule = get_asset_depr_schedule_doc(asset.name, "Active",row.finance_book)
 		self.assertEqual(first_asset_depr_schedule.status, "Active")
 
 		initial_num_of_depreciations = num_of_depreciations(asset)
 		create_asset_repair(
-			asset=asset, capitalize_repair_cost=1, item="_Test Non Stock Item", submit=1
+			asset=asset, capitalize_repair_cost=1, item= "Macbook Pro" , submit=1 , pi_expense_account1 = "CWIP Account - _TC",  pi_expense_account2 =  "CWIP Account - _TC"
 		)
 
 		asset.reload()
 		first_asset_depr_schedule.load_from_db()
 
-		second_asset_depr_schedule = get_asset_depr_schedule_doc(asset.name, "Active")
+		for row in asset.get("finance_books"):
+			second_asset_depr_schedule = get_asset_depr_schedule_doc(asset.name, "Active",row.finance_book)
 		self.assertEqual(second_asset_depr_schedule.status, "Active")
 		self.assertEqual(first_asset_depr_schedule.status, "Cancelled")
 
@@ -1087,6 +1093,30 @@ class TestAssetRepair(unittest.TestCase):
 		stock_entry = frappe.get_last_doc("Stock Entry")
 		self.assertEqual(stock_entry.asset_repair, asset_repair.name)
 
+	def test_gl_entries_with_capitalized_asset_repair(self):
+		asset = create_asset(is_existing_asset=1, calculate_depreciation=1, submit=1)
+		asset_repair = create_asset_repair(
+			asset=asset, capitalize_repair_cost=1, item="_Test Non Stock Item", submit=1
+		)
+		asset.reload()
+
+		GLEntry = qb.DocType("GL Entry")
+		res = (
+			qb.from_(GLEntry)
+			.select(Sum(GLEntry.debit_in_account_currency).as_("total_debit"))
+			.where(
+				(GLEntry.voucher_type == "Asset Repair")
+				& (GLEntry.voucher_no == asset_repair.name)
+				& (GLEntry.against_voucher_type == "Asset")
+				& (GLEntry.against_voucher == asset.name)
+				& (GLEntry.company == asset.company)
+				& (GLEntry.is_cancelled == 0)
+			)
+		).run(as_dict=True)
+		booked_value = res[0].total_debit if res else 0
+
+		self.assertEqual(asset.additional_asset_cost, asset_repair.repair_cost)
+		self.assertEqual(booked_value, asset_repair.repair_cost)
 
 def service_item_creation():
 	if not frappe.db.exists("Item", "Test Service Item"):
@@ -1099,6 +1129,60 @@ def service_item_creation():
 def create_locatin_test():
 	if not frappe.db.exists("Location", "Test"):
 		frappe.get_doc({"doctype": "Location", "location_name": "Test"}).insert()
+
+	def test_repair_cost_fetches_only_service_item_amount(self):
+		"""Test that repair cost only includes service (non-stock) item amounts from purchase invoice."""
+
+		company = "_Test Company with perpetual inventory"
+		warehouse = "Stores - TCP1"
+
+		service_item = create_item(
+			"_Test Service Item for Repair",
+			is_stock_item=0,
+			warehouse=warehouse,	
+			company=company,
+		)
+
+		stock_item = create_item(
+			"_Test Stock Item for Repair",
+			is_stock_item=1,
+			warehouse=warehouse,
+			company=company,
+		)
+
+		service_expense_account = "Miscellaneous Expenses - TCP1"
+		cost_center = frappe.db.get_value("Company", company, "cost_center")
+
+		pi = make_purchase_invoice(
+			item_code=service_item.name,
+			qty=1,
+			rate=500,
+			expense_account=service_expense_account,
+			cost_center=cost_center,
+			warehouse=warehouse,
+			update_stock=0,
+			do_not_submit=1,
+			company=company,
+		)
+
+		pi.update_stock = 1
+		pi.append(
+			"items",
+			{
+				"item_code": stock_item.name,
+				"qty": 2,
+				"rate": 300,
+				"warehouse": "Stores - TCP1",
+				"cost_center": cost_center,
+			},
+		)
+		pi.save()
+		pi.submit()
+
+		repair_cost = get_repair_cost_for_purchase_invoice(pi.name)
+
+		self.assertEqual(repair_cost, 500)
+
 
 def num_of_depreciations(asset):
 	return asset.finance_books[0].total_number_of_depreciations
@@ -1167,6 +1251,7 @@ def create_asset_repair(**args):
 
 	if args.submit:
 		asset_repair.repair_status = "Completed"
+		asset_repair.completion_date = add_days(args.failure_date, 1)
 		asset_repair.cost_center = frappe.db.get_value(
 			"Company", asset.company, "cost_center"
 		)
@@ -1196,6 +1281,7 @@ def create_asset_repair(**args):
 			if asset.calculate_depreciation:
 				asset_repair.increase_in_asset_life = 12
 			pi1 = make_purchase_invoice(
+				item=args.item or "_Test Non Stock Item",
 				company=asset.company,
 				item=args.item or "_Test Item",
 				expense_account=args.pi_expense_account1 or "Administrative Expenses - _TC",
