@@ -194,7 +194,7 @@ def reschedule_depreciation(asset_doc, notes, disposal_date=None):
 	for row in asset_doc.get("finance_books"):
 		current_schedule = get_asset_depr_schedule_doc(asset_doc.name, None, row.finance_book)
 
-		if flt(row.value_after_depreciation) <= flt(row.expected_value_after_useful_life):
+		if disposal_date and flt(row.value_after_depreciation) <= flt(row.expected_value_after_useful_life):
 			continue
 
 		if current_schedule:
