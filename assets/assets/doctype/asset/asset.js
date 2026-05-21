@@ -549,15 +549,16 @@ frappe.ui.form.on("Asset", {
 		});
 	},
 
-	is_existing_asset: function (frm) {
-		frm.trigger("toggle_reference_doc");
-	},
 
-	is_composite_asset: function (frm) {
-		if (frm.doc.is_composite_asset) {
-			frm.set_value("gross_purchase_amount", 0);
-		} else {
-			frm.set_df_property("gross_purchase_amount", "read_only", 0);
+	asset_type: function (frm) {
+		if (frm.doc.docstatus == 0) {
+			if (frm.doc.asset_type == "Composite Asset") {
+				if (!frm.doc.net_purchase_amount) {
+					frm.set_value("net_purchase_amount", 0);
+				}
+			} else {
+				frm.set_df_property("net_purchase_amount", "read_only", 0);
+			}
 		}
 		frm.trigger("toggle_reference_doc");
 	},
