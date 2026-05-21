@@ -416,7 +416,9 @@ def get_comma_separated_links(names, doctype):
 
 
 @frappe.whitelist()
-def scrap_asset(asset_name, scrap_date=None):
+def scrap_asset(asset_name: str, scrap_date: DateTimeLikeObject | None = None):
+	frappe.has_permission("Asset", "write", asset_name, throw=True)
+
 	asset = frappe.get_doc("Asset", asset_name)
 
 	if asset.docstatus != 1:
@@ -493,7 +495,12 @@ def validate_scrap_date(scrap_date, today_date, purchase_date, calculate_depreci
 				frappe.throw(_("Asset cannot be scrapped before the last depreciation entry."))
 
 @frappe.whitelist()
+<<<<<<< HEAD:assets/assets/doctype/asset/depreciation.py
 def restore_asset(asset_name):
+=======
+def restore_asset(asset_name: str):
+	frappe.has_permission("Asset", "write", asset_name, throw=True)
+>>>>>>> 21bb8fe979 (fix: asset scrap flow related changes):erpnext/assets/doctype/asset/depreciation.py
 	asset = frappe.get_doc("Asset", asset_name)
 
 	reverse_depreciation_entry_made_after_disposal(asset, asset.disposal_date)
