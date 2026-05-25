@@ -500,7 +500,10 @@ def restore_asset(asset_name):
 =======
 def restore_asset(asset_name: str):
 	frappe.has_permission("Asset", "write", asset_name, throw=True)
+<<<<<<< HEAD:assets/assets/doctype/asset/depreciation.py
 >>>>>>> 21bb8fe979 (fix: asset scrap flow related changes):erpnext/assets/doctype/asset/depreciation.py
+=======
+>>>>>>> 631a4a67ba (Merge pull request #55126 from khushi8112/asset-scrap-flow):erpnext/assets/doctype/asset/depreciation.py
 	asset = frappe.get_doc("Asset", asset_name)
 
 	reverse_depreciation_entry_made_after_disposal(asset, asset.disposal_date)
