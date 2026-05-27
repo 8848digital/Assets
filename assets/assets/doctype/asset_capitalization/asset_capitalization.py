@@ -21,11 +21,9 @@ from erpnext.stock.utils import get_incoming_rate
 # import erpnext
 from frappe import _
 from frappe.utils import cint, flt, get_link_to_form
-
-from assets.assets.doctype.asset.asset import get_asset_value_after_depreciation
-from assets.assets.doctype.asset.depreciation import (
-	depreciate_asset,
-	get_gl_entries_on_asset_disposal,
+import erpnext
+from erpnext.assets.doctype.asset.asset import get_asset_value_after_depreciation
+from erpnext.assets.doctype.asset.depreciation import (
 	get_value_after_depreciation_on_disposal_date,
 	reset_depreciation_schedule,
 	reverse_depreciation_entry_made_after_disposal,
@@ -479,21 +477,8 @@ class AssetCapitalization(StockController):
 	def get_gl_entries(
 		self, warehouse_account=None, default_expense_account=None, default_cost_center=None
 	):
-		# Stock GL Entries
-		gl_entries = []
-
-		self.warehouse_account = warehouse_account
-		if not self.warehouse_account:
-			self.warehouse_account = get_warehouse_account_map(self.company)
-
-		precision = self.get_debit_field_precision()
-		self.sle_map = self.get_stock_ledger_details()
-
-		target_account = self.get_target_account()
-		target_against = set()
-
-		self.get_gl_entries_for_consumed_stock_items(
-			gl_entries, target_account, target_against, precision
+		from erpnext.assets.doctype.asset_capitalization.services.gl_composer import (
+			AssetCapitalizationGLComposer,
 		)
 		self.get_gl_entries_for_consumed_asset_items(
 			gl_entries, target_account, target_against, precision
@@ -504,7 +489,7 @@ class AssetCapitalization(StockController):
 
 		self.get_gl_entries_for_target_item(gl_entries, target_against, precision)
 
-		return gl_entries
+		return AssetCapitalizationGLComposer(self).compose(inventory_account_map)
 
 	def get_target_account(self):
 		if self.target_is_fixed_asset:
@@ -512,174 +497,14 @@ class AssetCapitalization(StockController):
 		else:
 			return self.warehouse_account[self.target_warehouse]["account"]
 
-	def get_gl_entries_for_consumed_stock_items(
-		self, gl_entries, target_account, target_against, precision
-	):
-		# Consumed Stock Items
-		for item_row in self.stock_items:
-			sle_list = self.sle_map.get(item_row.name)
-			if sle_list:
-				for sle in sle_list:
-					stock_value_difference = flt(sle.stock_value_difference, precision)
 
-					if erpnext.is_perpetual_inventory_enabled(self.company):
-						account = self.warehouse_account[sle.warehouse]["account"]
-					else:
-						account = self.get_company_default("default_expense_account")
-
-					target_against.add(account)
-					gl_entries.append(
-						self.get_gl_dict(
-							{
-								"account": account,
-								"against": target_account,
-								"cost_center": item_row.cost_center,
-								"project": item_row.get("project") or self.get("project"),
-								"remarks": self.get("remarks") or "Accounting Entry for Stock",
-								"credit": -1 * stock_value_difference,
-							},
-							self.warehouse_account[sle.warehouse]["account_currency"],
-							item=item_row,
-						)
-					)
-
-	def get_gl_entries_for_consumed_asset_items(
-		self, gl_entries, target_account, target_against, precision
-	):
-		# Consumed Assets
+	def get_composite_component_value(self):
+		composite_component_value = 0
 		for item in self.asset_items:
-			asset = frappe.get_doc("Asset", item.asset)
-
-			if asset.calculate_depreciation:
-				try:
-					notes = _(
-						"This schedule was created when Asset {0} was consumed through Asset Capitalization {1}."
-					).format(
-						get_link_to_form(asset.doctype, asset.name),
-						get_link_to_form(self.doctype, self.get("name")),
-					)
-					depreciate_asset(asset, self.posting_date, notes)
-					asset.reload()
-				finally:
-					frappe.flags.is_composite_component = False
-
-			fixed_asset_gl_entries = get_gl_entries_on_asset_disposal(
-				asset,
-				item.asset_value,
-				item.get("finance_book") or self.get("finance_book"),
-				self.get("doctype"),
-				self.get("name"),
-				self.get("posting_date"),
-			)
-
-			asset.db_set("disposal_date", self.posting_date)
-
-			self.set_consumed_asset_status(asset)
-
-			for gle in fixed_asset_gl_entries:
-				gle["against"] = target_account
-				gl_entries.append(self.get_gl_dict(gle, item=item))
-				target_against.add(gle["account"])
-
-	def get_gl_entries_for_consumed_service_items(
-		self, gl_entries, target_account, target_against, precision
-	):
-		# Service Expenses
-		for item_row in self.service_items:
-			expense_amount = flt(item_row.amount, precision)
-			target_against.add(item_row.expense_account)
-
-			gl_entries.append(
-				self.get_gl_dict(
-					{
-						"account": item_row.expense_account,
-						"against": target_account,
-						"cost_center": item_row.cost_center,
-						"project": item_row.get("project") or self.get("project"),
-						"remarks": self.get("remarks") or "Accounting Entry for Stock",
-						"credit": expense_amount,
-					},
-					item=item_row,
-				)
-			)
-
-	def get_gl_entries_for_target_item(self, gl_entries, target_against, precision):
-		if self.target_is_fixed_asset:
-			# Capitalization
-			gl_entries.append(
-				self.get_gl_dict(
-					{
-						"account": self.target_fixed_asset_account,
-						"against": ", ".join(target_against),
-						"remarks": self.get("remarks") or _("Accounting Entry for Asset"),
-						"debit": flt(self.total_value, precision),
-						"cost_center": self.get("cost_center"),
-					},
-					item=self,
-				)
-			)
-		else:
-			# Target Stock Item
-			sle_list = self.sle_map.get(self.name)
-			for sle in sle_list:
-				stock_value_difference = flt(sle.stock_value_difference, precision)
-				account = self.warehouse_account[sle.warehouse]["account"]
-
-				gl_entries.append(
-					self.get_gl_dict(
-						{
-							"account": account,
-							"against": ", ".join(target_against),
-							"cost_center": self.cost_center,
-							"project": self.get("project"),
-							"remarks": self.get("remarks") or "Accounting Entry for Stock",
-							"debit": stock_value_difference,
-						},
-						self.warehouse_account[sle.warehouse]["account_currency"],
-						item=self,
-					)
-				)
-
-	def create_target_asset(self):
-		if (
-			self.entry_type != "Capitalization"
-			or self.capitalization_method != "Create a new composite asset"
-		):
-			return
-
-		total_target_asset_value = flt(self.total_value, self.precision("total_value"))
-
-		asset_doc = frappe.new_doc("Asset")
-		asset_doc.company = self.company
-		asset_doc.item_code = self.target_item_code
-		asset_doc.is_composite_asset = 1
-		asset_doc.location = self.target_asset_location
-		asset_doc.available_for_use_date = self.posting_date
-		asset_doc.purchase_date = self.posting_date
-		asset_doc.gross_purchase_amount = total_target_asset_value
-		asset_doc.purchase_amount = total_target_asset_value
-		asset_doc.flags.ignore_validate = True
-		asset_doc.flags.asset_created_via_asset_capitalization = True
-		asset_doc.insert()
-
-		self.target_asset = asset_doc.name
-
-		self.target_fixed_asset_account = get_asset_category_account(
-			"fixed_asset_account", item=self.target_item_code, company=asset_doc.company
-		)
-
-		add_asset_activity(
-			asset_doc.name,
-			_("Asset created after Asset Capitalization {0} was submitted").format(
-				get_link_to_form("Asset Capitalization", self.name)
-			),
-		)
-
-		frappe.msgprint(
-			_(
-				"Asset {0} has been created. Please set the depreciation details if any and submit it."
-			).format(get_link_to_form("Asset", asset_doc.name))
-		)
+			asset = frappe.db.get_value("Asset", item.asset, ["asset_type"], as_dict=True)
+			if asset and asset.asset_type == "Composite Component":
+				composite_component_value += flt(item.asset_value, item.precision("asset_value"))
+		return composite_component_value
 
 	def update_target_asset(self):
 		if (
