@@ -21,7 +21,10 @@ from frappe.utils import (
 	today,
 )
 
-from assets.assets.doctype.asset.depreciation import (
+
+import erpnext
+from erpnext.accounts.general_ledger import make_reverse_gl_entries
+from erpnext.assets.doctype.asset.depreciation import (
 	get_comma_separated_links,
 	get_depreciation_accounts,
 	get_disposal_account_and_cost_center,
@@ -38,6 +41,16 @@ from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedu
 	make_draft_asset_depr_schedules,
 	make_draft_asset_depr_schedules_if_not_present,
 	update_draft_asset_depr_schedules,
+)
+
+from .mapper import (
+	create_asset_capitalization,
+	create_asset_maintenance,
+	create_asset_repair,
+	create_asset_value_adjustment,
+	make_journal_entry,
+	make_sales_invoice,
+	split_asset,
 )
 
 
@@ -1017,97 +1030,12 @@ def get_asset_naming_series():
 
 
 @frappe.whitelist()
-def make_sales_invoice(asset, item_code, company, serial_no=None):
-	si = frappe.new_doc("Sales Invoice")
-	si.company = company
-	si.currency = frappe.get_cached_value("Company", company, "default_currency")
-	disposal_account, depreciation_cost_center = get_disposal_account_and_cost_center(
-		company
-	)
-	si.append(
-		"items",
-		{
-			"item_code": item_code,
-			"is_fixed_asset": 1,
-			"asset": asset,
-			"income_account": disposal_account,
-			"serial_no": serial_no,
-			"cost_center": depreciation_cost_center,
-			"qty": 1,
-		},
-	)
-	si.set_missing_values()
-	return si
 
-
-@frappe.whitelist()
-def create_asset_maintenance(asset, item_code, item_name, asset_category, company):
-	asset_maintenance = frappe.new_doc("Asset Maintenance")
-	asset_maintenance.update(
-		{
-			"asset_name": asset,
-			"company": company,
-			"item_code": item_code,
-			"item_name": item_name,
-			"asset_category": asset_category,
-		}
-	)
-	return asset_maintenance
-
-
-@frappe.whitelist()
-def create_asset_repair(asset, asset_name):
-	asset_repair = frappe.new_doc("Asset Repair")
-	asset_repair.update({"asset": asset, "asset_name": asset_name})
-	return asset_repair
-
-
-@frappe.whitelist()
-def create_asset_capitalization(asset, asset_name, item_code):
-	asset_capitalization = frappe.new_doc("Asset Capitalization")
-	asset_capitalization.update(
-		{
-			"target_asset": asset,
-			"capitalization_method": "Choose a WIP composite asset",
-			"target_asset_name": asset_name,
-			"target_item_code": item_code,
-		}
-	)
-	return asset_capitalization
-
-
-@frappe.whitelist()
-def create_asset_value_adjustment(asset, asset_category, company):
-	asset_value_adjustment = frappe.new_doc("Asset Value Adjustment")
-	asset_value_adjustment.update(
-		{"asset": asset, "company": company, "asset_category": asset_category}
-	)
-	return asset_value_adjustment
-
-
-@frappe.whitelist()
-def transfer_asset(args):
-	args = json.loads(args)
-
-	if args.get("serial_no"):
-		args["quantity"] = len(args.get("serial_no").split("\n"))
-
-	movement_entry = frappe.new_doc("Asset Movement")
-	movement_entry.update(args)
-	movement_entry.insert()
-	movement_entry.submit()
-
-	frappe.db.commit()
-
-	frappe.msgprint(
-		_("Asset Movement record {0} created")
-		.format("<a href='/app/Form/Asset Movement/{0}'>{0}</a>")
-		.format(movement_entry.name)
-	)
-
-
-@frappe.whitelist()
-def get_item_details(item_code, asset_category, gross_purchase_amount):
+def get_item_details(
+	item_code: str,
+	asset_category: str,
+	net_purchase_amount: float,
+):
 	asset_category_doc = frappe.get_cached_doc("Asset Category", asset_category)
 	books = []
 	for d in asset_category_doc.finance_books:
@@ -1160,87 +1088,6 @@ def get_asset_account(account_name, asset=None, asset_category=None, company=Non
 	return account
 
 
-@frappe.whitelist()
-def make_journal_entry(asset_name):
-	asset = frappe.get_doc("Asset", asset_name)
-	(
-		fixed_asset_account,
-		accumulated_depreciation_account,
-		depreciation_expense_account,
-	) = get_depreciation_accounts(asset.asset_category, asset.company)
-
-	depreciation_cost_center, depreciation_series, company_cost_center = frappe.get_cached_value(
-		"Company",
-		asset.company,
-		["depreciation_cost_center", "series_for_depreciation_entry", "cost_center"],
-	)
-	depreciation_cost_center = asset.cost_center or depreciation_cost_center
-
-	je = frappe.new_doc("Journal Entry")
-	je.voucher_type = "Depreciation Entry"
-	je.naming_series = depreciation_series
-	je.company = asset.company
-	je.remark = _("Depreciation Entry against asset {0}").format(asset_name)
-
-	je.append(
-		"accounts",
-		{
-			"account": depreciation_expense_account,
-			"reference_type": "Asset",
-			"reference_name": asset.name,
-			"cost_center": depreciation_cost_center,
-		},
-	)
-
-	je.append(
-		"accounts",
-		{
-			"account": accumulated_depreciation_account,
-			"reference_type": "Asset",
-			"reference_name": asset.name,
-			"cost_center": asset.cost_center or company_cost_center,
-		},
-	)
-
-	return je
-
-
-@frappe.whitelist()
-def make_asset_movement(assets, purpose=None):
-	import json
-
-	if isinstance(assets, str):
-		assets = json.loads(assets)
-
-	if len(assets) == 0:
-		frappe.throw(_("Atleast one asset has to be selected."))
-
-	asset_movement = frappe.new_doc("Asset Movement")
-	asset_movement.quantity = len(assets)
-	for asset in assets:
-		asset = frappe.get_doc("Asset", asset.get("name"))
-		asset_movement.company = asset.get("company")
-
-		asset_dict = {
-			"asset": asset.get("name"),
-			"source_location": asset.get("location"),
-			"from_employee": asset.get("custodian"),
-			"source_cost_center": asset.get("cost_center"),
-		}
-
-		fields = frappe.get_list("Accounting Dimension", pluck="fieldname")
-		transformed_fields = [f"source_{field}" for field in fields]
-
-		for field in transformed_fields:
-			original_fieldname = field.replace("source_", "")
-			asset_dict[field] = asset.get(original_fieldname, None)
-
-		asset_movement.append("assets", asset_dict)
-
-	if asset_movement.get("assets"):
-		return asset_movement.as_dict()
-
-
 def is_cwip_accounting_enabled(asset_category):
 	return cint(
 		frappe.db.get_value("Asset Category", asset_category, "enable_cwip_accounting")
@@ -1283,224 +1130,3 @@ def get_values_from_purchase_doc(purchase_doc_name, item_code, doctype):
 		"purchase_receipt_item": first_item.name if doctype == "Purchase Receipt" else None,
 		"purchase_invoice_item": first_item.name if doctype == "Purchase Invoice" else None,
 	}
-
-@frappe.whitelist()
-def split_asset(asset_name, split_qty):
-	asset = frappe.get_doc("Asset", asset_name)
-	split_qty = cint(split_qty)
-
-	if split_qty >= asset.asset_quantity:
-		frappe.throw(_("Split qty cannot be grater than or equal to asset qty"))
-
-	remaining_qty = asset.asset_quantity - split_qty
-
-	new_asset = create_new_asset_after_split(asset, split_qty)
-	update_existing_asset(asset, remaining_qty, new_asset.name)
-
-	return new_asset
-
-
-def update_existing_asset(asset, remaining_qty, new_asset_name):
-	remaining_gross_purchase_amount = flt(
-		(asset.gross_purchase_amount * remaining_qty) / asset.asset_quantity
-	)
-	opening_accumulated_depreciation = flt(
-		(asset.opening_accumulated_depreciation * remaining_qty) / asset.asset_quantity
-	)
-	value_after_depreciation = flt(
-		(asset.value_after_depreciation * remaining_qty) / asset.asset_quantity,
-		asset.precision("gross_purchase_amount"),
-	)
-
-	frappe.db.set_value(
-		"Asset",
-		asset.name,
-		{
-			"opening_accumulated_depreciation": opening_accumulated_depreciation,
-			"gross_purchase_amount": remaining_gross_purchase_amount,
-			"value_after_depreciation": value_after_depreciation,
-			"asset_quantity": remaining_qty,
-		},
-	)
-
-	add_asset_activity(
-		asset.name,
-		_("Asset updated after being split into Asset {0}").format(
-			get_link_to_form("Asset", new_asset_name)
-		),
-	)
-	for row in asset.get("finance_books"):
-		value_after_depreciation = flt(
-			(row.value_after_depreciation * remaining_qty) / asset.asset_quantity
-		)
-		expected_value_after_useful_life = flt(
-			(row.expected_value_after_useful_life * remaining_qty) / asset.asset_quantity
-		)
-		frappe.db.set_value(
-			"Asset Finance Book", row.name, "value_after_depreciation", value_after_depreciation
-		)
-		frappe.db.set_value(
-			"Asset Finance Book",
-			row.name,
-			"expected_value_after_useful_life",
-			expected_value_after_useful_life,
-		)
-
-		current_asset_depr_schedule_doc = get_asset_depr_schedule_doc(
-			asset.name, "Active", row.finance_book
-		)
-		if not current_asset_depr_schedule_doc:
-			continue
-		new_asset_depr_schedule_doc = frappe.copy_doc(current_asset_depr_schedule_doc)
-
-		new_asset_depr_schedule_doc.set_draft_asset_depr_schedule_details(asset, row)
-
-		accumulated_depreciation = 0
-
-		for term in new_asset_depr_schedule_doc.get("depreciation_schedule"):
-			depreciation_amount = flt(
-				(term.depreciation_amount * remaining_qty) / asset.asset_quantity
-			)
-			term.depreciation_amount = depreciation_amount
-			accumulated_depreciation += depreciation_amount
-			term.accumulated_depreciation_amount = accumulated_depreciation
-
-		notes = _(
-			"This schedule was created when Asset {0} was updated after being split into new Asset {1}."
-		).format(
-			get_link_to_form(asset.doctype, asset.name),
-			get_link_to_form(asset.doctype, new_asset_name),
-		)
-		new_asset_depr_schedule_doc.notes = notes
-
-		current_asset_depr_schedule_doc.flags.should_not_cancel_depreciation_entries = True
-		current_asset_depr_schedule_doc.cancel()
-
-		new_asset_depr_schedule_doc.submit()
-
-
-def create_new_asset_after_split(asset, split_qty):
-	new_asset = frappe.copy_doc(asset)
-	new_gross_purchase_amount = flt(
-		(asset.gross_purchase_amount * split_qty) / asset.asset_quantity
-	)
-	opening_accumulated_depreciation = flt(
-		(asset.opening_accumulated_depreciation * split_qty) / asset.asset_quantity
-	)
-
-	new_asset.gross_purchase_amount = new_gross_purchase_amount
-	if asset.purchase_amount:
-		new_asset.purchase_amount = new_gross_purchase_amount
-	new_asset.opening_accumulated_depreciation = opening_accumulated_depreciation
-	new_asset.asset_quantity = split_qty
-	new_asset.split_from = asset.name
-	new_asset.value_after_depreciation = flt(
-		(asset.value_after_depreciation * split_qty) / asset.asset_quantity,
-		asset.precision("gross_purchase_amount"),
-	)
-
-	for row in new_asset.get("finance_books"):
-		row.value_after_depreciation = flt(
-			(row.value_after_depreciation * split_qty) / asset.asset_quantity
-		)
-		row.expected_value_after_useful_life = flt(
-			(row.expected_value_after_useful_life * split_qty) / asset.asset_quantity
-		)
-
-	new_asset.insert()
-
-	add_asset_activity(
-		new_asset.name,
-		_("Asset created after being split from Asset {0}").format(
-			get_link_to_form("Asset", asset.name)
-		),
-	)
-
-	new_asset.submit()
-	new_asset.set_status()
-
-	for row in new_asset.get("finance_books"):
-		current_asset_depr_schedule_doc = get_asset_depr_schedule_doc(
-			asset.name, "Active", row.finance_book
-		)
-		if not current_asset_depr_schedule_doc:
-			continue
-		new_asset_depr_schedule_doc = frappe.copy_doc(current_asset_depr_schedule_doc)
-
-		new_asset_depr_schedule_doc.set_draft_asset_depr_schedule_details(new_asset, row)
-
-		accumulated_depreciation = 0
-
-		for term in new_asset_depr_schedule_doc.get("depreciation_schedule"):
-			depreciation_amount = flt(
-				(term.depreciation_amount * split_qty) / asset.asset_quantity
-			)
-			term.depreciation_amount = depreciation_amount
-			accumulated_depreciation += depreciation_amount
-			term.accumulated_depreciation_amount = accumulated_depreciation
-
-		notes = _(
-			"This schedule was created when new Asset {0} was split from Asset {1}."
-		).format(
-			get_link_to_form(new_asset.doctype, new_asset.name),
-			get_link_to_form(asset.doctype, asset.name),
-		)
-		new_asset_depr_schedule_doc.notes = notes
-
-		new_asset_depr_schedule_doc.submit()
-
-	for row in new_asset.get("finance_books"):
-		depr_schedule = get_depr_schedule(new_asset.name, "Active", row.finance_book)
-		if depr_schedule:
-			for term in depr_schedule:
-				# Update references in JV
-				if term.journal_entry:
-					add_reference_in_jv_on_split(
-						term.journal_entry, new_asset.name, asset.name, term.depreciation_amount
-					)
-	return new_asset
-
-
-def add_reference_in_jv_on_split(
-	entry_name, new_asset_name, old_asset_name, depreciation_amount
-):
-	journal_entry = frappe.get_doc("Journal Entry", entry_name)
-	entries_to_add = []
-	idx = len(journal_entry.get("accounts")) + 1
-
-	for account in journal_entry.get("accounts"):
-		if account.reference_name == old_asset_name:
-			entries_to_add.append(frappe.copy_doc(account).as_dict())
-			if account.credit:
-				account.credit = account.credit - depreciation_amount
-				account.credit_in_account_currency = (
-					account.credit_in_account_currency - account.exchange_rate * depreciation_amount
-				)
-			elif account.debit:
-				account.debit = account.debit - depreciation_amount
-				account.debit_in_account_currency = (
-					account.debit_in_account_currency - account.exchange_rate * depreciation_amount
-				)
-
-	for entry in entries_to_add:
-		entry.reference_name = new_asset_name
-		if entry.credit:
-			entry.credit = depreciation_amount
-			entry.credit_in_account_currency = entry.exchange_rate * depreciation_amount
-		elif entry.debit:
-			entry.debit = depreciation_amount
-			entry.debit_in_account_currency = entry.exchange_rate * depreciation_amount
-
-		entry.idx = idx
-		idx += 1
-
-		journal_entry.append("accounts", entry)
-
-	journal_entry.flags.ignore_validate_update_after_submit = True
-	journal_entry.save()
-
-	# Repost GL Entries
-	journal_entry.docstatus = 2
-	journal_entry.make_gl_entries(1)
-	journal_entry.docstatus = 1
-	journal_entry.make_gl_entries()
