@@ -1,8 +1,15 @@
 # Copyright (c) 2017, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
-import erpnext
 import frappe
+from frappe import _
+from frappe.query_builder.functions import Sum
+from frappe.utils import add_months, cint, flt, get_link_to_form, getdate, time_diff_in_hours
+
+import erpnext
+from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
+	get_accounting_dimensions,
+)
 from erpnext.accounts.general_ledger import make_gl_entries
 from erpnext.controllers.accounts_controller import AccountsController
 from frappe.query_builder.functions import Sum
@@ -377,28 +384,6 @@ class AssetRepair(AccountsController):
 
 		pi_expense_account = expense_accounts[0]
 
-		debit_against_account = set()
-
-		for pi in self.invoices:
-			debit_against_account.add(pi.expense_account)
-			gl_entries.append(
-				self.get_gl_dict(
-					{
-						"account": pi.expense_account,
-						"credit": pi.repair_cost,
-						"credit_in_account_currency": pi.repair_cost,
-						"against": fixed_asset_account,
-						"voucher_type": self.doctype,
-						"voucher_no": self.name,
-						"cost_center": self.cost_center,
-						"posting_date": self.completion_date,
-						"company": self.company,
-					},
-					item=self,
-				)
-			)
-		debit_against_account = ", ".join(debit_against_account)
-
 		gl_entries.append(
 			self.get_gl_dict(
 				{
@@ -573,84 +558,6 @@ def get_downtime(failure_date, completion_date):
 
 
 @frappe.whitelist()
-@frappe.validate_and_sanitize_search_inputs
-def get_purchase_invoice(doctype, txt, searchfield, start, page_len, filters):
-	query = expense_item_pi_query(filters, doctype, txt, searchfield, start, page_len)
-	return query.run(as_list=1)
-
-
-def expense_item_pi_query(
-		filters,
-		doctype = None ,
-		txt = None ,
-		searchfield = "name" ,
-		start = 0 ,
-		page_len = 10 ,
-	):
-	PurchaseInvoice = DocType("Purchase Invoice")
-	PurchaseInvoiceItem = DocType("Purchase Invoice Item")
-	Item = DocType("Item")
-
-	query = (
-		frappe.qb.from_(PurchaseInvoice)
-		.join(PurchaseInvoiceItem)
-		.on(PurchaseInvoiceItem.parent == PurchaseInvoice.name)
-		.join(Item)
-		.on(Item.name == PurchaseInvoiceItem.item_code)
-		.select(PurchaseInvoice.name)
-		.where(
-			(Item.is_stock_item == 0)
-			& (Item.is_fixed_asset == 0)
-		)
-		.limit(page_len)
-		.offset(start)
-	)
-
-	if filters.get("company"):
-		query = query.where(PurchaseInvoice.company == filters.get("company"))
-
-	if filters.get("docstatus"):
-		query = query.where(PurchaseInvoice.docstatus == filters.get("docstatus"))
-
-	if txt:
-		query = query.where(getattr(PurchaseInvoice, searchfield).like("%" + txt + "%"))
-
-	return query
-
-
-def updated_expense_item_pi_query(
-		# filters,
-		company,
-		doctype = None ,
-	):
-	PurchaseInvoice = DocType("Purchase Invoice")
-	PurchaseInvoiceItem = DocType("Purchase Invoice Item")
-	Item = DocType("Item")
-
-	query = (
-		frappe.qb.from_(PurchaseInvoice)
-		.join(PurchaseInvoiceItem)
-		.on(PurchaseInvoiceItem.parent == PurchaseInvoice.name)
-		.join(Item)
-		.on(Item.name == PurchaseInvoiceItem.item_code)
-		.select(PurchaseInvoice.name)
-		.where(
-			(Item.is_stock_item == 0)
-			& (Item.is_fixed_asset == 1)
-			& (PurchaseInvoice.company == company)
-			& (PurchaseInvoice.docstatus == 1)
-		)
-	)
-	return query
-
-@frappe.whitelist()
-def get_expense_account(purchase_invoice):
-	expense_account = frappe.db.get_value("Purchase Invoice Item", {"parent": purchase_invoice}, "expense_account")
-	amount = frappe.db.get_value("Purchase Invoice Item", {"parent": purchase_invoice}, "amount")
-
-	return {"expense_account": expense_account,"amount":amount}
-
-@frappe.whitelist()
 def get_repair_cost_for_purchase_invoice(purchase_invoice: str) -> float:
 	"""
 	Get the total repair cost from GL entries for a purchase invoice.
@@ -658,8 +565,6 @@ def get_repair_cost_for_purchase_invoice(purchase_invoice: str) -> float:
 	"""
 	if not purchase_invoice:
 		return 0.0
-
-	frappe.has_permission("Purchase Invoice", "read", purchase_invoice, throw=True)
 
 	expense_accounts = _get_expense_accounts_for_purchase_invoice(purchase_invoice)
 
@@ -673,7 +578,7 @@ def _get_expense_accounts_for_purchase_invoice(purchase_invoice: str) -> list[st
 	"""
 	Get expense accounts for non-stock items from the purchase invoice.
 	"""
-	pi_items = frappe.get_all(
+	pi_items = frappe.db.get_list(
 		"Purchase Invoice Item",
 		filters={"parent": purchase_invoice},
 		fields=["item_code", "expense_account", "is_fixed_asset"],
