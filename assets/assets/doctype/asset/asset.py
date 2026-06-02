@@ -72,9 +72,7 @@ class Asset(AccountsController):
 		default_finance_book: DF.Link | None
 		department: DF.Link | None
 		depr_entry_posting_status: DF.Literal["", "Successful", "Failed"]
-		depreciation_method: DF.Literal[
-			"", "Straight Line", "Double Declining Balance", "Manual"
-		]
+		depreciation_method: DF.Literal["", "Straight Line", "Double Declining Balance", "Manual"]
 		disposal_date: DF.Date | None
 		finance_books: DF.Table[AssetFinanceBook]
 		frequency_of_depreciation: DF.Int
@@ -161,7 +159,7 @@ class Asset(AccountsController):
 		self.total_asset_cost = self.gross_purchase_amount + self.additional_asset_cost
 		self.total_asset_cost = self.gross_purchase_amount
 		self.status = self.get_status()
-	
+
 	def before_submit(self):
 		if self.is_composite_asset and not has_active_capitalization(self.name):
 			frappe.throw(_("Please capitalize this asset before submitting."))
@@ -552,7 +550,6 @@ class Asset(AccountsController):
 					title=_("Invalid Schedule"),
 				)
 			row.depreciation_start_date = get_last_day(self.available_for_use_date)
-		
 		self.validate_depreciation_start_date(row)
 		self.validate_total_number_of_depreciations_and_frequency(row)
 
@@ -618,26 +615,8 @@ class Asset(AccountsController):
 					"Row {0}: Total Number of Depreciations cannot be less than or equal to Opening Number of Booked Depreciations"
 				).format(row.idx),
 				title=_("Invalid Schedule"),
-			frappe.throw(
-				_("Opening Accumulated Depreciation must be less than or equal to {0}").format(
-					depreciable_amount
-				)
 			)
 
-		if self.opening_accumulated_depreciation:
-			if not self.opening_number_of_booked_depreciations:
-				frappe.throw(_("Please set Opening Number of Booked Depreciations"))
-		else:
-			self.opening_number_of_booked_depreciations = 0
-
-		if flt(row.total_number_of_depreciations) <= cint(self.opening_number_of_booked_depreciations):
-			frappe.throw(
-				_(
-					"Row {0}: Total Number of Depreciations cannot be less than or equal to Opening Number of Booked Depreciations"
-				).format(row.idx),
-				title=_("Invalid Schedule"),
-			)		
-	
 	def set_total_booked_depreciations(self):
 		# set value of total number of booked depreciations field
 		for fb_row in self.get("finance_books"):

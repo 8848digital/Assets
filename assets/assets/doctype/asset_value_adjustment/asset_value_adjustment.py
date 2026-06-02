@@ -168,16 +168,6 @@ class AssetValueAdjustment(Document):
 		je.submit()
 
 		self.db_set("journal_entry", je.name)
-	
-	def cancel_asset_revaluation_entry(self):
-		if not self.journal_entry:
-			return
-
-		revaluation_entry = frappe.get_doc("Journal Entry", self.journal_entry)
-		if revaluation_entry.docstatus == 1:
-			revaluation_entry.flags.ignore_permissions = True
-			revaluation_entry.flags.via_asset_value_adjustment = True
-			revaluation_entry.cancel()
 
 	def cancel_asset_revaluation_entry(self):
 		if not self.journal_entry:

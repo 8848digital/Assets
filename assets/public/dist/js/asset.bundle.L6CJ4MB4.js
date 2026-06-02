@@ -1,0 +1,2 @@
+(()=>{frappe.provide("frappe.help.help_links");var e="https://erpnext.com/docs/";frappe.help.help_links["List/Asset"]=[{label:"Managing Fixed Assets",url:e+"user/manual/en/asset"}];frappe.help.help_links["List/Asset Category"]=[{label:"Asset Category",url:e+"user/manual/en/asset-category"}];frappe.help.help_links["List/Item"].push({label:"Managing Fixed Assets",url:e+"user/manual/en/asset"});frappe.help.help_links["Form/Item"].push({label:"Managing Fixed Assets",url:e+"user/manual/en/asset"});})();
+//# sourceMappingURL=asset.bundle.L6CJ4MB4.js.map
