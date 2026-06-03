@@ -215,10 +215,10 @@ class AssetRepair(AccountsController):
 				doc = frappe.get_doc("Serial and Batch Bundle", sabb)
 				doc.cancel()
 
-	def on_cancel(self):
+	def on_cancel(self):  # nosemgrep
 		if self.get("capitalize_repair_cost"):
-			self.ignore_linked_doctypes = ("GL Entry", "Stock Ledger Entry")  # nosemgrep
-			self.asset_doc = frappe.get_lazy_doc("Asset", self.asset)  # nosemgrep
+			self.ignore_linked_doctypes = ("GL Entry", "Stock Ledger Entry")
+			self.asset_doc = frappe.get_lazy_doc("Asset", self.asset)
 			self.update_asset_value()
 			self.make_gl_entries(cancel=True)
 			self.set_increase_in_asset_life()
