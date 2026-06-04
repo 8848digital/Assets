@@ -30,7 +30,7 @@ class AssetCapitalizationGLComposer(BaseStockGLComposer):
 		gl_entries = []
 
 		self.inventory_account_map = inventory_account_map or doc.get_inventory_account_map()
-		self.precision = doc.get_debit_field_precision()
+		self.precision = self.get_debit_field_precision()
 		self.sle_map = doc.get_stock_ledger_details()
 
 		target_account = doc.get_target_account()
