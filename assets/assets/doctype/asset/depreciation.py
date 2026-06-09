@@ -23,9 +23,9 @@ import erpnext
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 	get_checks_for_pl_and_bs_accounts,
 )
-from erpnext.accounts.doctype.journal_entry.journal_entry import make_reverse_journal_entry
-from assets.assets.doctype.asset_activity.asset_activity import add_asset_activity
-from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
+from erpnext.accounts.doctype.journal_entry.mapper import make_reverse_journal_entry
+from erpnext.assets.doctype.asset_activity.asset_activity import add_asset_activity
+from erpnext.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_asset_depr_schedule_doc,
 	get_asset_depr_schedule_name,
 	get_temp_asset_depr_schedule_doc,
@@ -495,15 +495,8 @@ def validate_scrap_date(scrap_date, today_date, purchase_date, calculate_depreci
 				frappe.throw(_("Asset cannot be scrapped before the last depreciation entry."))
 
 @frappe.whitelist()
-<<<<<<< HEAD:assets/assets/doctype/asset/depreciation.py
-def restore_asset(asset_name):
-=======
 def restore_asset(asset_name: str):
 	frappe.has_permission("Asset", "write", asset_name, throw=True)
-<<<<<<< HEAD:assets/assets/doctype/asset/depreciation.py
->>>>>>> 21bb8fe979 (fix: asset scrap flow related changes):erpnext/assets/doctype/asset/depreciation.py
-=======
->>>>>>> 631a4a67ba (Merge pull request #55126 from khushi8112/asset-scrap-flow):erpnext/assets/doctype/asset/depreciation.py
 	asset = frappe.get_doc("Asset", asset_name)
 
 	reverse_depreciation_entry_made_after_disposal(asset, asset.disposal_date)
