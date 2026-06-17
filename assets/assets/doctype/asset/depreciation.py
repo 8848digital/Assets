@@ -123,7 +123,9 @@ def get_depreciable_asset_depr_schedules_data(date):
 		.where(a.status.isin(["Submitted", "Partially Depreciated"]))
 		.where(ds.journal_entry.isnull())
 		.where(ds.schedule_date <= date)
-		.groupby(ads.name, a.name, a.asset_category, a.company)
+		# a.name/a.creation are constant per ads.name; include them so postgres accepts the
+		# SELECT and ORDER BY (one row per Asset Depreciation Schedule either way)
+		.groupby(ads.name, a.name, a.creation)
 		.orderby(a.creation, order=Order.desc)
 	)
 
