@@ -222,18 +222,12 @@ def _ring_area(coords):
 def get_children(doctype, parent=None, location=None, is_root=False):
 	if parent is None or parent == "All Locations":
 		parent = ""
+	filters = {"parent_location": parent} if parent else {"parent_location": ["is", "not set"]}
 
-	return frappe.db.sql(
-		f"""
-		select
-			name as value,
-			is_group as expandable
-		from
-			`tabLocation` comp
-		where
-			coalesce(parent_location, '') = {frappe.db.escape(parent)}
-		""",
-		as_dict=1,
+	return frappe.get_all(
+		"Location",
+		filters=filters,
+		fields=["name as value", "is_group as expandable"],
 	)
 
 

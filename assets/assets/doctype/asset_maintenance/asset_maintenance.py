@@ -90,11 +90,14 @@ def assign_tasks(
 		"description": maintenance_task,
 		"date": next_due_date,
 	}
-	if not frappe.db.sql(
-		"""select owner from `tabToDo`
-		where reference_type=%(doctype)s and reference_name=%(name)s and status='Open'
-		and owner=%(assign_to)s""",
-		args,
+	if not frappe.db.exists(
+		"ToDo",
+		{
+			"reference_type": args["doctype"],
+			"reference_name": args["name"],
+			"status": "Open",
+			"owner": args["assign_to"],
+		},
 	):
 		# assign_to function expects a list
 		args["assign_to"] = [args["assign_to"]]
@@ -190,12 +193,10 @@ def get_team_members(doctype, txt, searchfield, start, page_len, filters):
 
 
 @frappe.whitelist()
-def get_maintenance_log(asset_name):
-	return frappe.db.sql(
-		"""
-        select maintenance_status, count(asset_name) as count, asset_name
-        from `tabAsset Maintenance Log`
-        where asset_name=%s group by maintenance_status,asset_name""",
-		(asset_name),
-		as_dict=1,
+def get_maintenance_log(asset_name: str):
+	return frappe.get_all(
+		"Asset Maintenance Log",
+		filters={"asset_name": asset_name},
+		fields=["maintenance_status", {"COUNT": "asset_name", "as": "count"}, "asset_name"],
+		group_by="maintenance_status, asset_name",
 	)
