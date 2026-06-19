@@ -736,10 +736,16 @@ class Asset(AccountsController):
 			frappe.throw(_("Asset cannot be cancelled, as it is already {0}").format(self.status))
 
 	def cancel_movement_entries(self):
-		movements = frappe.get_all(
-			"Asset Movement Item",
-			filters={"asset": self.name, "docstatus": 1},
-			fields=["parent as name"],
+		# filter the parent Asset Movement's docstatus (as the original SQL did), not the child row's
+		asm = frappe.qb.DocType("Asset Movement")
+		asm_item = frappe.qb.DocType("Asset Movement Item")
+		movements = (
+			frappe.qb.from_(asm_item)
+			.inner_join(asm)
+			.on(asm_item.parent == asm.name)
+			.select(asm.name)
+			.where((asm_item.asset == self.name) & (asm.docstatus == 1))
+			.run(as_dict=True)
 		)
 
 		for movement in movements:
