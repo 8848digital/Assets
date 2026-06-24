@@ -996,8 +996,7 @@ class Asset(AccountsController):
 
 	@frappe.whitelist()
 	def get_depreciation_rate(self, args: str | dict | Document, on_validate: bool = False):
-		if isinstance(args, str):
-			args = json.loads(args)
+		args = frappe.parse_json(args)
 
 		rate_field_precision = frappe.get_single_value("System Settings", "float_precision") or 2
 
