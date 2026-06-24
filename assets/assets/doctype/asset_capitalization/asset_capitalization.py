@@ -806,10 +806,8 @@ def get_service_item_details(args):
 
 
 @frappe.whitelist()
-def get_items_tagged_to_wip_composite_asset(params):
-	if isinstance(params, str):
-		params = json.loads(params)
-
+def get_items_tagged_to_wip_composite_asset(params: dict | str):
+	params = frappe.parse_json(params)
 	fields = [
 		"item_code",
 		"item_name",
