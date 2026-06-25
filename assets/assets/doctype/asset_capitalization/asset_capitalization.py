@@ -231,11 +231,8 @@ class AssetCapitalization(StockController):
 		if self.target_asset:
 			target_asset = self.get_asset_for_validation(self.target_asset)
 
-			if not target_asset.is_composite_asset:
-				frappe.throw(
-					_("Target Asset {0} needs to be composite asset").format(target_asset.name)
-				)
-
+			if not target_asset.asset_type == "Composite Asset":
+				frappe.throw(_("Target Asset {0} needs to be a composite asset").format(target_asset.name))
 			if target_asset.item_code != self.target_item_code:
 				frappe.throw(
 					_("Asset {0} does not belong to Item {1}").format(

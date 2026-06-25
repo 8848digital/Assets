@@ -328,7 +328,7 @@ class Asset(AccountsController):
 			reference_doc = frappe.get_doc(reference_doc, reference_name)
 			if reference_doc.get("company") != self.company:
 				frappe.throw(
-					_("Company of asset {0} and purchase document {1} doesn't matches.").format(
+					_("Company of asset {0} and purchase document {1} does not match.").format(
 						self.name, reference_doc.get("name")
 					)
 				)
@@ -356,7 +356,7 @@ class Asset(AccountsController):
 			)
 			if cost_center_company != self.company:
 				frappe.throw(
-					_("Cost Center {} doesn't belong to Company {}").format(
+					_("Cost Center {0} does not belong to Company {1}").format(
 						frappe.bold(self.cost_center), frappe.bold(self.company)
 					),
 					title=_("Invalid Cost Center"),
@@ -364,7 +364,7 @@ class Asset(AccountsController):
 			if cost_center_is_group:
 				frappe.throw(
 					_(
-						"Cost Center {} is a group cost center and group cost centers cannot be used in transactions"
+						"Cost Center {0} is a group cost center and group cost centers cannot be used in transactions"
 					).format(frappe.bold(self.cost_center)),
 					title=_("Invalid Cost Center"),
 				)
@@ -373,7 +373,7 @@ class Asset(AccountsController):
 			if not frappe.get_cached_value("Company", self.company, "depreciation_cost_center"):
 				frappe.throw(
 					_(
-						"Please set a Cost Center for the Asset or set an Asset Depreciation Cost Center for the Company {}"
+						"Please set a Cost Center for the Asset or set an Asset Depreciation Cost Center for the Company {0}"
 					).format(frappe.bold(self.company)),
 					title=_("Missing Cost Center"),
 				)
@@ -411,7 +411,7 @@ class Asset(AccountsController):
 		for d in self.finance_books:
 			if d.finance_book in finance_books:
 				frappe.throw(
-					_("Row #{}: Please use a different Finance Book.").format(d.idx),
+					_("Row #{0}: Please use a different Finance Book.").format(d.idx),
 					title=_("Duplicate Finance Book"),
 				)
 			else:
@@ -419,7 +419,9 @@ class Asset(AccountsController):
 
 			if not d.finance_book:
 				frappe.throw(
-					_("Row #{}: Finance Book should not be empty since you're using multiple.").format(d.idx),
+					_("Row #{0}: Finance Book should not be empty since you're using multiple.").format(
+						d.idx
+					),
 					title=_("Missing Finance Book"),
 				)
 
@@ -1357,7 +1359,7 @@ def get_values_from_purchase_doc(
 	matching_items = [item for item in purchase_doc.items if item.item_code == item_code]
 
 	if not matching_items:
-		frappe.throw(_(f"Selected {doctype} does not contain the Item Code {item_code}"))
+		frappe.throw(_("Selected {0} does not contain the Item Code {1}").format(doctype, item_code))
 
 	first_item = matching_items[0]
 
