@@ -190,6 +190,4 @@ class TestFixedAssetRegister(AssetSetup):
 		self.assertNotIn(
 			consumed_asset.name, {row["asset_id"] for row in self.run_report(status="In Location")}
 		)
-		self.assertIn(
-			consumed_asset.name, {row["asset_id"] for row in self.run_report(status="Disposed")}
-		)
+		self.assertIn(consumed_asset.name, {row["asset_id"] for row in self.run_report(status="Disposed")})
