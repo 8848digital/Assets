@@ -116,6 +116,32 @@ class TestFixedAssetRegister(ERPNextTestSuite):
 		row = self.report_row(asset.name)
 		self.assertEqual(row["asset_value"], 120000)  # 100000 + 20000 revaluation
 
+	def test_depreciation_and_revaluation_together(self):
+		asset = create_asset(
+			item_code="Macbook Pro",
+			calculate_depreciation=1,
+			available_for_use_date="2019-12-31",
+			depreciation_start_date="2020-12-31",
+			frequency_of_depreciation=12,
+			total_number_of_depreciations=3,
+			expected_value_after_useful_life=10000,
+			net_purchase_amount=100000,
+			purchase_amount=100000,
+			submit=True,
+		)
+
+		# books one depreciation entry of (100000 - 10000) / 3 = 30000, leaving 70000
+		post_depreciation_entries(date="2021-01-01")
+
+		# revalue the depreciated asset down from 70000 to 60000
+		make_asset_value_adjustment(
+			asset=asset.name, current_asset_value=70000, new_asset_value=60000
+		).submit()
+
+		row = self.report_row(asset.name)
+		self.assertEqual(row["depreciated_amount"], 30000)
+		self.assertEqual(row["asset_value"], 60000)  # 100000 - 30000 depreciation - 10000 revaluation
+
 	def test_sold_asset_hidden_from_in_location_and_shown_in_disposed(self):
 		asset = create_asset(
 			item_code="Macbook Pro", net_purchase_amount=100000, purchase_amount=100000, submit=True
