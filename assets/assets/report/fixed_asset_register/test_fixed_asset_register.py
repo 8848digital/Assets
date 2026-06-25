@@ -1,11 +1,11 @@
-# Copyright (c) 2026, Frappe Technologies Pvt. Ltd. and Contributors
-# See license.txt
+# Copyright (c) 2024, Frappe Technologies Pvt. Ltd. and Contributors
+# License: GNU General Public License v3. See license.txt
 
 import frappe
 
 from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
 from erpnext.assets.doctype.asset.depreciation import post_depreciation_entries
-from erpnext.assets.doctype.asset.test_asset import create_asset, set_depreciation_settings_in_company
+from erpnext.assets.doctype.asset.test_asset import AssetSetup, create_asset
 from erpnext.assets.doctype.asset_capitalization.test_asset_capitalization import (
 	create_asset_capitalization,
 )
@@ -13,13 +13,9 @@ from erpnext.assets.doctype.asset_value_adjustment.test_asset_value_adjustment i
 	make_asset_value_adjustment,
 )
 from erpnext.assets.report.fixed_asset_register.fixed_asset_register import execute
-from erpnext.tests.utils import ERPNextTestSuite
 
 
-class TestFixedAssetRegister(ERPNextTestSuite):
-	def setUp(self):
-		set_depreciation_settings_in_company()
-
+class TestFixedAssetRegister(AssetSetup):
 	def run_report(self, **extra):
 		filters = frappe._dict(company="_Test Company", **extra)
 		return execute(filters)[1]
@@ -27,12 +23,34 @@ class TestFixedAssetRegister(ERPNextTestSuite):
 	def report_row(self, asset_name, **extra):
 		return next(row for row in self.run_report(**extra) if row["asset_id"] == asset_name)
 
+	def test_report_lists_submitted_asset(self):
+		"""Exercises the report's converted queries -- including the depreciation aggregate that groups
+		by asset.name (must be valid on Postgres) -- by asserting a submitted asset is listed."""
+		asset = create_asset(
+			item_code="Macbook Pro",
+			purchase_date="2020-01-01",
+			available_for_use_date="2020-06-06",
+			location="Test Location",
+			submit=1,
+		)
+		ids = {
+			row["asset_id"]
+			for row in self.run_report(
+				status="In Location",
+				filter_based_on="Date Range",
+				from_date="2020-01-01",
+				to_date="2030-12-31",
+				date_based_on="Purchase Date",
+			)
+		}
+		self.assertIn(asset.name, ids)
+
 	def test_asset_appears_with_purchase_value(self):
 		asset = create_asset(
 			item_code="Macbook Pro", net_purchase_amount=100000, purchase_amount=100000, submit=True
 		)
 
-		row = next(row for row in self.run_report() if row["asset_id"] == asset.name)
+		row = self.report_row(asset.name)
 		self.assertEqual(row["net_purchase_amount"], 100000)
 		self.assertEqual(row["asset_value"], 100000)  # no depreciation yet
 		self.assertEqual(row["asset_category"], "Computers")
@@ -47,7 +65,7 @@ class TestFixedAssetRegister(ERPNextTestSuite):
 			submit=True,
 		)
 
-		row = next(row for row in self.run_report() if row["asset_id"] == asset.name)
+		row = self.report_row(asset.name)
 		self.assertEqual(row["opening_accumulated_depreciation"], 20000)
 		self.assertEqual(row["asset_value"], 80000)  # 100000 - 20000
 
