@@ -86,6 +86,8 @@ class TestFixedAssetRegister(AssetSetup):
 		self.assertIn(asset.name, ids)
 
 	def test_group_by_asset_category_sums_values(self):
+		before_net, before_value = self.computers_group_totals()
+
 		create_asset(item_code="Macbook Pro", net_purchase_amount=100000, purchase_amount=100000, submit=True)
 		create_asset(
 			item_code="Macbook Pro",
@@ -95,10 +97,17 @@ class TestFixedAssetRegister(AssetSetup):
 			submit=True,
 		)
 
-		rows = self.run_report(group_by="Asset Category")
-		computers = next(row for row in rows if row["asset_category"] == "Computers")
-		self.assertEqual(computers["net_purchase_amount"], 150000)
-		self.assertEqual(computers["asset_value"], 150000)
+		after_net, after_value = self.computers_group_totals()
+		# assert on the delta so pre-existing Computers assets don't skew the totals
+		self.assertEqual(after_net - before_net, 150000)
+		self.assertEqual(after_value - before_value, 150000)
+
+	def computers_group_totals(self):
+		row = next(
+			(r for r in self.run_report(group_by="Asset Category") if r["asset_category"] == "Computers"),
+			None,
+		)
+		return (row["net_purchase_amount"], row["asset_value"]) if row else (0, 0)
 
 	def test_booked_depreciation_reduces_asset_value(self):
 		asset = create_asset(
