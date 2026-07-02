@@ -65,7 +65,7 @@ class AssetCapitalizationGLComposer(BaseStockGLComposer):
 
 					target_against.add(account)
 					gl_entries.append(
-						doc.get_gl_dict(
+						self.get_gl_dict(
 							{
 								"account": account,
 								"against": target_account,
@@ -108,7 +108,7 @@ class AssetCapitalizationGLComposer(BaseStockGLComposer):
 
 				for gle in fixed_asset_gl_entries:
 					gle["against"] = target_account
-					gl_entries.append(doc.get_gl_dict(gle, item=item))
+					gl_entries.append(self.get_gl_dict(gle, item=item))
 					target_against.add(gle["account"])
 
 			asset.db_set("disposal_date", doc.posting_date)
@@ -123,7 +123,7 @@ class AssetCapitalizationGLComposer(BaseStockGLComposer):
 			target_against.add(item_row.expense_account)
 
 			gl_entries.append(
-				doc.get_gl_dict(
+				self.get_gl_dict(
 					{
 						"account": item_row.expense_account,
 						"against": target_account,
@@ -147,7 +147,7 @@ class AssetCapitalizationGLComposer(BaseStockGLComposer):
 		total_value = flt(doc.total_value - composite_component_value, self.precision)
 		if total_value:
 			gl_entries.append(
-				doc.get_gl_dict(
+				self.get_gl_dict(
 					{
 						"account": target_account,
 						"against": ", ".join(target_against),

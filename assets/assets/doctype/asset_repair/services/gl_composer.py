@@ -37,7 +37,7 @@ class AssetRepairGLComposer(BaseGLComposer):
 		for pi in doc.invoices:
 			debit_against_account.add(pi.expense_account)
 			gl_entries.append(
-				doc.get_gl_dict(
+				self.get_gl_dict(
 					{
 						"account": pi.expense_account,
 						"credit": pi.repair_cost,
@@ -55,7 +55,7 @@ class AssetRepairGLComposer(BaseGLComposer):
 
 		debit_against_account_str = ", ".join(debit_against_account)
 		gl_entries.append(
-			doc.get_gl_dict(
+			self.get_gl_dict(
 				{
 					"account": fixed_asset_account,
 					"debit": doc.repair_cost,
@@ -94,7 +94,7 @@ class AssetRepairGLComposer(BaseGLComposer):
 		for item in stock_entry_items:
 			if flt(item.amount) > 0:
 				gl_entries.append(
-					doc.get_gl_dict(
+					self.get_gl_dict(
 						{
 							"account": item.expense_account or default_expense_account,
 							"credit": item.amount,
@@ -111,7 +111,7 @@ class AssetRepairGLComposer(BaseGLComposer):
 				)
 
 				gl_entries.append(
-					doc.get_gl_dict(
+					self.get_gl_dict(
 						{
 							"account": fixed_asset_account,
 							"debit": item.amount,
