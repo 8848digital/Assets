@@ -43,16 +43,6 @@ from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedu
 	update_draft_asset_depr_schedules,
 )
 
-from .mapper import (
-	create_asset_capitalization,
-	create_asset_maintenance,
-	create_asset_repair,
-	create_asset_value_adjustment,
-	make_journal_entry,
-	make_sales_invoice,
-	split_asset,
-)
-
 
 class Asset(AccountsController):
 	# begin: auto-generated types

@@ -316,7 +316,7 @@ frappe.ui.form.on("Asset", {
 
 	make_journal_entry: function (frm) {
 		frappe.call({
-			method: "assets.assets.doctype.asset.asset.make_journal_entry",
+			method: "erpnext.assets.doctype.asset.mapper.make_journal_entry",
 			args: {
 				asset_name: frm.doc.name,
 			},
@@ -588,7 +588,8 @@ frappe.ui.form.on("Asset", {
 				asset_category: frm.doc.asset_category,
 				company: frm.doc.company,
 			},
-			method: "assets.assets.doctype.asset.asset.create_asset_maintenance",
+
+			method: "erpnext.assets.doctype.asset.mapper.create_asset_maintenance",
 			callback: function (r) {
 				var doclist = frappe.model.sync(r.message);
 				frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
@@ -602,7 +603,7 @@ frappe.ui.form.on("Asset", {
 				asset: frm.doc.name,
 				asset_name: frm.doc.asset_name,
 			},
-			method: "assets.assets.doctype.asset.asset.create_asset_repair",
+			method: "erpnext.assets.doctype.asset.mapper.create_asset_repair",
 			callback: function (r) {
 				var doclist = frappe.model.sync(r.message);
 				frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
@@ -617,7 +618,7 @@ frappe.ui.form.on("Asset", {
 				asset_name: frm.doc.asset_name,
 				item_code: frm.doc.item_code,
 			},
-			method: "assets.assets.doctype.asset.asset.create_asset_capitalization",
+			method: "erpnext.assets.doctype.asset.mapper.create_asset_capitalization",
 			callback: function (r) {
 				var doclist = frappe.model.sync(r.message);
 				frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
@@ -625,6 +626,70 @@ frappe.ui.form.on("Asset", {
 		});
 	},
 
+	sell_asset: function (frm) {
+		const make_sales_invoice = (sell_qty) => {
+			frappe.call({
+				method: "erpnext.assets.doctype.asset.mapper.make_sales_invoice",
+				args: {
+					asset: frm.doc.name,
+					item_code: frm.doc.item_code,
+					company: frm.doc.company,
+					serial_no: frm.doc.serial_no,
+					sell_qty: sell_qty,
+				},
+				callback: function (r) {
+					var doclist = frappe.model.sync(r.message);
+					frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
+				},
+			});
+		};
+
+		let dialog = new frappe.ui.Dialog({
+			title: __("Sell Asset"),
+			fields: [
+				{
+					fieldname: "sell_qty",
+					fieldtype: "Int",
+					label: __("Sell Qty"),
+					reqd: 1,
+				},
+			],
+		});
+
+		dialog.set_primary_action(__("Sell"), function () {
+			const dialog_data = dialog.get_values();
+			const sell_qty = cint(dialog_data.sell_qty);
+			const asset_qty = cint(frm.doc.asset_quantity);
+
+			if (sell_qty <= 0) {
+				frappe.throw(__("Sell quantity must be greater than zero"));
+			}
+
+			if (sell_qty > asset_qty) {
+				frappe.throw(__("Sell quantity cannot exceed the asset quantity"));
+			}
+
+			if (sell_qty < asset_qty) {
+				frappe.confirm(
+					__(
+						"The sell quantity is less than the total asset quantity. The remaining quantity will be split into a new asset. This action cannot be undone. <br><br><b>Do you want to continue?</b>"
+					),
+					() => {
+						make_sales_invoice(sell_qty);
+						dialog.hide();
+					}
+				);
+				return;
+			}
+
+			make_sales_invoice(sell_qty);
+			dialog.hide();
+		});
+
+		dialog.show();
+	},
+
+>>>>>>> 530e587bf2 (refactor: use mapper paths directly, drop re-export shims):erpnext/assets/doctype/asset/asset.js
 	split_asset: function (frm) {
 		const title = __("Split Asset");
 
@@ -649,7 +714,7 @@ frappe.ui.form.on("Asset", {
 					asset_name: frm.doc.name,
 					split_qty: cint(dialog_data.split_qty),
 				},
-				method: "assets.assets.doctype.asset.asset.split_asset",
+				method: "erpnext.assets.doctype.asset.mapper.split_asset",
 				callback: function (r) {
 					let doclist = frappe.model.sync(r.message);
 					frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
@@ -669,7 +734,8 @@ frappe.ui.form.on("Asset", {
 				asset_category: frm.doc.asset_category,
 				company: frm.doc.company,
 			},
-			method: "assets.assets.doctype.asset.asset.create_asset_value_adjustment",
+
+			method: "erpnext.assets.doctype.asset.mapper.create_asset_value_adjustment",
 			freeze: 1,
 			callback: function (r) {
 				var doclist = frappe.model.sync(r.message);
