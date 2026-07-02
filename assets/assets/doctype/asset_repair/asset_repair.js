@@ -68,14 +68,6 @@ frappe.ui.form.on("Asset Repair", {
 
 	refresh: function (frm) {
 		frm.events.show_general_ledger(frm);
-		if (frm.doc.docstatus) {
-			frm.add_custom_button(__("View General Ledger"), function () {
-				frappe.route_options = {
-					voucher_no: frm.doc.name,
-				};
-				frappe.set_route("query-report", "General Ledger");
-			});
-		}
 
 		let sbb_field = frm.get_docfield("stock_items", "serial_and_batch_bundle");
 		if (sbb_field) {
@@ -135,6 +127,7 @@ frappe.ui.form.on("Asset Repair", {
 			frm.set_value("repair_cost", 0);
 		}
 	},
+
 	show_general_ledger: (frm) => {
 		if (frm.doc.docstatus > 0) {
 			frm.add_custom_button(
@@ -142,7 +135,7 @@ frappe.ui.form.on("Asset Repair", {
 				function () {
 					frappe.route_options = {
 						voucher_no: frm.doc.name,
-						from_date: moment(frm.doc.completion_date).format("YYYY-MM-DD"),
+						from_date: frm.doc.posting_date,
 						to_date: moment(frm.doc.modified).format("YYYY-MM-DD"),
 						company: frm.doc.company,
 						categorize_by: "",

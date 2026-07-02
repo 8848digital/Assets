@@ -70,7 +70,7 @@ class AssetCategory(Document):
 
 		for d in invalid_accounts:
 			frappe.throw(
-				_("Row #{}: Currency of {} - {} doesn't matches company currency.").format(
+				_("Row #{0}: Currency of {1} - {2} does not match company currency.").format(
 					d.idx, frappe.bold(frappe.unscrub(d.type)), frappe.bold(d.account)
 				),
 				title=_("Invalid Account"),
@@ -118,10 +118,11 @@ class AssetCategory(Document):
 					)
 
 			if missing_cwip_accounts_for_company:
-				msg = _("""To enable Capital Work in Progress Accounting,""") + " "
-				msg += _("""you must select Capital Work in Progress Account in accounts table""")
+				msg = _(
+					"To enable Capital Work in Progress Accounting, you must select Capital Work in Progress Account in accounts table"
+				)
 				msg += "<br><br>"
-				msg += _("You can also set default CWIP account in Company {}").format(
+				msg += _("You can also set default CWIP account in Company {0}").format(
 					", ".join(missing_cwip_accounts_for_company)
 				)
 				frappe.throw(msg, title=_("Missing Account"))

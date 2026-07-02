@@ -53,7 +53,8 @@ frappe.ui.form.on("Asset", {
 		frm.make_methods = {
 			"Asset Movement": () => {
 				frappe.call({
-					method: "assets.assets.doctype.asset.asset.make_asset_movement",
+
+					method: "erpnext.assets.doctype.asset.mapper.make_asset_movement",
 					freeze: true,
 					args: {
 						assets: [{ name: cur_frm.doc.name }],
@@ -102,6 +103,13 @@ frappe.ui.form.on("Asset", {
 		frappe.ui.form.trigger("Asset", "is_existing_asset");
 		frm.toggle_display("next_depreciation_date", frm.doc.docstatus < 1);
 
+
+		if (frm.doc.docstatus < 1 && frm.doc.calculate_depreciation && frm.doc.is_fully_depreciated) {
+			// Is Fully Depreciated is read-only while depreciation is calculated, so keep it unchecked
+			frm.set_value("is_fully_depreciated", 0);
+		}
+
+		let has_create_buttons = false;
 		if (frm.doc.docstatus == 1) {
 			if (
 				["Submitted", "Partially Depreciated", "Fully Depreciated"].includes(
@@ -225,8 +233,11 @@ frappe.ui.form.on("Asset", {
 					},
 					callback: function (r) {
 						frm.has_active_capitalization = r.message;
+
 						if (!r.message) {
-							$(".form-message").text(__("Capitalize this asset before submitting."));
+							$(".primary-action").prop("hidden", true);
+							$(".form-message").text(__("Capitalize this asset to confirm"));
+
 							frm.add_custom_button(__("Capitalize Asset"), function () {
 								frm.trigger("create_asset_capitalization");
 							});
@@ -313,7 +324,7 @@ frappe.ui.form.on("Asset", {
 
 	make_journal_entry: function (frm) {
 		frappe.call({
-			method: "assets.assets.doctype.asset.asset.make_journal_entry",
+			method: "erpnext.assets.doctype.asset.mapper.make_journal_entry",
 			args: {
 				asset_name: frm.doc.name,
 			},
@@ -546,17 +557,17 @@ frappe.ui.form.on("Asset", {
 		});
 	},
 
-	is_existing_asset: function (frm) {
-		frm.trigger("toggle_reference_doc");
-	},
 
-	is_composite_asset: function (frm) {
-		if (frm.doc.is_composite_asset) {
-			frm.set_value("gross_purchase_amount", 0);
-		} else {
-			frm.set_df_property("gross_purchase_amount", "read_only", 0);
+	asset_type: function (frm) {
+		if (frm.doc.docstatus == 0) {
+			if (frm.doc.asset_type == "Composite Asset") {
+				if (!frm.doc.net_purchase_amount) {
+					frm.set_value("net_purchase_amount", 0);
+				}
+			} else {
+				frm.set_df_property("net_purchase_amount", "read_only", 0);
+			}
 		}
-
 		frm.trigger("toggle_reference_doc");
 	},
 
@@ -585,7 +596,8 @@ frappe.ui.form.on("Asset", {
 				asset_category: frm.doc.asset_category,
 				company: frm.doc.company,
 			},
-			method: "assets.assets.doctype.asset.asset.create_asset_maintenance",
+
+			method: "erpnext.assets.doctype.asset.mapper.create_asset_maintenance",
 			callback: function (r) {
 				var doclist = frappe.model.sync(r.message);
 				frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
@@ -599,7 +611,7 @@ frappe.ui.form.on("Asset", {
 				asset: frm.doc.name,
 				asset_name: frm.doc.asset_name,
 			},
-			method: "assets.assets.doctype.asset.asset.create_asset_repair",
+			method: "erpnext.assets.doctype.asset.mapper.create_asset_repair",
 			callback: function (r) {
 				var doclist = frappe.model.sync(r.message);
 				frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
@@ -614,7 +626,7 @@ frappe.ui.form.on("Asset", {
 				asset_name: frm.doc.asset_name,
 				item_code: frm.doc.item_code,
 			},
-			method: "assets.assets.doctype.asset.asset.create_asset_capitalization",
+			method: "erpnext.assets.doctype.asset.mapper.create_asset_capitalization",
 			callback: function (r) {
 				var doclist = frappe.model.sync(r.message);
 				frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
@@ -622,6 +634,70 @@ frappe.ui.form.on("Asset", {
 		});
 	},
 
+	sell_asset: function (frm) {
+		const make_sales_invoice = (sell_qty) => {
+			frappe.call({
+				method: "erpnext.assets.doctype.asset.mapper.make_sales_invoice",
+				args: {
+					asset: frm.doc.name,
+					item_code: frm.doc.item_code,
+					company: frm.doc.company,
+					serial_no: frm.doc.serial_no,
+					sell_qty: sell_qty,
+				},
+				callback: function (r) {
+					var doclist = frappe.model.sync(r.message);
+					frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
+				},
+			});
+		};
+
+		let dialog = new frappe.ui.Dialog({
+			title: __("Sell Asset"),
+			fields: [
+				{
+					fieldname: "sell_qty",
+					fieldtype: "Int",
+					label: __("Sell Qty"),
+					reqd: 1,
+				},
+			],
+		});
+
+		dialog.set_primary_action(__("Sell"), function () {
+			const dialog_data = dialog.get_values();
+			const sell_qty = cint(dialog_data.sell_qty);
+			const asset_qty = cint(frm.doc.asset_quantity);
+
+			if (sell_qty <= 0) {
+				frappe.throw(__("Sell quantity must be greater than zero"));
+			}
+
+			if (sell_qty > asset_qty) {
+				frappe.throw(__("Sell quantity cannot exceed the asset quantity"));
+			}
+
+			if (sell_qty < asset_qty) {
+				frappe.confirm(
+					__(
+						"The sell quantity is less than the total asset quantity. The remaining quantity will be split into a new asset. This action cannot be undone. <br><br><b>Do you want to continue?</b>"
+					),
+					() => {
+						make_sales_invoice(sell_qty);
+						dialog.hide();
+					}
+				);
+				return;
+			}
+
+			make_sales_invoice(sell_qty);
+			dialog.hide();
+		});
+
+		dialog.show();
+	},
+
+>>>>>>> 530e587bf2 (refactor: use mapper paths directly, drop re-export shims):erpnext/assets/doctype/asset/asset.js
 	split_asset: function (frm) {
 		const title = __("Split Asset");
 
@@ -646,7 +722,7 @@ frappe.ui.form.on("Asset", {
 					asset_name: frm.doc.name,
 					split_qty: cint(dialog_data.split_qty),
 				},
-				method: "assets.assets.doctype.asset.asset.split_asset",
+				method: "erpnext.assets.doctype.asset.mapper.split_asset",
 				callback: function (r) {
 					let doclist = frappe.model.sync(r.message);
 					frappe.set_route("Form", doclist[0].doctype, doclist[0].name);
@@ -666,7 +742,8 @@ frappe.ui.form.on("Asset", {
 				asset_category: frm.doc.asset_category,
 				company: frm.doc.company,
 			},
-			method: "assets.assets.doctype.asset.asset.create_asset_value_adjustment",
+
+			method: "erpnext.assets.doctype.asset.mapper.create_asset_value_adjustment",
 			freeze: 1,
 			callback: function (r) {
 				var doclist = frappe.model.sync(r.message);
@@ -677,7 +754,11 @@ frappe.ui.form.on("Asset", {
 
 	calculate_depreciation: function (frm) {
 		frm.toggle_reqd("finance_books", frm.doc.calculate_depreciation);
-		if (frm.doc.item_code && frm.doc.calculate_depreciation && frm.doc.gross_purchase_amount) {
+		if (frm.doc.calculate_depreciation && frm.doc.is_fully_depreciated) {
+			// Is Fully Depreciated is read-only while depreciation is calculated, so keep it unchecked
+			frm.set_value("is_fully_depreciated", 0);
+		}
+		if (frm.doc.item_code && frm.doc.calculate_depreciation && frm.doc.net_purchase_amount) {
 			frm.trigger("set_finance_book");
 		} else {
 			frm.set_value("finance_books", []);
@@ -921,7 +1002,7 @@ erpnext.asset.restore_asset = function (frm) {
 
 erpnext.asset.transfer_asset = function () {
 	frappe.call({
-		method: "assets.assets.doctype.asset.asset.make_asset_movement",
+		method: "erpnext.assets.doctype.asset.mapper.make_asset_movement",
 		freeze: true,
 		args: {
 			assets: [{ name: cur_frm.doc.name }],

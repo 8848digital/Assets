@@ -22,11 +22,11 @@ class AssetMovementItem(Document):
 		parent: DF.Data
 		parentfield: DF.Data
 		parenttype: DF.Data
-		source_cost_center: DF.Link | None
-		source_location: DF.Link | None
-		target_cost_center: DF.Link | None
-		target_location: DF.Link | None
-		to_employee: DF.Link | None
+		produced_qty: DF.Float
+		reference_name: DF.Data
+		stock_uom: DF.Link
+		secondary_item_type: DF.Literal["Co-Product", "By-Product", "Scrap", "Additional Finished Good"]
+		warehouse: DF.Link
 	# end: auto-generated types
 
 	pass
