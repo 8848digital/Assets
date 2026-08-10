@@ -108,7 +108,7 @@ frappe.ui.form.on("Asset Movement", {
 		set_cost_center_query(frm, "target_cost_center");
 	},
 
-	onload: (frm) => {
+	refresh: (frm) => {
 		frm.trigger("set_required_fields");
 	},
 

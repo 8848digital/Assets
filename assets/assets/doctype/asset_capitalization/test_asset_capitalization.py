@@ -27,7 +27,6 @@ class TestAssetCapitalization(unittest.TestCase):
 		set_depreciation_settings_in_company()
 		create_asset_data()
 		create_asset_capitalization_data()
-		frappe.db.sql("delete from `tabTax Rule`")
 	
 	#TC_FA_143
 	def test_capitalize_wip_composite_items_TC_FA_143(self):

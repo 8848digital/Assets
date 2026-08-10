@@ -21,6 +21,8 @@
   "serial_and_batch_bundle",
   "use_serial_batch_fields",
   "column_break_13",
+  "serial_batch_entries_section",
+  "serial_batch_entries_html",
   "section_break_bfqc",
   "serial_no",
   "column_break_mbuv",
@@ -164,6 +166,15 @@
    "fieldname": "use_serial_batch_fields",
    "fieldtype": "Check",
    "label": "Use Serial No / Batch Fields"
+  },
+  {
+   "fieldname": "serial_batch_entries_section",
+   "fieldtype": "Section Break",
+   "label": "Serial / Batch Entries"
+  },
+  {
+   "fieldname": "serial_batch_entries_html",
+   "fieldtype": "HTML"
   },
   {
    "depends_on": "eval:doc.use_serial_batch_fields === 1",

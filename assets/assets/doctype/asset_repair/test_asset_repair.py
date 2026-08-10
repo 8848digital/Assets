@@ -14,7 +14,7 @@ from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle 
 from frappe.utils import flt, nowdate, nowtime, today ,add_days,now_datetime,get_datetime, getdate,add_months,get_first_day
 from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
 from erpnext.setup.doctype.company.test_company import create_child_company
-from assets.assets.doctype.asset.asset import (
+from assets.assets.doctype.asset.mapper import (
 	get_asset_account,
 	get_asset_value_after_depreciation,
 	make_sales_invoice,
