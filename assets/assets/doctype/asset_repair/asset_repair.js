@@ -134,6 +134,15 @@ frappe.ui.form.on("Asset Repair", {
 		} else {
 			frm.set_value("repair_cost", 0);
 		}
+		if (frm.doc.asset) {
+			frappe.db.get_value("Asset", frm.doc.asset, "status").then(({ message }) => {
+				frm.set_df_property(
+					"capitalize_repair_cost",
+					"read_only",
+					message && message.status === "Fully Depreciated"
+				);
+			});
+		}
 	},
 	show_general_ledger: (frm) => {
 		if (frm.doc.docstatus > 0) {

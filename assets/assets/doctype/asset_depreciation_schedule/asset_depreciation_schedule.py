@@ -1230,6 +1230,9 @@ def get_temp_asset_depr_schedule_doc(
 		asset_doc.name, "Active", row.finance_book
 	)
 
+	if disposal_date and flt(row.value_after_depreciation) <= flt(row.expected_value_after_useful_life):
+		continue
+
 	if not current_asset_depr_schedule_doc:
 		frappe.throw(
 			_("Asset Depreciation Schedule not found for Asset {0} and Finance Book {1}").format(

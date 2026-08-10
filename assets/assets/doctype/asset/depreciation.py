@@ -23,7 +23,7 @@ import erpnext
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 	get_checks_for_pl_and_bs_accounts,
 )
-from erpnext.accounts.doctype.journal_entry.journal_entry import make_reverse_journal_entry
+from erpnext.accounts.doctype.journal_entry.mapper import make_reverse_journal_entry
 from assets.assets.doctype.asset_activity.asset_activity import add_asset_activity
 from assets.assets.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_asset_depr_schedule_doc,
@@ -123,7 +123,7 @@ def get_depreciable_asset_depr_schedules_data(date):
 		.where(a.status.isin(["Submitted", "Partially Depreciated"]))
 		.where(ds.journal_entry.isnull())
 		.where(ds.schedule_date <= date)
-		.groupby(ads.name, a.name, a.asset_category, a.company)
+		.groupby(ads.name, a.name, a.creation)
 		.orderby(a.creation, order=Order.desc)
 	)
 
@@ -417,6 +417,7 @@ def get_comma_separated_links(names, doctype):
 
 @frappe.whitelist()
 def scrap_asset(asset_name, scrap_date=None):
+	frappe.has_permission("Asset", "write", asset_name, throw=True)
 	asset = frappe.get_doc("Asset", asset_name)
 
 	if asset.docstatus != 1:
@@ -494,6 +495,7 @@ def validate_scrap_date(scrap_date, today_date, purchase_date, calculate_depreci
 
 @frappe.whitelist()
 def restore_asset(asset_name):
+	frappe.has_permission("Asset", "write", asset_name, throw=True)
 	asset = frappe.get_doc("Asset", asset_name)
 
 	reverse_depreciation_entry_made_after_disposal(asset, asset.disposal_date)
