@@ -618,6 +618,7 @@ class Asset(AccountsController):
 					"Row {0}: Total Number of Depreciations cannot be less than or equal to Opening Number of Booked Depreciations"
 				).format(row.idx),
 				title=_("Invalid Schedule"),
+			)
 			frappe.throw(
 				_("Opening Accumulated Depreciation must be less than or equal to {0}").format(
 					depreciable_amount
