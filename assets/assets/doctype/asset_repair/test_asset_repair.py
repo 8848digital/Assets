@@ -1283,7 +1283,6 @@ def create_asset_repair(**args):
 			pi1 = make_purchase_invoice(
 				item=args.item or "_Test Non Stock Item",
 				company=asset.company,
-				item=args.item or "_Test Item",
 				expense_account=args.pi_expense_account1 or "Administrative Expenses - _TC",
 				cost_center=asset_repair.cost_center,
 				warehouse=args.warehouse
